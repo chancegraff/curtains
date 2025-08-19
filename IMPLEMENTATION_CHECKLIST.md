@@ -22,10 +22,10 @@
 - [X] Test: Style scoping
 
 ## Phase 4: HTML Renderer
-- [ ] Build HTML slide structure
-- [ ] Merge CSS in correct order
-- [ ] Inject into template
-- [ ] Embed runtime JavaScript
+- [X] Build HTML slide structure
+- [X] Merge CSS in correct order
+- [X] Inject into template
+- [X] Embed runtime JavaScript
 
 ## Phase 5: Runtime Implementation
 - [ ] Update slide counter
