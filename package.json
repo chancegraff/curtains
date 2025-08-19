@@ -4,13 +4,15 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "curtains": "dist/cli.js"
+    "curtains": "./bin/curtains"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run build:bin",
+    "build:bin": "chmod +x bin/curtains",
     "build:watch": "tsc --watch",
     "clean": "rm -rf dist",
     "prebuild": "npm run clean",
+    "postbuild": "echo '✓ Build complete. CLI ready at bin/curtains'",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write src/**/*.ts",
@@ -18,9 +20,13 @@
     "type-check": "tsc --noEmit",
     "dev": "npm run build:watch",
     "prepare": "npm run build",
+    "prepublishOnly": "npm run build && npm test",
+    "start": "node bin/curtains",
+    "cli": "node bin/curtains",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "test:cli": "npm run build && node bin/curtains --help"
   },
   "author": "chancegraff",
   "license": "ISC",

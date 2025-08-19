@@ -1,0 +1,12 @@
+#!/usr/bin/env node
+
+// Global CLI entry point for curtains
+// This script enables global installation via `npm install -g curtains`
+
+import { main } from '../dist/src/cli.js'
+
+// Execute main CLI function with process arguments
+main(process.argv).catch(error => {
+  console.error('CLI Error:', error)
+  process.exit(1)
+})

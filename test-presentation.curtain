@@ -1,7 +1,7 @@
 <style>
 /* Global styles for all slides */
-.centered { 
-  text-align: center; 
+.centered {
+  text-align: center;
 }
 .highlight {
   color: #007acc;
@@ -10,9 +10,11 @@
 
 ===
 
-# Welcome to My Presentation
+<container class="hero">
+  # Welcome to My Presentation
 
-This is the **first slide** with some content.
+  This is the **first slide** with some content.
+</container>
 
 <style>
 /* Slide-specific styles */
@@ -32,13 +34,13 @@ This is the **first slide** with some content.
 Here's a list of important points:
 
 - First important point
-- Second **bold** point  
+- Second **bold** point
 - Third point with [a link](https://example.com)
 
 <container class="columns">
   ### Left Column
   Some content here
-  
+
   <container class="nested">
   Nested content
   </container>
