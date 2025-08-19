@@ -14,6 +14,7 @@ Curtains transforms simple Markdown-based presentation files into beautiful, int
 
 - **Extended Markdown Support**: Full CommonMark support with additional presentation features
 - **Custom Containers**: Layout control with `<container>` elements for complex slide structures
+- **Image Support**: Native support for `<img>` tags with class attributes and security filtering
 - **CSS Styling**: Global and slide-specific CSS styling support
 - **Self-Contained Output**: Generates single HTML files with embedded styles and runtime
 - **Keyboard Navigation**: Arrow keys, spacebar, and fullscreen support (F key)
@@ -101,7 +102,8 @@ More content here.
 2. **Global Styles**: CSS before the first `===` applies to all slides
 3. **Slide Styles**: CSS within a slide applies only to that slide
 4. **Containers**: Use `<container class="classname">` for layout control
-5. **Markdown**: Full CommonMark support within slides
+5. **Images**: Use `<img>` tags or Markdown image syntax
+6. **Markdown**: Full CommonMark support within slides
 
 ## Examples
 
@@ -170,6 +172,22 @@ Introduction to Curtains
 </container>
 ```
 
+### Using Images
+
+```curtain
+===
+
+## Slide with Images
+
+You can use standard Markdown image syntax:
+![Alt text](./image.png)
+
+Or HTML img tags with classes:
+<img src="./logo.svg" class="responsive centered" alt="Company Logo">
+
+===
+```
+
 ## Architecture
 
 Curtains follows a four-phase pipeline architecture:
@@ -184,12 +202,14 @@ Curtains follows a four-phase pipeline architecture:
 - Splits content on `===` delimiters
 - Extracts and validates CSS styles
 - Parses container elements with class validation
+- Processes `<img>` tags with security filtering (strips dangerous attributes)
 - Converts Markdown to AST using remark
 - Validates all input with Zod schemas
 
 #### 2. Transformer (`src/transformer/`)
 - Converts AST to HTML using rehype
 - Transforms containers to `<div>` elements
+- Wraps root slide content in staging container for proper layout
 - Adds `target="_blank"` to external links
 - Scopes slide CSS with nth-child selectors
 
