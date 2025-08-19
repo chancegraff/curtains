@@ -15,11 +15,11 @@
 - [X] Test: Container nesting
 
 ## Phase 3: Transformer Pipeline
-- [ ] Convert AST to HTML with rehype
-- [ ] Transform containers to divs
-- [ ] Add target="_blank" to external links
-- [ ] Scope slide styles with nth-child
-- [ ] Test: Style scoping
+- [X] Convert AST to HTML with rehype
+- [X] Transform containers to divs
+- [X] Add target="_blank" to external links
+- [X] Scope slide styles with nth-child
+- [X] Test: Style scoping
 
 ## Phase 4: HTML Renderer
 - [ ] Build HTML slide structure
