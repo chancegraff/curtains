@@ -84,13 +84,21 @@ html, body {
   width: 100vw;
   height: 100vh;
   flex-shrink: 0;
-  padding: clamp(1.5rem, 4vmin, 6rem);
   overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   font-size: clamp(1.25rem, 2.5vmin, 2rem);
   line-height: 1.8;
+}
+
+/* Content wrapper with padding */
+.curtains-content {
+  padding: clamp(1.5rem, 4vmin, 6rem);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 
 /* Typography Scale */
@@ -170,8 +178,11 @@ html, body {
 /* Responsive Design */
 @media (max-width: 768px) {
   .curtains-slide {
-    padding: 2rem;
     font-size: 1.125rem;
+  }
+
+  .curtains-content {
+    padding: 2rem;
   }
 
   .curtains-slide h1 {
@@ -189,8 +200,11 @@ html, body {
 
 @media (max-width: 480px) {
   .curtains-slide {
-    padding: 1.5rem;
     font-size: 1rem;
+  }
+
+  .curtains-content {
+    padding: 1.5rem;
   }
 
   .curtains-slide h1 {

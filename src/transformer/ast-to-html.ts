@@ -23,12 +23,34 @@ export function astToHTML(ast: unknown): string {
 function convertASTToHTML(ast: CurtainsAST): string {
   // Process AST nodes
   const htmlParts: string[] = []
-
+  const paddedContent: string[] = []
+  
   for (const node of ast.children) {
-    const html = convertNodeToHTML(node as ASTNode)
-    if (html) {
-      htmlParts.push(html)
+    const typedNode = node as Record<string, unknown>
+    
+    if (typedNode.type === 'container') {
+      // If we have accumulated padded content, wrap it first
+      if (paddedContent.length > 0) {
+        htmlParts.push(`<div class="curtains-content">${paddedContent.join('\n')}</div>`)
+        paddedContent.length = 0
+      }
+      // Add container directly without padding wrapper
+      const html = convertNodeToHTML(node as ASTNode)
+      if (html) {
+        htmlParts.push(html)
+      }
+    } else {
+      // Accumulate non-container content for padding wrapper
+      const html = convertNodeToHTML(node as ASTNode)
+      if (html) {
+        paddedContent.push(html)
+      }
     }
+  }
+  
+  // Wrap any remaining padded content
+  if (paddedContent.length > 0) {
+    htmlParts.push(`<div class="curtains-content">${paddedContent.join('\n')}</div>`)
   }
 
   return htmlParts.join('\n')
