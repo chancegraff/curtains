@@ -1,0 +1,53 @@
+<style>
+/* Global styles for all slides */
+.centered { 
+  text-align: center; 
+}
+.highlight {
+  color: #007acc;
+}
+</style>
+
+===
+
+# Welcome to My Presentation
+
+This is the **first slide** with some content.
+
+<style>
+/* Slide-specific styles */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+}
+</style>
+
+===
+
+## Content Slide
+
+Here's a list of important points:
+
+- First important point
+- Second **bold** point  
+- Third point with [a link](https://example.com)
+
+<container class="columns">
+  ### Left Column
+  Some content here
+  
+  <container class="nested">
+  Nested content
+  </container>
+</container>
+
+===
+
+## Final Slide
+
+Thank you for your attention!
+
+![Sample Image](https://example.com/image.png)

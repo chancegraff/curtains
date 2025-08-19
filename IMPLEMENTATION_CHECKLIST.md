@@ -1,19 +1,18 @@
 # Implementation Checklist
 
 ## Phase 1: Project Foundation
-- [ ] Initialize TypeScript project
-- [ ] Install dependencies: remark, rehype, commander
-- [ ] Set up build scripts
+- [X] Initialize TypeScript project
+- [X] Install dependencies: remark, rehype, commander
 
 ## Phase 2: Core Parser
-- [ ] Read .curtain file
-- [ ] Split on === delimiters
-- [ ] Extract style blocks
-- [ ] Parse container elements
-- [ ] Parse Markdown with remark
-- [ ] Build combined AST
-- [ ] Test: Basic .curtain file parsing
-- [ ] Test: Container nesting
+- [X] Read .curtain file
+- [X] Split on === delimiters
+- [X] Extract style blocks
+- [X] Parse container elements
+- [X] Parse Markdown with remark
+- [X] Build combined AST
+- [X] Test: Basic .curtain file parsing
+- [X] Test: Container nesting
 
 ## Phase 3: Transformer Pipeline
 - [ ] Convert AST to HTML with rehype
@@ -46,3 +45,4 @@
 - [ ] Help text
 - [ ] Version command
 - [ ] Success confirmation
+- [ ] Set up build scripts
