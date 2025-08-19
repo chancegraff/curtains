@@ -1,51 +1,47 @@
 # Implementation Checklist
 
-## Setup
+## Phase 1: Project Foundation
 - [ ] Initialize TypeScript project
 - [ ] Install dependencies: remark, rehype, commander
 - [ ] Set up build scripts
 
-## CLI Layer
-- [ ] Parse command arguments
-- [ ] Validate input/output paths
+## Phase 2: Core Parser
 - [ ] Read .curtain file
-- [ ] Handle exit codes
-- [ ] Write output file
-
-## Parser
 - [ ] Split on === delimiters
 - [ ] Extract style blocks
 - [ ] Parse container elements
 - [ ] Parse Markdown with remark
 - [ ] Build combined AST
+- [ ] Test: Basic .curtain file parsing
+- [ ] Test: Container nesting
 
-## Transformer
+## Phase 3: Transformer Pipeline
 - [ ] Convert AST to HTML with rehype
 - [ ] Transform containers to divs
 - [ ] Add target="_blank" to external links
 - [ ] Scope slide styles with nth-child
+- [ ] Test: Style scoping
 
-## Renderer
-- [ ] Merge CSS in correct order
+## Phase 4: HTML Renderer
 - [ ] Build HTML slide structure
+- [ ] Merge CSS in correct order
 - [ ] Inject into template
 - [ ] Embed runtime JavaScript
 
-## Runtime (Browser)
+## Phase 5: Runtime Implementation
+- [ ] Update slide counter
 - [ ] Arrow key navigation
 - [ ] Click navigation
-- [ ] Fullscreen toggle (F key)
-- [ ] Update slide counter
 - [ ] Wrap-around navigation
+- [ ] Fullscreen toggle (F key)
+- [ ] Test: Navigation works
+- [ ] Test: Counter updates
 
-## Testing
-- [ ] Basic .curtain file parsing
-- [ ] Container nesting
-- [ ] Style scoping
-- [ ] Navigation works
-- [ ] Counter updates
-
-## Polish
+## Phase 6: CLI Integration
+- [ ] Parse command arguments
+- [ ] Validate input/output paths
+- [ ] Write output file
+- [ ] Handle exit codes
 - [ ] Error messages
 - [ ] Help text
 - [ ] Version command

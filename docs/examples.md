@@ -68,14 +68,6 @@ Welcome to my presentation
 </container>
 ```
 
-## Input/Output Files
-```bash
-# Input: presentation.curtain
-# Output: presentation.html
-
-curtains build presentation.curtain -o presentation.html --theme dark
-```
-
 ## Generated HTML Structure
 ```html
 <div class="curtains-root" data-theme="dark">
