@@ -249,5 +249,189 @@ Paragraph content
       expect(result.type).toBe('root')
       expect(result.children).toHaveLength(0)
     })
+
+    it('should parse HTML img tags on their own line', () => {
+      // Arrange
+      const content = '<img src="./logo.svg" alt="Logo">'
+
+      // Act
+      const result = parseMarkdown(content)
+
+      // Assert
+      if (!result.children) {
+        throw new Error('Expected children to be defined')
+      }
+      
+      const imageNode = result.children.find((child: TestASTNode) => child.type === 'image')
+      expect(imageNode).toBeDefined()
+      
+      if (imageNode?.type === 'image') {
+        expect(imageNode.url).toBe('./logo.svg')
+        expect(imageNode.alt).toBe('Logo')
+        expect(imageNode.classes).toBeUndefined()
+      }
+    })
+
+    it('should parse HTML img tags with class attribute', () => {
+      // Arrange
+      const content = '<img src="./logo.svg" class="responsive-logo" alt="Logo">'
+
+      // Act
+      const result = parseMarkdown(content)
+
+      // Assert
+      if (!result.children) {
+        throw new Error('Expected children to be defined')
+      }
+      
+      const imageNode = result.children.find((child: TestASTNode) => child.type === 'image')
+      expect(imageNode).toBeDefined()
+      
+      if (imageNode?.type === 'image') {
+        expect(imageNode.url).toBe('./logo.svg')
+        expect(imageNode.alt).toBe('Logo')
+        expect(imageNode.classes).toEqual(['responsive-logo'])
+      }
+    })
+
+    it('should parse HTML img tags with multiple classes', () => {
+      // Arrange
+      const content = '<img src="./logo.svg" class="responsive-logo centered" alt="Logo">'
+
+      // Act
+      const result = parseMarkdown(content)
+
+      // Assert
+      if (!result.children) {
+        throw new Error('Expected children to be defined')
+      }
+      
+      const imageNode = result.children.find((child: TestASTNode) => child.type === 'image')
+      expect(imageNode).toBeDefined()
+      
+      if (imageNode?.type === 'image') {
+        expect(imageNode.url).toBe('./logo.svg')
+        expect(imageNode.alt).toBe('Logo')
+        expect(imageNode.classes).toEqual(['responsive-logo', 'centered'])
+      }
+    })
+
+    it('should strip dangerous HTML img tag attributes for security', () => {
+      // Arrange
+      const content = '<img src="./logo.svg" class="safe" style="width:100px" onclick="alert(\'xss\')" onload="hack()" id="bad" data-attr="evil" alt="Logo">'
+
+      // Act
+      const result = parseMarkdown(content)
+
+      // Assert
+      if (!result.children) {
+        throw new Error('Expected children to be defined')
+      }
+      
+      const imageNode = result.children.find((child: TestASTNode) => child.type === 'image')
+      expect(imageNode).toBeDefined()
+      
+      if (imageNode?.type === 'image') {
+        expect(imageNode.url).toBe('./logo.svg')
+        expect(imageNode.alt).toBe('Logo')
+        expect(imageNode.classes).toEqual(['safe'])
+        // All other attributes should be stripped - only url, alt, and classes should exist
+        expect(Object.keys(imageNode)).toEqual(expect.arrayContaining(['type', 'url', 'alt', 'classes']))
+        expect(Object.keys(imageNode)).not.toEqual(expect.arrayContaining(['style', 'onclick', 'onload', 'id', 'data-attr']))
+      }
+    })
+
+    it('should parse HTML img tags within paragraphs inline', () => {
+      // Arrange
+      const content = 'Here is an image <img src="./logo.svg" class="inline-img" alt="Logo"> in the middle of text.'
+
+      // Act
+      const result = parseMarkdown(content)
+
+      // Assert
+      if (!result.children) {
+        throw new Error('Expected children to be defined')
+      }
+      
+      const paragraph = result.children[0] as TestASTNode
+      expect(paragraph?.type).toBe('paragraph')
+      
+      if (paragraph?.type === 'paragraph') {
+        const imageNode = paragraph.children.find((child: TestASTNode) => child.type === 'image')
+        expect(imageNode).toBeDefined()
+        
+        if (imageNode?.type === 'image') {
+          expect(imageNode.url).toBe('./logo.svg')
+          expect(imageNode.alt).toBe('Logo')
+          expect(imageNode.classes).toEqual(['inline-img'])
+        }
+        
+        // Should have text nodes before and after the image
+        const textNodes = paragraph.children.filter((child: TestASTNode) => child.type === 'text')
+        expect(textNodes.length).toBeGreaterThan(1)
+      }
+    })
+
+    it('should handle HTML img tags without alt attribute', () => {
+      // Arrange
+      const content = '<img src="./logo.svg" class="no-alt">'
+
+      // Act
+      const result = parseMarkdown(content)
+
+      // Assert
+      if (!result.children) {
+        throw new Error('Expected children to be defined')
+      }
+      
+      const imageNode = result.children.find((child: TestASTNode) => child.type === 'image')
+      expect(imageNode).toBeDefined()
+      
+      if (imageNode?.type === 'image') {
+        expect(imageNode.url).toBe('./logo.svg')
+        expect(imageNode.alt).toBe('')
+        expect(imageNode.classes).toEqual(['no-alt'])
+      }
+    })
+
+    it('should handle HTML img tags without class attribute', () => {
+      // Arrange
+      const content = '<img src="./logo.svg" alt="Logo">'
+
+      // Act
+      const result = parseMarkdown(content)
+
+      // Assert
+      if (!result.children) {
+        throw new Error('Expected children to be defined')
+      }
+      
+      const imageNode = result.children.find((child: TestASTNode) => child.type === 'image')
+      expect(imageNode).toBeDefined()
+      
+      if (imageNode?.type === 'image') {
+        expect(imageNode.url).toBe('./logo.svg')
+        expect(imageNode.alt).toBe('Logo')
+        expect(imageNode.classes).toBeUndefined()
+      }
+    })
+
+    it('should handle malformed HTML img tags gracefully', () => {
+      // Arrange
+      const content = '<img src="./logo.svg" alt="Logo" class="test"'
+
+      // Act
+      const result = parseMarkdown(content)
+
+      // Assert  
+      // Should be parsed as regular paragraph text since it's malformed (missing closing >)
+      if (!result.children) {
+        throw new Error('Expected children to be defined')
+      }
+      
+      const paragraph = result.children[0] as TestASTNode
+      expect(paragraph?.type).toBe('paragraph')
+      expect(paragraph.children[0]?.value).toContain('<img')
+    })
   })
 })

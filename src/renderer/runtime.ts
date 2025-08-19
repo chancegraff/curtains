@@ -18,6 +18,7 @@ export function getRuntimeJS(): string {
     init() {
       this.total = document.querySelectorAll('.curtains-slide').length;
       this.updateCounter();
+      this.updateScale();
       this.setupEventListeners();
       console.log(\`Curtains initialized: \${this.total} slides\`);
     },
@@ -87,6 +88,30 @@ export function getRuntimeJS(): string {
       }
       
       announcer.textContent = \`Slide \${this.current + 1} of \${this.total}\`;
+    },
+    
+    updateScale() {
+      // Calculate scale to fit 1920x1080 slide to viewport
+      const stageWrapper = document.querySelector('.curtains-stage-wrapper');
+      if (!stageWrapper) return;
+      
+      // Fixed slide dimensions (16:9 aspect ratio)
+      const slideWidth = 1920;
+      const slideHeight = 1080;
+      
+      // Available viewport dimensions
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      // Calculate scale factors for width and height
+      const scaleX = viewportWidth / slideWidth;
+      const scaleY = viewportHeight / slideHeight;
+      
+      // Use the smaller scale to maintain aspect ratio
+      const scale = Math.min(scaleX, scaleY);
+      
+      // Apply the scale transform
+      stageWrapper.style.transform = \`scale(\${scale})\`;
     },
     
     setupEventListeners() {
@@ -172,6 +197,7 @@ export function getRuntimeJS(): string {
       
       // Handle window resize
       window.addEventListener('resize', () => {
+        this.updateScale();
         // Force repositioning to current slide after resize
         setTimeout(() => {
           const stage = document.querySelector('.curtains-stage');

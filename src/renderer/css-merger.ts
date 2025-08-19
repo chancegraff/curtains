@@ -83,13 +83,16 @@ html, body {
 }
 
 .curtains-stage-wrapper {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  max-width: 177.78vh; /* 16:9 aspect ratio based on height */
-  max-height: 56.25vw; /* 16:9 aspect ratio based on width */
+  position: absolute;
+  width: 1920px;
+  height: 1080px;
+  transform-origin: center center;
   background-color: var(--curtains-bg-primary, #ffffff);
   overflow: hidden;
+  left: 50%;
+  top: 50%;
+  margin-left: -960px;
+  margin-top: -540px;
 }
 
 .curtains-stage {
@@ -109,13 +112,13 @@ html, body {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  font-size: clamp(1.25rem, 2.5vmin, 2rem);
+  font-size: 2rem;
   line-height: 1.8;
 }
 
 /* Content wrapper with padding */
 .curtains-content {
-  padding: clamp(1.5rem, 4vmin, 6rem);
+  padding: 4rem;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -124,42 +127,42 @@ html, body {
 
 /* Typography Scale */
 .curtains-slide h1 {
-  font-size: clamp(2.5rem, 6vmin, 5rem);
+  font-size: 4rem;
   font-weight: 700;
   margin-bottom: 1.5rem;
   line-height: 1.2;
 }
 
 .curtains-slide h2 {
-  font-size: clamp(2rem, 4.5vmin, 4rem);
+  font-size: 3.2rem;
   font-weight: 600;
   margin-bottom: 1.25rem;
   line-height: 1.3;
 }
 
 .curtains-slide h3 {
-  font-size: clamp(1.5rem, 3.5vmin, 3rem);
+  font-size: 2.5rem;
   font-weight: 600;
   margin-bottom: 1rem;
   line-height: 1.4;
 }
 
 .curtains-slide h4 {
-  font-size: clamp(1.25rem, 3vmin, 2.5rem);
+  font-size: 2rem;
   font-weight: 600;
   margin-bottom: 0.875rem;
   line-height: 1.5;
 }
 
 .curtains-slide h5 {
-  font-size: clamp(1.125rem, 2.5vmin, 2rem);
+  font-size: 1.75rem;
   font-weight: 600;
   margin-bottom: 0.75rem;
   line-height: 1.6;
 }
 
 .curtains-slide h6 {
-  font-size: clamp(1rem, 2vmin, 1.75rem);
+  font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 0.75rem;
   line-height: 1.6;
@@ -196,59 +199,7 @@ html, body {
   margin-bottom: 1.5rem;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .curtains-slide {
-    font-size: 1.125rem;
-  }
-
-  .curtains-content {
-    padding: 2rem;
-  }
-
-  .curtains-slide h1 {
-    font-size: 2.5rem;
-  }
-
-  .curtains-slide h2 {
-    font-size: 2rem;
-  }
-
-  .curtains-slide h3 {
-    font-size: 1.75rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .curtains-slide {
-    font-size: 1rem;
-  }
-
-  .curtains-content {
-    padding: 1.5rem;
-  }
-
-  .curtains-slide h1 {
-    font-size: 2rem;
-  }
-
-  .curtains-slide h2 {
-    font-size: 1.75rem;
-  }
-}
-
-/* Large screen breakpoints */
-@media (min-width: 1200px) {
-  .curtains-slide {
-    font-size: clamp(1.5rem, 2.75vmin, 2.25rem);
-  }
-}
-
-@media (min-width: 1600px) {
-  .curtains-slide {
-    font-size: clamp(1.75rem, 3vmin, 2.5rem);
-  }
-}
+/* Responsive design handled by scale transform - no media queries needed */
 
 /* Column layout scaling */
 .columns {

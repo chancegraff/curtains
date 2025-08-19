@@ -16,6 +16,39 @@ interface MarkdownNode {
   classes?: string[]
 }
 
+/**
+ * Sanitizes HTML img tag attributes, allowing only src, alt, and class attributes
+ * @param imgTagMatch - The full img tag match from regex
+ * @returns Object with sanitized attributes
+ */
+function sanitizeImgAttributes(imgTagMatch: string): { src: string; alt: string; classes?: string[] } {
+  const result: { src: string; alt: string; classes?: string[] } = { src: '', alt: '' }
+  
+  // Extract src attribute
+  const srcMatch = imgTagMatch.match(/\bsrc\s*=\s*["']([^"']*)["']/i)
+  if (srcMatch) {
+    result.src = srcMatch[1] ?? ''
+  }
+  
+  // Extract alt attribute
+  const altMatch = imgTagMatch.match(/\balt\s*=\s*["']([^"']*)["']/i)
+  if (altMatch) {
+    result.alt = altMatch[1] ?? ''
+  }
+  
+  // Extract class attribute
+  const classMatch = imgTagMatch.match(/\bclass\s*=\s*["']([^"']*)["']/i)
+  if (classMatch) {
+    const classStr = classMatch[1] ?? ''
+    const classes = classStr.split(/\s+/).filter(Boolean)
+    if (classes.length > 0) {
+      result.classes = classes
+    }
+  }
+  
+  return result
+}
+
 // Simple markdown parser for testing - handles basic markdown without external dependencies
 function parseBasicMarkdown(content: string): MarkdownNode {
   // Handle container placeholders that might span multiple lines
@@ -217,27 +250,30 @@ function parseBasicMarkdown(content: string): MarkdownNode {
       continue
     }
     
-    // Parse images with optional classes: ![alt](url){.class1 .class2}
-    const imageMatch = trimmed.match(/^!\[([^\]]*)\]\(([^)]+)\)(?:\{([^}]*)\})?$/)
+    // Parse standard markdown images: ![alt](url)
+    const imageMatch = trimmed.match(/^!\[([^\]]*)\]\(([^)]+)\)$/)
     if (imageMatch) {
       const alt = imageMatch[1] ?? ''
       const url = imageMatch[2] ?? ''
-      const classesStr = imageMatch[3]
-      
-      let classes: string[] | undefined
-      if (classesStr) {
-        // Parse class syntax: .class1 .class2 or class1 class2
-        classes = classesStr
-          .split(/\s+/)
-          .map(cls => cls.startsWith('.') ? cls.substring(1) : cls)
-          .filter(Boolean)
-      }
       
       children.push({
         type: 'image',
         alt,
-        url,
-        ...(classes && classes.length > 0 && { classes })
+        url
+      })
+      i++
+      continue
+    }
+    
+    // Parse HTML img tags on their own line
+    const htmlImgMatch = trimmed.match(/^<img[^>]*>$/i)
+    if (htmlImgMatch) {
+      const sanitized = sanitizeImgAttributes(htmlImgMatch[0])
+      children.push({
+        type: 'image',
+        url: sanitized.src,
+        alt: sanitized.alt,
+        ...(sanitized.classes && sanitized.classes.length > 0 && { classes: sanitized.classes })
       })
       i++
       continue
@@ -250,7 +286,7 @@ function parseBasicMarkdown(content: string): MarkdownNode {
     }
     
     // Parse regular paragraphs (including those with links and formatting)
-    if (trimmed !== '' && !trimmed.startsWith('#') && !trimmed.startsWith('- ') && orderedMatch === null && imageMatch === null) {
+    if (trimmed !== '' && !trimmed.startsWith('#') && !trimmed.startsWith('- ') && orderedMatch === null && imageMatch === null && htmlImgMatch === null) {
       children.push({
         type: 'paragraph',
         children: parseInlineText(trimmed)
@@ -270,7 +306,7 @@ function parseBasicMarkdown(content: string): MarkdownNode {
 }
 
 /**
- * Parses inline text with formatting (bold, links, etc.)
+ * Parses inline text with formatting (bold, links, HTML img tags, etc.)
  * @param text - The text to parse inline formatting
  * @returns Array of MarkdownNode children
  */
@@ -278,8 +314,8 @@ function parseInlineText(text: string): MarkdownNode[] {
   const children: MarkdownNode[] = []
   let currentIndex = 0
   
-  // Combined regex for bold and links
-  const formatRegex = /(\*\*([^*]+)\*\*)|(\[([^\]]+)\]\(([^)]+)\))/g
+  // Combined regex for bold, links, and HTML img tags
+  const formatRegex = /(\*\*([^*]+)\*\*)|(\[([^\]]+)\]\(([^)]+)\))|(<img[^>]*>)/gi
   let match
   
   while ((match = formatRegex.exec(text)) !== null) {
@@ -308,6 +344,17 @@ function parseInlineText(text: string): MarkdownNode[] {
         type: 'link',
         url: match[5],
         children: [{ type: 'text', value: match[4] }]
+      })
+    }
+    // Check if it's an HTML img tag
+    else if (match[6]) {
+      const imgTagMatch = match[6]
+      const sanitized = sanitizeImgAttributes(imgTagMatch)
+      children.push({
+        type: 'image',
+        url: sanitized.src,
+        alt: sanitized.alt,
+        ...(sanitized.classes && sanitized.classes.length > 0 && { classes: sanitized.classes })
       })
     }
     
