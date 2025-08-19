@@ -6,6 +6,17 @@
 .highlight {
   color: #007acc;
 }
+.columns {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+}
+.nested {
+  background-color: rgba(150, 150, 150, 0.1);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-top: 1rem;
+}
 </style>
 
 ===
@@ -20,7 +31,9 @@
 /* Slide-specific styles */
 .hero {
   min-height: 100vh;
+  min-width: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   background: linear-gradient(45deg, #667eea, #764ba2);
@@ -52,4 +65,4 @@ Here's a list of important points:
 
 Thank you for your attention!
 
-![Sample Image](https://example.com/image.png)
+![Test Image](./test-image.svg)

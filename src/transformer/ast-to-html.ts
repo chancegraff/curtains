@@ -98,7 +98,7 @@ function convertNodeToHTML(node: ASTNode): string {
       return `<${tag}>${items}</${tag}>`
     }
 
-    case 'listitem': {
+    case 'listItem': {
       const children = typedNode.children as ASTNode[] | undefined
       const content = children?.map(convertNodeToHTML).join('') ?? ''
       return `<li>${content}</li>`

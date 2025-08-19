@@ -17,10 +17,10 @@ export async function mergeCSS(params: {
   // Note: Using relative path from project root
   const templatePath = join(process.cwd(), 'src', 'templates', 'style.css')
   const baseCSS = await readFile(templatePath, 'utf-8')
-  
+
   // Get base layout styles (these go before theme variables)
   const layoutCSS = getBaseLayoutCSS()
-  
+
   // Merge in correct cascade order
   const cssLayers = [
     '/* Base Layout Styles */',
@@ -35,7 +35,7 @@ export async function mergeCSS(params: {
     '/* Slide-specific Scoped Styles */',
     ...params.slidesCSS.filter(css => css.trim())
   ]
-  
+
   return cssLayers.filter(layer => layer !== undefined).join('\n')
 }
 
@@ -84,53 +84,53 @@ html, body {
   width: 100vw;
   height: 100vh;
   flex-shrink: 0;
-  padding: 3rem;
-  overflow-y: auto;
+  padding: clamp(1.5rem, 4vmin, 6rem);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  font-size: 1.25rem;
+  font-size: clamp(1.25rem, 2.5vmin, 2rem);
   line-height: 1.8;
 }
 
 /* Typography Scale */
 .curtains-slide h1 {
-  font-size: 3rem;
+  font-size: clamp(2.5rem, 6vmin, 5rem);
   font-weight: 700;
   margin-bottom: 1.5rem;
   line-height: 1.2;
 }
 
 .curtains-slide h2 {
-  font-size: 2.5rem;
+  font-size: clamp(2rem, 4.5vmin, 4rem);
   font-weight: 600;
   margin-bottom: 1.25rem;
   line-height: 1.3;
 }
 
 .curtains-slide h3 {
-  font-size: 2rem;
+  font-size: clamp(1.5rem, 3.5vmin, 3rem);
   font-weight: 600;
   margin-bottom: 1rem;
   line-height: 1.4;
 }
 
 .curtains-slide h4 {
-  font-size: 1.5rem;
+  font-size: clamp(1.25rem, 3vmin, 2.5rem);
   font-weight: 600;
   margin-bottom: 0.875rem;
   line-height: 1.5;
 }
 
 .curtains-slide h5 {
-  font-size: 1.25rem;
+  font-size: clamp(1.125rem, 2.5vmin, 2rem);
   font-weight: 600;
   margin-bottom: 0.75rem;
   line-height: 1.6;
 }
 
 .curtains-slide h6 {
-  font-size: 1.125rem;
+  font-size: clamp(1rem, 2vmin, 1.75rem);
   font-weight: 600;
   margin-bottom: 0.75rem;
   line-height: 1.6;
@@ -138,6 +138,7 @@ html, body {
 
 .curtains-slide p {
   margin-bottom: 1.5rem;
+  font-size: inherit;
 }
 
 .curtains-slide ul,
@@ -148,6 +149,7 @@ html, body {
 
 .curtains-slide li {
   margin-bottom: 0.75rem;
+  font-size: inherit;
 }
 
 .curtains-slide pre {
@@ -171,15 +173,15 @@ html, body {
     padding: 2rem;
     font-size: 1.125rem;
   }
-  
+
   .curtains-slide h1 {
     font-size: 2.5rem;
   }
-  
+
   .curtains-slide h2 {
     font-size: 2rem;
   }
-  
+
   .curtains-slide h3 {
     font-size: 1.75rem;
   }
@@ -190,14 +192,36 @@ html, body {
     padding: 1.5rem;
     font-size: 1rem;
   }
-  
+
   .curtains-slide h1 {
     font-size: 2rem;
   }
-  
+
   .curtains-slide h2 {
     font-size: 1.75rem;
   }
+}
+
+/* Large screen breakpoints */
+@media (min-width: 1200px) {
+  .curtains-slide {
+    font-size: clamp(1.5rem, 2.75vmin, 2.25rem);
+  }
+}
+
+@media (min-width: 1600px) {
+  .curtains-slide {
+    font-size: clamp(1.75rem, 3vmin, 2.5rem);
+  }
+}
+
+/* Column layout scaling */
+.columns {
+  font-size: inherit;
+}
+
+.columns * {
+  font-size: inherit;
 }
   `.trim()
 }

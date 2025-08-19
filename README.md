@@ -1,6 +1,7 @@
 <p align="center">
   <img src="./docs/mascot.svg" height="140px" />
   <img src="./docs/title.svg" height="140px" />
+  <img src="./docs/claude.svg" height="140px" >
 </p>
 
 Curtains is a powerful presentation builder that converts extended Markdown files (`.curtain`) into self-contained HTML presentations with support for custom styling, containers, and runtime navigation.

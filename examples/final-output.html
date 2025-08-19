@@ -47,53 +47,53 @@ html, body {
   width: 100vw;
   height: 100vh;
   flex-shrink: 0;
-  padding: 3rem;
-  overflow-y: auto;
+  padding: clamp(1.5rem, 4vmin, 6rem);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  font-size: 1.25rem;
+  font-size: clamp(1.25rem, 2.5vmin, 2rem);
   line-height: 1.8;
 }
 
 /* Typography Scale */
 .curtains-slide h1 {
-  font-size: 3rem;
+  font-size: clamp(2.5rem, 6vmin, 5rem);
   font-weight: 700;
   margin-bottom: 1.5rem;
   line-height: 1.2;
 }
 
 .curtains-slide h2 {
-  font-size: 2.5rem;
+  font-size: clamp(2rem, 4.5vmin, 4rem);
   font-weight: 600;
   margin-bottom: 1.25rem;
   line-height: 1.3;
 }
 
 .curtains-slide h3 {
-  font-size: 2rem;
+  font-size: clamp(1.5rem, 3.5vmin, 3rem);
   font-weight: 600;
   margin-bottom: 1rem;
   line-height: 1.4;
 }
 
 .curtains-slide h4 {
-  font-size: 1.5rem;
+  font-size: clamp(1.25rem, 3vmin, 2.5rem);
   font-weight: 600;
   margin-bottom: 0.875rem;
   line-height: 1.5;
 }
 
 .curtains-slide h5 {
-  font-size: 1.25rem;
+  font-size: clamp(1.125rem, 2.5vmin, 2rem);
   font-weight: 600;
   margin-bottom: 0.75rem;
   line-height: 1.6;
 }
 
 .curtains-slide h6 {
-  font-size: 1.125rem;
+  font-size: clamp(1rem, 2vmin, 1.75rem);
   font-weight: 600;
   margin-bottom: 0.75rem;
   line-height: 1.6;
@@ -101,6 +101,7 @@ html, body {
 
 .curtains-slide p {
   margin-bottom: 1.5rem;
+  font-size: inherit;
 }
 
 .curtains-slide ul,
@@ -111,6 +112,7 @@ html, body {
 
 .curtains-slide li {
   margin-bottom: 0.75rem;
+  font-size: inherit;
 }
 
 .curtains-slide pre {
@@ -134,15 +136,15 @@ html, body {
     padding: 2rem;
     font-size: 1.125rem;
   }
-  
+
   .curtains-slide h1 {
     font-size: 2.5rem;
   }
-  
+
   .curtains-slide h2 {
     font-size: 2rem;
   }
-  
+
   .curtains-slide h3 {
     font-size: 1.75rem;
   }
@@ -153,14 +155,36 @@ html, body {
     padding: 1.5rem;
     font-size: 1rem;
   }
-  
+
   .curtains-slide h1 {
     font-size: 2rem;
   }
-  
+
   .curtains-slide h2 {
     font-size: 1.75rem;
   }
+}
+
+/* Large screen breakpoints */
+@media (min-width: 1200px) {
+  .curtains-slide {
+    font-size: clamp(1.5rem, 2.75vmin, 2.25rem);
+  }
+}
+
+@media (min-width: 1600px) {
+  .curtains-slide {
+    font-size: clamp(1.75rem, 3vmin, 2.5rem);
+  }
+}
+
+/* Column layout scaling */
+.columns {
+  font-size: inherit;
+}
+
+.columns * {
+  font-size: inherit;
 }
 
 /* Theme Variables and Base Styles */
@@ -485,18 +509,31 @@ html, body {
 
 /* Global User Styles */
 /* Global styles for all slides */
-.centered { 
-  text-align: center; 
+.centered {
+  text-align: center;
 }
 .highlight {
   color: #007acc;
+}
+.columns {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+}
+.nested {
+  background-color: rgba(150, 150, 150, 0.1);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-top: 1rem;
 }
 
 /* Slide-specific Scoped Styles */
 /* Slide-specific styles */
 .curtains-slide:nth-child(1) .hero {
   min-height: 100vh;
+  min-width: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   background: linear-gradient(45deg, #667eea, #764ba2);
@@ -506,22 +543,19 @@ html, body {
 <body>
   <div class="curtains-root" data-theme="light">
     <div class="curtains-stage">
-      <section class="curtains-slide"><h1>Welcome to My Presentation</h1>
-<p>This is the **first slide** with some content.</p></section>
+      <section class="curtains-slide"><div class="hero"><h1>Welcome to My Presentation</h1>
+<p>This is the <strong>first slide</strong> with some content.</p></div></section>
       <section class="curtains-slide"><h2>Content Slide</h2>
 <p>Here's a list of important points:</p>
-<ul><p>First important point</p>
-<p>Second **bold** point</p>
-<p>Third point with [a link](https://example.com)</p></ul>
-<ul><p>Second **bold** point</p>
-<p>Third point with [a link](https://example.com)</p></ul>
-<ul><p>Third point with [a link](https://example.com)</p></ul>
+<ul><li><p>First important point</p></li>
+<li><p>Second <strong>bold</strong> point</p></li>
+<li><p>Third point with <a href="https://example.com" target="_blank" rel="noopener noreferrer">a link</a></p></li></ul>
 <div class="columns"><h3>Left Column</h3>
 <p>Some content here</p>
 <div class="nested"><p>Nested content</p></div></div></section>
       <section class="curtains-slide"><h2>Final Slide</h2>
 <p>Thank you for your attention!</p>
-<img src="https://example.com/image.png" alt="Sample Image"></section>
+<img src="./test-image.svg" alt="Test Image"></section>
     </div>
     <div class="curtains-counter">1/3</div>
   </div>

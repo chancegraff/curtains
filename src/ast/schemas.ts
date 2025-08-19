@@ -12,7 +12,8 @@ export const NodeTypeSchema = z.enum(['root', 'container', 'heading', 'paragraph
 // Markdown node schemas (mdast compatible)
 export const TextNodeSchema = z.object({
   type: z.literal('text'),
-  value: z.string()
+  value: z.string(),
+  bold: z.boolean().optional()
 })
 
 export const HeadingNodeSchema = z.object({

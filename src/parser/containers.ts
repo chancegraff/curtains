@@ -29,6 +29,7 @@ interface MarkdownNode {
   ordered?: boolean
   start?: number
   spread?: boolean
+  bold?: boolean
 }
 
 export interface ContainerParseResult {
@@ -170,7 +171,8 @@ export function buildAST(
       case 'text':
         return TextNodeSchema.parse({
           type: 'text',
-          value: node.value
+          value: node.value,
+          bold: node.bold
         })
       
       case 'heading':
