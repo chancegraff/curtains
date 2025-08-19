@@ -199,7 +199,42 @@ html, body {
   margin-bottom: 1.5rem;
 }
 
-/* Responsive design handled by scale transform - no media queries needed */
+/* Responsive Design */
+@media (max-width: 768px) {
+  .curtains-content {
+    padding: 2rem;
+  }
+  
+  .curtains-slide h1 {
+    font-size: 3rem;
+  }
+  
+  .curtains-slide h2 {
+    font-size: 2.5rem;
+  }
+  
+  .curtains-slide h3 {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .curtains-content {
+    padding: 1.5rem;
+  }
+  
+  .curtains-slide h1 {
+    font-size: 2.5rem;
+  }
+  
+  .curtains-slide h2 {
+    font-size: 2rem;
+  }
+  
+  .curtains-slide h3 {
+    font-size: 1.75rem;
+  }
+}
 
 /* Column layout scaling */
 .columns {

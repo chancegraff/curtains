@@ -72,7 +72,7 @@ describe('Renderer', () => {
       expect(cssMatch).toBeTruthy()
       expect(cssMatch).toHaveLength(2) // Full match + capture group
       
-      const css = cssMatch![1]
+      const css = cssMatch?.[1] ?? ''
       expect(css).toBeDefined()
       expect(typeof css).toBe('string')
       

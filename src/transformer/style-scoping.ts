@@ -129,6 +129,11 @@ function scopeSelector(selector: string, slideIndex: number): string {
       return trimmed
     }
     
+    // Special handling for pseudo-elements (::before, ::after)
+    if (trimmed.startsWith('::')) {
+      return `${slideScope} ${trimmed}`
+    }
+    
     // Special handling for pseudo-selectors and combinators
     if (trimmed.startsWith(':') || trimmed.startsWith('>') || trimmed.startsWith('+') || trimmed.startsWith('~')) {
       return `${slideScope}${trimmed}`

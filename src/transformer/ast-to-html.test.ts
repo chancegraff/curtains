@@ -332,14 +332,14 @@ describe('astToHTML', () => {
                 ordered: false,
                 children: [
                   {
-                    type: 'listitem',
+                    type: 'listItem',
                     children: [{
                       type: 'paragraph',
                       children: [{ type: 'text', value: 'Item 1' }]
                     }]
                   },
                   {
-                    type: 'listitem',
+                    type: 'listItem',
                     children: [{
                       type: 'paragraph',
                       children: [{ type: 'text', value: 'Item 2' }]
