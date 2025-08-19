@@ -48,7 +48,8 @@ export const ImageNodeSchema = z.object({
   type: z.literal('image'),
   url: z.string(), // Allow any string for relative/local images
   alt: z.string().optional(),
-  title: z.string().optional()
+  title: z.string().optional(),
+  classes: z.array(z.string()).optional()
 })
 
 export const CodeNodeSchema = z.object({

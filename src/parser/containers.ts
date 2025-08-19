@@ -27,6 +27,7 @@ interface MarkdownNode {
   lang?: string
   meta?: string
   ordered?: boolean
+  classes?: string[]
   start?: number
   spread?: boolean
   bold?: boolean
@@ -283,7 +284,8 @@ export function buildAST(
           type: 'image',
           url: node.url,
           alt: node.alt,
-          title: node.title
+          title: node.title,
+          ...(node.classes && { classes: node.classes })
         })
       
       case 'code':

@@ -126,10 +126,10 @@ export function getRuntimeJS(): string {
           return;
         }
         
-        const stage = e.target.closest('.curtains-stage');
-        if (!stage) return;
+        const stageWrapper = e.target.closest('.curtains-stage-wrapper');
+        if (!stageWrapper) return;
         
-        const rect = stage.getBoundingClientRect();
+        const rect = stageWrapper.getBoundingClientRect();
         const clickX = e.clientX - rect.left;
         const centerX = rect.width / 2;
         

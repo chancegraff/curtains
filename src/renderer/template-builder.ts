@@ -28,8 +28,12 @@ ${params.css}
 </head>
 <body>
   <div class="curtains-root" data-theme="${params.runtimeConfig.theme}">
-    <div class="curtains-stage">
-      ${params.slidesHTML}
+    <div class="curtains-viewport">
+      <div class="curtains-stage-wrapper">
+        <div class="curtains-stage">
+          ${params.slidesHTML}
+        </div>
+      </div>
     </div>
     <div class="curtains-counter">1/${params.runtimeConfig.totalSlides}</div>
   </div>

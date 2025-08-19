@@ -69,6 +69,27 @@ html, body {
   position: relative;
   display: flex;
   flex-direction: column;
+  background-color: #000000;
+}
+
+/* Responsive viewport with 16:9 aspect ratio */
+.curtains-viewport {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #000000;
+}
+
+.curtains-stage-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: 177.78vh; /* 16:9 aspect ratio based on height */
+  max-height: 56.25vw; /* 16:9 aspect ratio based on width */
+  background-color: var(--curtains-bg-primary, #ffffff);
+  overflow: hidden;
 }
 
 .curtains-stage {
@@ -81,8 +102,8 @@ html, body {
 }
 
 .curtains-slide {
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   flex-shrink: 0;
   overflow: hidden;
   display: flex;

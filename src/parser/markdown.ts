@@ -13,6 +13,7 @@ interface MarkdownNode {
   start?: number
   spread?: boolean
   bold?: boolean
+  classes?: string[]
 }
 
 // Simple markdown parser for testing - handles basic markdown without external dependencies
@@ -216,13 +217,27 @@ function parseBasicMarkdown(content: string): MarkdownNode {
       continue
     }
     
-    // Parse images
-    const imageMatch = trimmed.match(/^!\[([^\]]*)\]\(([^)]+)\)$/)
+    // Parse images with optional classes: ![alt](url){.class1 .class2}
+    const imageMatch = trimmed.match(/^!\[([^\]]*)\]\(([^)]+)\)(?:\{([^}]*)\})?$/)
     if (imageMatch) {
+      const alt = imageMatch[1] ?? ''
+      const url = imageMatch[2] ?? ''
+      const classesStr = imageMatch[3]
+      
+      let classes: string[] | undefined
+      if (classesStr) {
+        // Parse class syntax: .class1 .class2 or class1 class2
+        classes = classesStr
+          .split(/\s+/)
+          .map(cls => cls.startsWith('.') ? cls.substring(1) : cls)
+          .filter(Boolean)
+      }
+      
       children.push({
         type: 'image',
-        alt: imageMatch[1] ?? '',
-        url: imageMatch[2] ?? ''
+        alt,
+        url,
+        ...(classes && classes.length > 0 && { classes })
       })
       i++
       continue

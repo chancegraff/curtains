@@ -110,7 +110,9 @@ function convertNodeToHTML(node: ASTNode): string {
     case 'image': {
       const src = (typedNode.url as string) ?? ''
       const alt = (typedNode.alt as string) ?? ''
-      return `<img src="${src}" alt="${alt}">`
+      const classes = typedNode.classes as string[] | undefined
+      const classAttr = classes && classes.length > 0 ? ` class="${classes.join(' ')}"` : ''
+      return `<img src="${src}" alt="${alt}"${classAttr}>`
     }
 
     case 'list': {

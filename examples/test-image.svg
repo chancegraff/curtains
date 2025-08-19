@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <!-- Background -->
+  <rect width="400" height="300" fill="#f0f4f8"/>
+  
+  <!-- Grid pattern -->
+  <defs>
+    <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="400" height="300" fill="url(#grid)"/>
+  
+  <!-- Central circle with gradient -->
+  <defs>
+    <linearGradient id="circleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <circle cx="200" cy="150" r="80" fill="url(#circleGradient)"/>
+  
+  <!-- Decorative elements -->
+  <rect x="50" y="50" width="60" height="60" fill="#48bb78" opacity="0.7" rx="8"/>
+  <rect x="290" y="190" width="60" height="60" fill="#ed8936" opacity="0.7" rx="8"/>
+  
+  <!-- Triangle -->
+  <path d="M 320 80 L 350 130 L 290 130 Z" fill="#38b2ac" opacity="0.7"/>
+  
+  <!-- Text -->
+  <text x="200" y="155" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="bold" fill="white" text-anchor="middle">
+    TEST IMAGE
+  </text>
+  
+  <!-- Small decorative dots -->
+  <circle cx="80" cy="220" r="8" fill="#9f7aea" opacity="0.6"/>
+  <circle cx="110" cy="240" r="5" fill="#4299e1" opacity="0.6"/>
+  <circle cx="320" cy="60" r="6" fill="#f687b3" opacity="0.6"/>
+</svg>
