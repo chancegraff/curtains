@@ -23,7 +23,14 @@ export function getRuntimeJS(): string {
     },
     
     goToSlide(index) {
-      const newIndex = Math.max(0, Math.min(index, this.total - 1));
+      // Implement wrap-around navigation
+      let newIndex = index;
+      if (newIndex >= this.total) {
+        newIndex = 0; // Wrap to first slide
+      } else if (newIndex < 0) {
+        newIndex = this.total - 1; // Wrap to last slide
+      }
+      
       if (newIndex === this.current) return;
       
       this.current = newIndex;

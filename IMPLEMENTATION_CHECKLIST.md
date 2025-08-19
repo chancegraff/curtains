@@ -28,13 +28,13 @@
 - [X] Embed runtime JavaScript
 
 ## Phase 5: Runtime Implementation
-- [ ] Update slide counter
-- [ ] Arrow key navigation
-- [ ] Click navigation
-- [ ] Wrap-around navigation
-- [ ] Fullscreen toggle (F key)
-- [ ] Test: Navigation works
-- [ ] Test: Counter updates
+- [X] Update slide counter
+- [X] Arrow key navigation
+- [X] Click navigation
+- [X] Wrap-around navigation
+- [X] Fullscreen toggle (F key)
+- [X] Test: Navigation works
+- [X] Test: Counter updates
 
 ## Phase 6: CLI Integration
 - [ ] Parse command arguments

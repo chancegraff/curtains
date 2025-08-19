@@ -104,7 +104,15 @@ describe('Runtime JavaScript', () => {
       expect(result).toContain('.curtains-stage')
       expect(result).toContain('translateX(')
       expect(result).toContain('this.current * 100')
-      expect(result).toContain('Math.max(0, Math.min(')
+    })
+
+    it('should include wrap-around navigation logic', () => {
+      const result = getRuntimeJS()
+
+      expect(result).toContain('if (newIndex >= this.total)')
+      expect(result).toContain('newIndex = 0; // Wrap to first slide')
+      expect(result).toContain('else if (newIndex < 0)')
+      expect(result).toContain('newIndex = this.total - 1; // Wrap to last slide')
     })
 
     it('should include counter updates', () => {

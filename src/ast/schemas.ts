@@ -39,13 +39,13 @@ export const ListItemNodeSchema = z.object({
 
 export const LinkNodeSchema = z.object({
   type: z.literal('link'),
-  url: z.string().url(),
+  url: z.string(), // Allow any string for internal/relative links
   children: z.array(z.lazy(() => ASTNodeSchema))
 })
 
 export const ImageNodeSchema = z.object({
   type: z.literal('image'),
-  url: z.string().url(),
+  url: z.string(), // Allow any string for relative/local images
   alt: z.string().optional(),
   title: z.string().optional()
 })

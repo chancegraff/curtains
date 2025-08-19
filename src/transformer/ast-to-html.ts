@@ -1,34 +1,30 @@
-import { CurtainsDocumentSchema } from '../ast/schemas.js'
+import { CurtainsASTSchema } from '../ast/schemas.js'
 import type {
-  CurtainsSlide,
+  CurtainsAST,
   ASTNode
 } from '../ast/types.js'
 
 /**
- * Converts CurtainsDocument to HTML string
- * @param doc - Validated CurtainsDocument
- * @returns HTML string with all slides
+ * Converts a slide AST to HTML string
+ * @param ast - Validated CurtainsAST for a single slide
+ * @returns HTML string for the slide content
  */
-export function astToHTML(doc: unknown): string {
-  // Validate document
-  const validatedDoc = CurtainsDocumentSchema.parse(doc)
+export function astToHTML(ast: unknown): string {
+  // Validate AST
+  const validatedAST = CurtainsASTSchema.parse(ast)
 
-  // Convert each slide to HTML
-  const slidesHtml = validatedDoc.slides.map(slide =>
-    `<div class="curtains-slide">${convertSlideToHTML(slide)}</div>`
-  ).join('\n')
-
-  return slidesHtml
+  // Convert AST to HTML
+  return convertASTToHTML(validatedAST)
 }
 
 /**
- * Converts a single slide to HTML
+ * Converts AST to HTML
  */
-function convertSlideToHTML(slide: CurtainsSlide): string {
+function convertASTToHTML(ast: CurtainsAST): string {
   // Process AST nodes
   const htmlParts: string[] = []
 
-  for (const node of slide.ast.children) {
+  for (const node of ast.children) {
     const html = convertNodeToHTML(node as ASTNode)
     if (html) {
       htmlParts.push(html)

@@ -1,5 +1,5 @@
-import { CurtainsDocumentSchema, TransformedDocumentSchema } from '../../src/ast/schemas.js'
-import type { TransformedDocument } from '../../src/ast/types.js'
+import { CurtainsDocumentSchema, TransformedDocumentSchema } from '../ast/schemas.js'
+import type { TransformedDocument } from '../ast/types.js'
 import { astToHTML } from './ast-to-html.js'
 import { scopeStyles } from './style-scoping.js'
 
