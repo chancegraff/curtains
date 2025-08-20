@@ -44,6 +44,45 @@ export interface ContainerParseResult {
 }
 
 /**
+ * Dedents content by removing common leading whitespace and cleans HTML div tags
+ * @param content - The content to dedent and clean
+ * @returns Cleaned and dedented content
+ */
+function dedentContent(content: string): string {
+  // First, remove HTML div tags that interfere with markdown parsing
+  let cleanedContent = content
+    .replace(/<\/?div[^>]*>/gi, '') // Remove all div tags (opening and closing)
+    .replace(/^\s*\n/, '') // Remove leading empty line
+    .replace(/\n\s*$/, '') // Remove trailing empty line
+  
+  const lines = cleanedContent.split('\n')
+  
+  // Find non-empty lines to determine minimum indentation
+  const nonEmptyLines = lines.filter(line => line.trim().length > 0)
+  if (nonEmptyLines.length === 0) {
+    return cleanedContent
+  }
+  
+  // Find minimum indentation level
+  const minIndent = Math.min(...nonEmptyLines.map(line => {
+    const match = line.match(/^(\s*)/)
+    return match && match[1] ? match[1].length : 0
+  }))
+  
+  // Remove the minimum indentation from all lines
+  if (minIndent > 0) {
+    cleanedContent = lines.map(line => {
+      if (line.trim().length === 0) {
+        return line // Keep empty lines as-is
+      }
+      return line.substring(minIndent)
+    }).join('\n')
+  }
+  
+  return cleanedContent
+}
+
+/**
  * Parses container tags in content and returns marked content with container placeholders
  * @param content - The content containing container tags
  * @returns Object with marked content and container map
@@ -115,7 +154,7 @@ export function parseContainers(content: string): ContainerParseResult {
       if (!container) continue
       
       // Process the container content recursively
-      const innerContent = container.contentLines.join('\n')
+      const innerContent = dedentContent(container.contentLines.join('\n'))
       const { marked: innerProcessed } = parseContainers(innerContent)
       
       // Create container node

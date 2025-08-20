@@ -820,6 +820,8 @@ Jane | 25 | LA
 
       it('should handle table without header separator', () => {
         // Arrange
+        // According to GFM spec, tables require header separator row
+        // This content should be parsed as paragraph text, not a table
         const content = `
 | Data 1 | Data 2 | Data 3 |
 | More 1 | More 2 | More 3 |
@@ -833,23 +835,21 @@ Jane | 25 | LA
           throw new Error('Expected children to be defined')
         }
 
-        const tableNode = result.children.find((child: TestASTNode) => child.type === 'table')
-        expect(tableNode).toBeDefined()
-
-        if (tableNode?.type === 'table' && tableNode.children) {
-          expect(tableNode.children).toHaveLength(2)
-          
-          // When no separator, first row should be treated as header
-          const firstRow = tableNode.children[0] as TestASTNode
-          const firstRowCells = firstRow.children as TestASTNode[]
-          
-          expect(firstRowCells[0]?.header).toBe(true)
-          expect(firstRowCells[0]?.children[0]?.value).toBe('Data 1')
+        // Should be parsed as paragraph, not table (GFM spec compliance)
+        const paragraphNode = result.children.find((child: TestASTNode) => child.type === 'paragraph')
+        expect(paragraphNode).toBeDefined()
+        
+        if (paragraphNode?.children && paragraphNode.children[0]) {
+          const textNode = paragraphNode.children[0] as TestASTNode
+          expect(textNode.type).toBe('text')
+          expect(textNode.value).toBe('| Data 1 | Data 2 | Data 3 |\n| More 1 | More 2 | More 3 |')
         }
       })
 
       it('should handle malformed table gracefully', () => {
         // Arrange
+        // According to GFM spec, malformed tables without header separator
+        // should be parsed as paragraph text, not as tables
         const content = `
 | Column 1 | Column 2
 | Data 1 | Data 2 | Data 3 |
@@ -863,18 +863,14 @@ Jane | 25 | LA
           throw new Error('Expected children to be defined')
         }
 
-        const tableNode = result.children.find((child: TestASTNode) => child.type === 'table')
-        expect(tableNode).toBeDefined()
-
-        if (tableNode?.type === 'table' && tableNode.children) {
-          expect(tableNode.children).toHaveLength(2)
-          
-          // Should still parse each row independently
-          const firstRow = tableNode.children[0] as TestASTNode
-          expect(firstRow.children).toHaveLength(2)
-          
-          const secondRow = tableNode.children[1] as TestASTNode
-          expect(secondRow.children).toHaveLength(3)
+        // Should be parsed as paragraph, not table (GFM spec compliance)
+        const paragraphNode = result.children.find((child: TestASTNode) => child.type === 'paragraph')
+        expect(paragraphNode).toBeDefined()
+        
+        if (paragraphNode?.children && paragraphNode.children[0]) {
+          const textNode = paragraphNode.children[0] as TestASTNode
+          expect(textNode.type).toBe('text')
+          expect(textNode.value).toBe('| Column 1 | Column 2\n| Data 1 | Data 2 | Data 3 |')
         }
       })
     })

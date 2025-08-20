@@ -1,3 +1,11 @@
+// Markdown parser implementation using remark/unified ecosystem
+// Replaces the previous custom markdown parser with a more robust solution
+// while maintaining compatibility with the existing AST structure and container system
+
+import { unified } from 'unified'
+import remarkParse from 'remark-parse'
+import remarkGfm from 'remark-gfm'
+
 // Type for markdown nodes
 interface MarkdownNode {
   type: string
@@ -49,66 +57,336 @@ function sanitizeImgAttributes(imgTagMatch: string): { src: string; alt: string;
   return result
 }
 
-// Simple markdown parser for testing - handles basic markdown without external dependencies
-function parseBasicMarkdown(content: string): MarkdownNode {
-  // Handle container placeholders that might span multiple lines
-  // Use a more sophisticated approach to handle nested placeholders
-  function extractContainerPlaceholders(text: string): string[] {
-    const placeholders: string[] = []
-    let index = 0
-    
-    while (index < text.length) {
-      const start = text.indexOf('{{CONTAINER:', index)
-      if (start === -1) break
-      
-      // Find the matching closing }}
-      let braceCount = 1 // Start with 1 to account for the opening {{
-      let end = start + 12 // length of '{{CONTAINER:'
-      
-      // Skip to the content part (after the colon following the container ID)
-      let colonCount = 0
-      while (end < text.length && colonCount < 1) {
-        if (text[end] === ':') {
-          colonCount++
-        }
-        end++
+/**
+ * Custom remark plugin to handle container placeholders and HTML img tags
+ */
+function remarkCurtainsPlugin() {
+  return function transformer(tree: any) {
+    visit(tree, handleNode)
+  }
+
+  function visit(node: any, handler: (node: any, parent?: any) => void) {
+    handler(node)
+    if (node.children) {
+      for (const child of node.children) {
+        child.parent = node // Set parent reference
+        visit(child, handler)
       }
-      
-      
-      // Now count braces to find the matching closing }}
-      while (end < text.length) {
-        if (text.substring(end, end + 2) === '{{') {
-          braceCount++
-          end += 2
-        } else if (text.substring(end, end + 2) === '}}') {
-          braceCount--
-          if (braceCount === 0) {
-            // This is our closing brace
-            end += 2
-            break
-          } else {
-            end += 2
-          }
-        } else {
-          end++
-        }
-      }
-      
-      placeholders.push(text.substring(start, end))
-      index = end
+    }
+  }
+
+  function handleNode(node: any) {
+    // Handle container placeholders in text nodes
+    if (node.type === 'text' && node.value && node.value.includes('{{CONTAINER:')) {
+      // Keep container placeholders as-is for later processing
+      return
     }
     
-    return placeholders
+    // Handle HTML img tags in both text and html nodes
+    if ((node.type === 'text' || node.type === 'html') && node.value) {
+      const htmlImgPattern = /<img[^>]*>/gi
+      let match
+      let lastIndex = 0
+      const newNodes: any[] = []
+      
+      while ((match = htmlImgPattern.exec(node.value)) !== null) {
+        // Add text before img tag
+        if (match.index > lastIndex) {
+          const beforeText = node.value.substring(lastIndex, match.index)
+          if (beforeText.trim()) {
+            newNodes.push({ type: 'text', value: beforeText })
+          }
+        }
+        
+        // Add img node
+        const sanitized = sanitizeImgAttributes(match[0])
+        const imgNode: any = {
+          type: 'image',
+          url: sanitized.src,
+          alt: sanitized.alt
+        }
+        if (sanitized.classes && sanitized.classes.length > 0) {
+          imgNode.classes = sanitized.classes
+        }
+        newNodes.push(imgNode)
+        
+        lastIndex = match.index + match[0].length
+      }
+      
+      // If we found HTML img tags, replace the text node
+      if (newNodes.length > 0) {
+        // Add remaining text
+        if (lastIndex < node.value.length) {
+          const remainingText = node.value.substring(lastIndex)
+          if (remainingText.trim()) {
+            newNodes.push({ type: 'text', value: remainingText })
+          }
+        }
+        
+        // Replace in parent
+        if (node.parent && node.parent.children) {
+          const nodeIndex = node.parent.children.indexOf(node)
+          if (nodeIndex !== -1) {
+            node.parent.children.splice(nodeIndex, 1, ...newNodes)
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Converts mdast node to our MarkdownNode format
+ */
+function convertMdastNode(node: any): MarkdownNode {
+  const result: MarkdownNode = {
+    type: node.type
   }
   
-  const placeholders = extractContainerPlaceholders(content)
+  // Handle specific node types
+  switch (node.type) {
+    case 'root':
+      result.children = node.children?.map(convertMdastNode).filter(Boolean) ?? []
+      break
+      
+    case 'heading':
+      result.depth = node.depth
+      result.children = node.children?.map(convertMdastNode) ?? []
+      break
+      
+    case 'paragraph':
+      result.children = node.children?.map(convertMdastNode) ?? []
+      // If paragraph contains only a single image, return just the image for backwards compatibility
+      if (result.children && result.children.length === 1 && result.children[0]?.type === 'image') {
+        return result.children[0]
+      }
+      break
+      
+    case 'text':
+      result.value = node.value
+      break
+      
+    case 'strong':
+      // Convert strong to text with bold flag for compatibility
+      if (node.children && node.children.length === 1 && node.children[0].type === 'text') {
+        result.type = 'text'
+        result.value = node.children[0].value
+        result.bold = true
+      } else {
+        result.children = node.children?.map(convertMdastNode) ?? []
+      }
+      break
+      
+    case 'emphasis':
+      // Convert emphasis to children for now (italic not in current schema)
+      result.children = node.children?.map(convertMdastNode) ?? []
+      break
+      
+    case 'link':
+      result.url = node.url
+      result.children = node.children?.map(convertMdastNode) ?? []
+      break
+      
+    case 'image':
+      result.url = node.url
+      result.alt = node.alt || ''
+      if (node.classes) {
+        result.classes = node.classes
+      }
+      break
+      
+    case 'list':
+      result.ordered = node.ordered || false
+      result.children = node.children?.map(convertMdastNode) ?? []
+      break
+      
+    case 'listItem':
+      result.children = node.children?.map(convertMdastNode) ?? []
+      break
+      
+    case 'code':
+      result.value = node.value
+      if (node.lang) {
+        result.lang = node.lang
+      }
+      break
+      
+    case 'table':
+      // Transfer alignment from table to cells
+      const tableAlign = node.align as ('left' | 'center' | 'right')[] | undefined
+      result.children = node.children?.map((rowNode: any) => {
+        if (rowNode.type === 'tableRow') {
+          const convertedRow = convertMdastNode(rowNode)
+          // Apply alignment to cells in this row
+          if (convertedRow.children && tableAlign) {
+            convertedRow.children = convertedRow.children.map((cell: any, index: number) => {
+              if (cell.type === 'tableCell' && tableAlign[index]) {
+                cell.align = tableAlign[index]
+              }
+              return cell
+            })
+          }
+          return convertedRow
+        }
+        return convertMdastNode(rowNode)
+      }) ?? []
+      break
+      
+    case 'tableRow':
+      result.children = node.children?.map(convertMdastNode) ?? []
+      break
+      
+    case 'tableCell':
+      result.children = node.children?.map(convertMdastNode) ?? []
+      // Handle table cell properties from mdast
+      if (node.align) {
+        (result as any).align = node.align
+      }
+      // For GFM tables, first row cells are typically headers
+      // This is handled by the table processing logic
+      break
+      
+    default:
+      // For unknown nodes, try to preserve children
+      if (node.children) {
+        result.children = node.children.map(convertMdastNode)
+      }
+      if (node.value !== undefined) {
+        result.value = node.value
+      }
+      break
+  }
   
+  return result
+}
+
+/**
+ * Processes markdown with remark and converts to our AST format
+ */
+function parseWithRemark(content: string): MarkdownNode {
+  // First, handle container placeholders by preserving them in the content
+  let processedContent = content
+  
+  // Skip container closing tags  
+  processedContent = processedContent.replace(/^\s*<\/container>\s*$/gm, '')
+  
+  // Handle standalone HTML img tags on their own lines
+  processedContent = processedContent.replace(/^\s*(<img[^>]*>)\s*$/gm, (_match, imgTag) => {
+    // Keep as HTML for our plugin to handle instead of converting to markdown
+    return imgTag
+  })
+  
+  const processor = unified()
+    .use(remarkParse)
+    .use(remarkGfm) // Add GFM support for tables
+    .use(remarkCurtainsPlugin)
+  
+  const tree = processor.parse(processedContent)
+  const transformedTree = processor.runSync(tree)
+  
+  // Post-process for table headers (GFM tables need special handling)
+  const result = convertMdastNode(transformedTree)
+  return postProcessTables(result)
+}
+
+/**
+ * Post-processes tables to ensure proper header detection
+ */
+function postProcessTables(node: MarkdownNode): MarkdownNode {
+  if (node.type === 'table' && node.children && node.children.length > 0) {
+    // Mark first row cells as headers if they aren't already
+    const firstRow = node.children[0]
+    if (firstRow && firstRow.type === 'tableRow' && firstRow.children) {
+      for (const cell of firstRow.children) {
+        if (cell.type === 'tableCell') {
+          (cell as any).header = true
+        }
+      }
+    }
+    
+    // Process all table cells to ensure empty cells have proper structure
+    for (const row of node.children) {
+      if (row && row.type === 'tableRow' && row.children) {
+        for (const cell of row.children) {
+          if (cell && cell.type === 'tableCell') {
+            // Ensure empty cells have at least one text node with empty value
+            if (!cell.children || cell.children.length === 0) {
+              cell.children = [{ type: 'text', value: '' }]
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  // Recursively process children
+  if (node.children) {
+    node.children = node.children.map(postProcessTables)
+  }
+  
+  return node
+}
+
+/**
+ * Enhanced container placeholder extraction that handles nested containers
+ */
+function extractContainerPlaceholders(text: string): string[] {
+  const placeholders: string[] = []
+  let index = 0
+  
+  while (index < text.length) {
+    const start = text.indexOf('{{CONTAINER:', index)
+    if (start === -1) break
+    
+    // Find the matching closing }}
+    let braceCount = 1 // Start with 1 to account for the opening {{
+    let end = start + 12 // length of '{{CONTAINER:'
+    
+    // Skip to the content part (after the colon following the container ID)
+    let colonCount = 0
+    while (end < text.length && colonCount < 1) {
+      if (text[end] === ':') {
+        colonCount++
+      }
+      end++
+    }
+    
+    // Now count braces to find the matching closing }}
+    while (end < text.length) {
+      if (text.substring(end, end + 2) === '{{') {
+        braceCount++
+        end += 2
+      } else if (text.substring(end, end + 2) === '}}') {
+        braceCount--
+        if (braceCount === 0) {
+          // This is our closing brace
+          end += 2
+          break
+        } else {
+          end += 2
+        }
+      } else {
+        end++
+      }
+    }
+    
+    placeholders.push(text.substring(start, end))
+    index = end
+  }
+  
+  return placeholders
+}
+
+/**
+ * Handles container placeholders by processing them as separate markdown content
+ */
+function handleContainerPlaceholders(content: string): MarkdownNode {
+  const placeholders = extractContainerPlaceholders(content)
   
   // Check if content is just a single container placeholder
   const trimmedContent = content.trim()
   if (trimmedContent.startsWith('{{CONTAINER:') && trimmedContent.endsWith('}}')) {
     // Need to verify this is actually a single placeholder, not multiple
-    // Count the number of container placeholders to be sure
     if (placeholders.length === 1) {
       // This is truly a single container placeholder
       // Return it as a paragraph so buildAST can process it
@@ -127,15 +405,13 @@ function parseBasicMarkdown(content: string): MarkdownNode {
     const children: MarkdownNode[] = []
     let remainingContent = content
     
-    
     for (const placeholder of placeholders) {
       const index = remainingContent.indexOf(placeholder)
       if (index !== -1) {
-        
         // Add content before placeholder
         const beforeContent = remainingContent.substring(0, index).trim()
         if (beforeContent) {
-          const beforeAST = parseBasicMarkdown(beforeContent)
+          const beforeAST = parseWithRemark(beforeContent)
           if (beforeAST.children) {
             children.push(...beforeAST.children)
           }
@@ -155,7 +431,7 @@ function parseBasicMarkdown(content: string): MarkdownNode {
     // Add any remaining content
     const afterContent = remainingContent.trim()
     if (afterContent) {
-      const afterAST = parseBasicMarkdown(afterContent)
+      const afterAST = parseWithRemark(afterContent)
       if (afterAST.children) {
         children.push(...afterAST.children)
       }
@@ -167,324 +443,25 @@ function parseBasicMarkdown(content: string): MarkdownNode {
     }
   }
   
-  const lines = content.split('\n')
-  const children: MarkdownNode[] = []
-  
-  let i = 0
-  while (i < lines.length) {
-    const line = lines[i] ?? ''
-    const trimmed = line.trim()
-    
-    // Skip empty lines except in code blocks
-    if (trimmed === '') {
-      i++
-      continue
-    }
-    
-    // Parse code blocks (triple backticks)
-    if (trimmed.startsWith('```')) {
-      const langMatch = trimmed.match(/^```(.*)$/)
-      const lang = langMatch?.[1]?.trim() || undefined
-      const codeLines: string[] = []
-      i++ // Move past opening ```
-      
-      // Collect code lines until closing ``` (preserve exact formatting)
-      while (i < lines.length) {
-        const codeLine = lines[i] ?? ''
-        if (codeLine.trim() === '```') {
-          break // Found closing ```
-        }
-        codeLines.push(codeLine)
-        i++
-      }
-      
-      // Add code block node
-      children.push({
-        type: 'code',
-        value: codeLines.join('\n'),
-        ...(lang && { lang })
-      })
-      
-      i++ // Move past closing ```
-      continue
-    }
-    
-    // Parse tables (pipe syntax)
-    if (trimmed.includes('|')) {
-      const tableRows: MarkdownNode[] = []
-      let currentIndex = i
-      let alignments: ('left' | 'center' | 'right')[] = []
-      
-      // Collect consecutive table rows
-      while (currentIndex < lines.length) {
-        const tableLine = lines[currentIndex]?.trim() ?? ''
-        if (!tableLine.includes('|')) break
-        
-        // Check if this is a separator row (|---|---|)
-        const separatorMatch = tableLine.match(/^\|?[\s\-:]+\|[\s\-:|]*\|?$/)
-        if (separatorMatch) {
-          // Parse alignment from separator row
-          alignments = tableLine.split('|')
-            .filter(cell => cell.trim())
-            .map(cell => {
-              const trimmed = cell.trim()
-              if (trimmed.startsWith(':') && trimmed.endsWith(':')) return 'center'
-              if (trimmed.endsWith(':')) return 'right'
-              return 'left'
-            })
-          currentIndex++
-          continue
-        }
-        
-        // Parse table row
-        const cells = tableLine.split('|')
-          .filter((cell, index) => {
-            // Filter out empty cells at start/end that are just from leading/trailing |
-            if (index === 0 || index === tableLine.split('|').length - 1) {
-              return cell.trim() !== ''
-            }
-            return true
-          })
-          .map((cell, cellIndex) => {
-            const cellContent = cell.trim()
-            const isHeader = tableRows.length === 0 && alignments.length === 0
-            const align = alignments[cellIndex]
-            
-            return {
-              type: 'tableCell' as const,
-              ...(isHeader && { header: true }),
-              ...(align && { align }),
-              children: cellContent ? parseInlineText(cellContent) : [{ type: 'text' as const, value: '' }]
-            }
-          })
-        
-        if (cells.length > 0) {
-          tableRows.push({
-            type: 'tableRow',
-            children: cells
-          })
-        }
-        
-        currentIndex++
-      }
-      
-      if (tableRows.length > 0) {
-        children.push({
-          type: 'table',
-          children: tableRows
-        })
-        i = currentIndex
-        continue
-      }
-    }
-    
-    // Parse headings
-    const headingMatch = trimmed.match(/^(#{1,6})\s+(.+)$/)
-    if (headingMatch) {
-      children.push({
-        type: 'heading',
-        depth: headingMatch[1]?.length ?? 1,
-        children: [{ type: 'text', value: headingMatch[2] ?? '' }]
-      })
-      i++
-      continue
-    }
-    
-    // Parse unordered lists
-    if (trimmed.startsWith('- ')) {
-      const listItems = []
-      let currentIndex = i
-      
-      while (currentIndex < lines.length && (lines[currentIndex]?.trim().startsWith('- ') === true)) {
-        const listItemText = lines[currentIndex]?.trim().substring(2) ?? ''
-        listItems.push({
-          type: 'listItem',
-          children: [
-            {
-              type: 'paragraph',
-              children: parseInlineText(listItemText)
-            }
-          ]
-        })
-        currentIndex++
-      }
-      
-      if (listItems.length > 0) {
-        children.push({
-          type: 'list',
-          ordered: false,
-          children: listItems
-        })
-      }
-      
-      // Update i to point to the next unprocessed line
-      i = currentIndex
-      continue
-    }
-    
-    // Parse ordered lists
-    const orderedMatch = trimmed.match(/^(\d+)\.\s+(.+)$/)
-    if (orderedMatch) {
-      const listItems = []
-      let currentIndex = i
-      
-      while (currentIndex < lines.length && lines[currentIndex]?.trim().match(/^\d+\.\s+/)) {
-        const itemMatch = lines[currentIndex]?.trim().match(/^\d+\.\s+(.+)$/)
-        if (itemMatch) {
-          listItems.push({
-            type: 'listItem',
-            children: [
-              {
-                type: 'paragraph',
-                children: parseInlineText(itemMatch[1] ?? '')
-              }
-            ]
-          })
-        }
-        currentIndex++
-      }
-      
-      if (listItems.length > 0) {
-        children.push({
-          type: 'list',
-          ordered: true,
-          children: listItems
-        })
-      }
-      
-      // Update i to point to the next unprocessed line
-      i = currentIndex
-      continue
-    }
-    
-    // Parse standard markdown images: ![alt](url)
-    const imageMatch = trimmed.match(/^!\[([^\]]*)\]\(([^)]+)\)$/)
-    if (imageMatch) {
-      const alt = imageMatch[1] ?? ''
-      const url = imageMatch[2] ?? ''
-      
-      children.push({
-        type: 'image',
-        alt,
-        url
-      })
-      i++
-      continue
-    }
-    
-    // Parse HTML img tags on their own line
-    const htmlImgMatch = trimmed.match(/^<img[^>]*>$/i)
-    if (htmlImgMatch) {
-      const sanitized = sanitizeImgAttributes(htmlImgMatch[0])
-      children.push({
-        type: 'image',
-        url: sanitized.src,
-        alt: sanitized.alt,
-        ...(sanitized.classes && sanitized.classes.length > 0 && { classes: sanitized.classes })
-      })
-      i++
-      continue
-    }
-    
-    // Skip container closing tags
-    if (trimmed === '</container>') {
-      i++
-      continue
-    }
-    
-    // Parse regular paragraphs (including those with links and formatting)
-    if (trimmed !== '' && !trimmed.startsWith('#') && !trimmed.startsWith('- ') && orderedMatch === null && imageMatch === null && htmlImgMatch === null) {
-      children.push({
-        type: 'paragraph',
-        children: parseInlineText(trimmed)
-      })
-    }
-    
-    i++
-  }
-  
-  const result = {
-    type: 'root',
-    children
-  }
-  
-  
-  return result
+  // No container placeholders, use regular remark parsing
+  return parseWithRemark(content)
 }
 
 /**
- * Parses inline text with formatting (bold, links, HTML img tags, etc.)
- * @param text - The text to parse inline formatting
- * @returns Array of MarkdownNode children
+ * Legacy function kept for compatibility - now delegates to remark-based parser
  */
-function parseInlineText(text: string): MarkdownNode[] {
-  const children: MarkdownNode[] = []
-  let currentIndex = 0
-  
-  // Combined regex for bold, links, and HTML img tags
-  const formatRegex = /(\*\*([^*]+)\*\*)|(\[([^\]]+)\]\(([^)]+)\))|(<img[^>]*>)/gi
-  let match
-  
-  while ((match = formatRegex.exec(text)) !== null) {
-    // Add text before the match
-    if (match.index > currentIndex) {
-      const beforeText = text.substring(currentIndex, match.index)
-      if (beforeText) {
-        children.push({
-          type: 'text',
-          value: beforeText
-        })
-      }
-    }
-    
-    // Check if it's bold (**text**)
-    if (match[1] && match[2]) {
-      children.push({
-        type: 'text',
-        value: match[2],
-        bold: true
-      })
-    }
-    // Check if it's a link [text](url)
-    else if (match[3] && match[4] && match[5]) {
-      children.push({
-        type: 'link',
-        url: match[5],
-        children: [{ type: 'text', value: match[4] }]
-      })
-    }
-    // Check if it's an HTML img tag
-    else if (match[6]) {
-      const imgTagMatch = match[6]
-      const sanitized = sanitizeImgAttributes(imgTagMatch)
-      children.push({
-        type: 'image',
-        url: sanitized.src,
-        alt: sanitized.alt,
-        ...(sanitized.classes && sanitized.classes.length > 0 && { classes: sanitized.classes })
-      })
-    }
-    
-    currentIndex = match.index + match[0].length
-  }
-  
-  // Add remaining text
-  if (currentIndex < text.length) {
-    const remainingText = text.substring(currentIndex)
-    if (remainingText) {
-      children.push({
-        type: 'text',
-        value: remainingText
-      })
-    }
-  }
-  
-  // If no formatting found, just return as text
-  if (children.length === 0) {
-    children.push({ type: 'text', value: text })
-  }
-  
-  return children
+export function parseBasicMarkdown(content: string): MarkdownNode {
+  return handleContainerPlaceholders(content)
+}
+
+/**
+ * Legacy inline text parser - kept for backwards compatibility only
+ * New implementation uses remark's built-in text processing
+ */
+export function parseInlineText(text: string): MarkdownNode[] {
+  // Legacy implementation - kept for backwards compatibility
+  // New remark-based parser handles inline formatting automatically
+  return [{ type: 'text', value: text }]
 }
 
 /**
@@ -493,6 +470,6 @@ function parseInlineText(text: string): MarkdownNode[] {
  * @returns AST representation of the markdown
  */
 export function parseMarkdown(content: string): MarkdownNode {
-  // Use basic markdown parser for Jest compatibility
-  return parseBasicMarkdown(content)
+  // Use remark-based parser with container support
+  return handleContainerPlaceholders(content)
 }
