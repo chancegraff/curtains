@@ -10,6 +10,11 @@ Curtains is a powerful presentation builder that converts extended Markdown file
 
 Curtains transforms simple Markdown-based presentation files into beautiful, interactive HTML presentations. It extends standard Markdown with layout containers and CSS styling capabilities, making it easy to create professional presentations without complex tools.
 
+
+<p align="center">
+  <img src="./docs/example.svg" />
+</p>
+
 ### Key Features
 
 - **Extended Markdown Support**: Full CommonMark support with additional presentation features
