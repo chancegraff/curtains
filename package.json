@@ -1,6 +1,6 @@
 {
   "name": "curtains",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -38,8 +38,29 @@
     "type": "git",
     "url": "https://github.com/chancegraff/curtains.git"
   },
-  "keywords": [],
-  "description": "",
+  "keywords": [
+        "presentation",
+    "slides",
+    "markdown",
+    "slideshow",
+    "html",
+    "static-site-generator",
+    "markdown-to-html",
+    "cli",
+    "presentation-tool",
+    "markdown-slides",
+    "curtains",
+    "keynote",
+    "powerpoint",
+    "reveal-alternative",
+    "self-contained",
+    "offline-presentations",
+    "markdown-converter",
+    "slide-deck",
+    "public-speaking",
+    "conference-talks"
+  ],
+  "description": "Build beautiful HTML presentations from Markdown with custom styling, containers, and keyboard navigation",
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/node": "^24.3.0",
