@@ -1,7 +1,7 @@
 // Template Builder Tests
 // Tests for complete HTML document assembly
 
-import { describe, it, expect } from '@jest/globals'
+import { describe, it, expect } from 'vitest'
 import { buildCompleteHTML } from './template-builder.js'
 
 describe('Template Builder', () => {

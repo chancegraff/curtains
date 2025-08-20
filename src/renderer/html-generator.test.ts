@@ -1,7 +1,7 @@
 // HTML Generator Tests
 // Tests for HTML slide structure generation
 
-import { describe, it, expect } from '@jest/globals'
+import { describe, it, expect } from 'vitest'
 import { buildSlidesHTML } from './html-generator.js'
 import type { TransformedDocument } from '../ast/types.js'
 

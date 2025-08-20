@@ -1,13 +1,12 @@
 // CSS Merger Tests
 // Tests for CSS merging functionality with proper cascade order
 
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { readFile } from 'fs/promises'
 import { mergeCSS, getBaseLayoutCSS } from './css-merger.js'
 
 // Mock fs/promises
-jest.mock('fs/promises')
-const mockedReadFile = readFile as jest.MockedFunction<typeof readFile>
+vi.mock('fs/promises')
 
 describe('CSS Merger', () => {
   const mockTemplateCSS = `
@@ -28,11 +27,11 @@ describe('CSS Merger', () => {
   `.trim()
 
   beforeEach(() => {
-    mockedReadFile.mockResolvedValue(mockTemplateCSS)
+    vi.mocked(readFile).mockResolvedValue(mockTemplateCSS)
   })
 
   afterEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   describe('mergeCSS function', () => {
@@ -161,7 +160,7 @@ describe('CSS Merger', () => {
 
       // Theme doesn't directly affect CSS merging logic,
       // but should be accepted without error
-      expect(mockedReadFile).toHaveBeenCalledTimes(1)
+      expect(vi.mocked(readFile)).toHaveBeenCalledTimes(1)
     })
 
     it('should read template from correct path', async () => {
@@ -171,14 +170,14 @@ describe('CSS Merger', () => {
         theme: 'light'
       })
 
-      expect(mockedReadFile).toHaveBeenCalledWith(
+      expect(vi.mocked(readFile)).toHaveBeenCalledWith(
         expect.stringMatching(/src[/\\]templates[/\\]style\.css$/),
         'utf-8'
       )
     })
 
     it('should handle file read errors gracefully', async () => {
-      mockedReadFile.mockRejectedValueOnce(new Error('File not found'))
+      vi.mocked(readFile).mockRejectedValueOnce(new Error('File not found'))
 
       await expect(mergeCSS({
         globalCSS: '',

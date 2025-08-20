@@ -1,7 +1,7 @@
 // Renderer Tests
 // Tests for Phase 4 implementation
 
-import { describe, it, expect, beforeEach } from '@jest/globals'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { render } from './index.js'
 import type { TransformedDocument } from '../ast/types.js'
 import type { BuildOptions } from '../config/types.js'

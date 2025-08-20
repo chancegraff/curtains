@@ -1,7 +1,7 @@
 // Renderer Schemas Tests
 // Tests for renderer-specific Zod validation schemas
 
-import { describe, it, expect } from '@jest/globals'
+import { describe, it, expect } from 'vitest'
 import { RuntimeConfigSchema, HTMLOutputSchema } from './schemas.js'
 import type { RuntimeConfig } from './schemas.js'
 

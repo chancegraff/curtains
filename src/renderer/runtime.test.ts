@@ -1,7 +1,7 @@
 // Runtime JavaScript Tests
 // Tests for runtime JavaScript generation
 
-import { describe, it, expect } from '@jest/globals'
+import { describe, it, expect } from 'vitest'
 import { getRuntimeJS } from './runtime.js'
 
 describe('Runtime JavaScript', () => {

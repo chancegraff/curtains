@@ -1,4 +1,4 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import { astToHTML } from './ast-to-html';
 import { CurtainsDocument, ContainerNode } from '../ast/types';
 

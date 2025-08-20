@@ -2,7 +2,8 @@
 // Handles CSS merging in correct cascade order
 
 import { readFile } from 'fs/promises'
-import { join } from 'path'
+import { join, dirname } from 'path'
+import { fileURLToPath } from 'url'
 
 /**
  * Task 2: Merge CSS in correct order
@@ -14,8 +15,9 @@ export async function mergeCSS(params: {
   theme: 'light' | 'dark'
 }): Promise<string> {
   // Load base styles from template
-  // Note: Using relative path from project root
-  const templatePath = join(process.cwd(), 'src', 'templates', 'style.css')
+  // Get the directory of this module to resolve the template path correctly
+  const __dirname = dirname(fileURLToPath(import.meta.url))
+  const templatePath = join(__dirname, '..', 'templates', 'style.css')
   const baseCSS = await readFile(templatePath, 'utf-8')
 
   // Get base layout styles (these go before theme variables)
