@@ -179,6 +179,7 @@ html, body {
 .curtains-slide ol {
   margin-bottom: 1.5rem;
   padding-left: 2rem;
+  font-size: 1.75rem;
 }
 
 .curtains-slide li {

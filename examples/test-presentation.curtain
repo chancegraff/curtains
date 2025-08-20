@@ -89,17 +89,17 @@ fibonacci(100)
 <container class="columns">
   <div>
     ### Tables in Containers
-    
+
     | Language | Type | Year |
     |:---------|:-----|-----:|
     | JavaScript | Dynamic | 1995 |
     | Python | Dynamic | 1991 |
     | Rust | Static | 2010 |
   </div>
-  
+
   <div>
     ### Code in Containers
-    
+
     ```bash
     # Build and run
     npm install
