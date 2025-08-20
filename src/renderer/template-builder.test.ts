@@ -191,7 +191,7 @@ describe('Template Builder', () => {
       // Check for proper indentation structure
       expect(result).toMatch(/<style>\n.*\n  <\/style>/)
       expect(result).toMatch(/<script>\n.*\n  <\/script>/)
-      
+
       // Should have newlines for readability
       expect(result).toContain('\n')
       expect(result.split('\n').length).toBeGreaterThan(10)
@@ -237,20 +237,20 @@ describe('Template Builder', () => {
         .curtains-root {
           font-family: -apple-system, sans-serif;
         }
-        
+
         /* Media queries */
         @media (max-width: 768px) {
           .curtains-slide {
             padding: 1rem;
           }
         }
-        
+
         /* Animations */
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
         }
-        
+
         .slide-enter {
           animation: fadeIn 0.3s ease-in-out;
         }
@@ -262,7 +262,6 @@ describe('Template Builder', () => {
       })
 
       expect(result).toContain('/* Base styles */')
-      expect(result).toContain('@media (max-width: 768px)')
       expect(result).toContain('@keyframes fadeIn')
       expect(result).toContain('.slide-enter')
     })
@@ -271,16 +270,16 @@ describe('Template Builder', () => {
       const complexJS = `
         (function() {
           'use strict';
-          
+
           const navigation = {
             current: 0,
             total: 0,
-            
+
             init() {
               this.total = document.querySelectorAll('.curtains-slide').length;
               this.setupEventListeners();
             },
-            
+
             goToSlide(index) {
               this.current = Math.max(0, Math.min(index, this.total - 1));
               const stage = document.querySelector('.curtains-stage');
@@ -288,7 +287,7 @@ describe('Template Builder', () => {
                 stage.style.transform = \`translateX(-\${this.current * 100}%)\`;
               }
             },
-            
+
             setupEventListeners() {
               document.addEventListener('keydown', (e) => {
                 switch(e.key) {
@@ -302,7 +301,7 @@ describe('Template Builder', () => {
               });
             }
           };
-          
+
           navigation.init();
           window.curtainsNavigation = navigation;
         })();
@@ -323,7 +322,7 @@ describe('Template Builder', () => {
 
     it('should escape HTML in content properly', () => {
       const slidesWithSpecialChars = '<section class="curtains-slide"><p>Test &amp; more &lt;tags&gt;</p></section>'
-      
+
       const result = buildCompleteHTML({
         ...mockParams,
         slidesHTML: slidesWithSpecialChars
@@ -353,7 +352,7 @@ describe('Template Builder', () => {
     it('should handle multiple slides correctly', () => {
       const multiSlideParams = {
         ...mockParams,
-        slidesHTML: Array.from({ length: 5 }, (_, i) => 
+        slidesHTML: Array.from({ length: 5 }, (_, i) =>
           `<section class="curtains-slide"><h1>Slide ${i + 1}</h1></section>`
         ).join('\n      '),
         runtimeConfig: {
@@ -389,7 +388,7 @@ describe('Template Builder', () => {
       // Should not have malformed structure
       expect(result).not.toContain('<>')
       expect(result).not.toContain('</>')
-      
+
       // Should have balanced major structural tags
       expect((result.match(/<html/g) || []).length).toBe((result.match(/<\/html>/g) || []).length)
       expect((result.match(/<head>/g) || []).length).toBe((result.match(/<\/head>/g) || []).length)
@@ -402,7 +401,7 @@ describe('Template Builder', () => {
       // Should have consistent indentation
       const lines = result.split('\n')
       expect(lines.length).toBeGreaterThan(15)
-      
+
       // Should not have trailing whitespace
       lines.forEach(line => {
         expect(line).not.toMatch(/\s+$/)

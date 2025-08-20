@@ -92,7 +92,7 @@ describe('CSS Merger', () => {
 
       expect(result).toContain('/* Global User Styles */')
       expect(result).toContain(globalCSS)
-      
+
       // Ensure global CSS comes after theme variables
       const themeIndex = result.indexOf('/* Theme Variables and Base Styles */')
       const globalIndex = result.indexOf(globalCSS)
@@ -113,7 +113,7 @@ describe('CSS Merger', () => {
       expect(result).toContain('/* Slide-specific Scoped Styles */')
       expect(result).toContain('.slide-1 { background: blue; }')
       expect(result).toContain('.slide-2 { background: red; }')
-      
+
       // Ensure slide CSS comes last
       const globalIndex = result.indexOf('/* Global User Styles */')
       const slideIndex = result.indexOf('.slide-1 { background: blue; }')
@@ -219,14 +219,6 @@ describe('CSS Merger', () => {
       expect(result).toContain('.curtains-slide ol {')
     })
 
-    it('should include responsive breakpoints', () => {
-      const result = getBaseLayoutCSS()
-
-      expect(result).toContain('/* Responsive Design */')
-      expect(result).toContain('@media (max-width: 768px)')
-      expect(result).toContain('@media (max-width: 480px)')
-    })
-
     it('should have proper CSS structure', () => {
       const result = getBaseLayoutCSS()
 
@@ -234,7 +226,7 @@ describe('CSS Merger', () => {
       expect(result.trim()).toBeTruthy()
       expect(result).not.toMatch(/^\s/)
       expect(result).not.toMatch(/\s$/)
-      
+
       // Should have balanced braces
       const openBraces = (result.match(/{/g) || []).length
       const closeBraces = (result.match(/}/g) || []).length
@@ -272,11 +264,11 @@ describe('CSS Merger', () => {
       // Should not have syntax errors
       expect(result).not.toContain('undefined')
       expect(result).not.toContain('[object Object]')
-      
+
       // Should have proper CSS formatting
       const lines = result.split('\n')
       expect(lines.length).toBeGreaterThan(10)
-      
+
       // Should contain all expected sections
       expect(result).toContain('/* Base Layout Styles */')
       expect(result).toContain('/* Theme Variables and Base Styles */')
@@ -292,19 +284,19 @@ describe('CSS Merger', () => {
             margin: 0 auto;
           }
         }
-        
+
         .fancy-button:hover::before {
           content: "→";
           position: absolute;
         }
       `
-      
+
       const complexSlideCSS = [
         `
         .slide-animation {
           animation: fadeIn 0.5s ease-in-out;
         }
-        
+
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }

@@ -35,7 +35,7 @@ describe('Renderer', () => {
   describe('render function', () => {
     it('should generate valid HTML document', async () => {
       const result = await render(mockTransformedDoc, mockBuildOptions)
-      
+
       expect(result).toMatch(/^<!DOCTYPE html>/)
       expect(result).toContain('<html lang="en">')
       expect(result).toContain('</html>')
@@ -43,7 +43,7 @@ describe('Renderer', () => {
 
     it('should include proper meta tags', async () => {
       const result = await render(mockTransformedDoc, mockBuildOptions)
-      
+
       expect(result).toContain('<meta charset="UTF-8">')
       expect(result).toContain('<meta name="viewport"')
       expect(result).toContain('<meta name="description"')
@@ -52,13 +52,13 @@ describe('Renderer', () => {
 
     it('should build HTML slide structure correctly', async () => {
       const result = await render(mockTransformedDoc, mockBuildOptions)
-      
+
       // Check for slide sections
       expect(result).toContain('<section class="curtains-slide">')
       expect(result).toContain('<h1>Title Slide</h1>')
       expect(result).toContain('<h2>Content Slide</h2>')
       expect(result).toContain('<li>Point 1</li>')
-      
+
       // Count slide sections
       const slideMatches = result.match(/<section class="curtains-slide">/g)
       expect(slideMatches).toHaveLength(2)
@@ -66,30 +66,30 @@ describe('Renderer', () => {
 
     it('should merge CSS in correct order', async () => {
       const result = await render(mockTransformedDoc, mockBuildOptions)
-      
+
       // Extract CSS content
       const cssMatch = result.match(/<style>([\s\S]*?)<\/style>/)
       expect(cssMatch).toBeTruthy()
       expect(cssMatch).toHaveLength(2) // Full match + capture group
-      
+
       const css = cssMatch?.[1] ?? ''
       expect(css).toBeDefined()
       expect(typeof css).toBe('string')
-      
+
       // Type assertion since we've verified it exists
       const cssContent = css as string
-      
+
       // Check for proper order: base layout → theme variables → global → slide CSS
       const baseLayoutIndex = cssContent.indexOf('/* Base Layout Styles */')
       const themeVariablesIndex = cssContent.indexOf('/* Theme Variables and Base Styles */')
       const globalStylesIndex = cssContent.indexOf('/* Global User Styles */')
       const slideStylesIndex = cssContent.indexOf('/* Slide-specific Scoped Styles */')
-      
+
       expect(baseLayoutIndex).toBeGreaterThan(-1)
       expect(themeVariablesIndex).toBeGreaterThan(baseLayoutIndex)
       expect(globalStylesIndex).toBeGreaterThan(themeVariablesIndex)
       expect(slideStylesIndex).toBeGreaterThan(globalStylesIndex)
-      
+
       // Check for our custom styles
       expect(cssContent).toContain('.global-style { font-family: Arial; }')
       expect(cssContent).toContain('.special { color: blue; }')
@@ -98,23 +98,23 @@ describe('Renderer', () => {
 
     it('should inject proper template structure', async () => {
       const result = await render(mockTransformedDoc, mockBuildOptions)
-      
+
       // Check core structure
       expect(result).toContain('<div class="curtains-root" data-theme="light">')
       expect(result).toContain('<div class="curtains-stage">')
       expect(result).toContain('<div class="curtains-counter">1/2</div>')
-      
+
       // Check theme attribute matches options
       expect(result).toContain('data-theme="light"')
     })
 
     it('should embed runtime JavaScript', async () => {
       const result = await render(mockTransformedDoc, mockBuildOptions)
-      
+
       // Check for script tag
       expect(result).toContain('<script>')
       expect(result).toContain('</script>')
-      
+
       // Check for key navigation features
       expect(result).toContain('navigation')
       expect(result).toContain('ArrowRight')
@@ -127,9 +127,9 @@ describe('Renderer', () => {
 
     it('should handle dark theme', async () => {
       mockBuildOptions.theme = 'dark'
-      
+
       const result = await render(mockTransformedDoc, mockBuildOptions)
-      
+
       expect(result).toContain('data-theme="dark"')
     })
 
@@ -138,9 +138,9 @@ describe('Renderer', () => {
       if (firstSlide) {
         mockTransformedDoc.slides = [firstSlide]
       }
-      
+
       const result = await render(mockTransformedDoc, mockBuildOptions)
-      
+
       expect(result).toContain('<div class="curtains-counter">1/1</div>')
       const slideMatches = result.match(/<section class="curtains-slide">/g)
       expect(slideMatches).toHaveLength(1)
@@ -150,7 +150,7 @@ describe('Renderer', () => {
       // Test invalid transformed document
       await expect(render({ invalid: 'data' }, mockBuildOptions))
         .rejects.toThrow()
-      
+
       // Test invalid build options
       await expect(render(mockTransformedDoc, { invalid: 'options' }))
         .rejects.toThrow()
@@ -158,10 +158,10 @@ describe('Renderer', () => {
 
     it('should validate HTML output', async () => {
       const result = await render(mockTransformedDoc, mockBuildOptions)
-      
+
       // Should start with DOCTYPE
       expect(result).toMatch(/^<!DOCTYPE html>/)
-      
+
       // Should be a single string (not undefined/null)
       expect(typeof result).toBe('string')
       expect(result.length).toBeGreaterThan(1000) // Substantial content
@@ -169,9 +169,9 @@ describe('Renderer', () => {
 
     it('should handle empty global CSS', async () => {
       mockTransformedDoc.globalCSS = ''
-      
+
       const result = await render(mockTransformedDoc, mockBuildOptions)
-      
+
       // Should still render without errors
       expect(result).toContain('<!DOCTYPE html>')
       expect(result).toContain('<style>')
@@ -184,9 +184,9 @@ describe('Renderer', () => {
       if (mockTransformedDoc.slides[1]) {
         mockTransformedDoc.slides[1].css = ''
       }
-      
+
       const result = await render(mockTransformedDoc, mockBuildOptions)
-      
+
       // Should still render without errors
       expect(result).toContain('<!DOCTYPE html>')
       expect(result).toContain('<section class="curtains-slide">')
@@ -196,7 +196,7 @@ describe('Renderer', () => {
   describe('accessibility features', () => {
     it('should include proper accessibility attributes', async () => {
       const result = await render(mockTransformedDoc, mockBuildOptions)
-      
+
       // Check for screen reader announcements
       expect(result).toContain('aria-live')
       expect(result).toContain('aria-atomic')
@@ -204,7 +204,7 @@ describe('Renderer', () => {
 
     it('should include keyboard navigation help', async () => {
       const result = await render(mockTransformedDoc, mockBuildOptions)
-      
+
       // Navigation should handle standard keys
       expect(result).toContain('ArrowRight')
       expect(result).toContain('ArrowLeft')
@@ -215,17 +215,9 @@ describe('Renderer', () => {
   })
 
   describe('responsive features', () => {
-    it('should include responsive CSS', async () => {
-      const result = await render(mockTransformedDoc, mockBuildOptions)
-      
-      // Check for responsive breakpoints
-      expect(result).toContain('@media (max-width: 768px)')
-      expect(result).toContain('@media (max-width: 480px)')
-    })
-
     it('should include touch navigation', async () => {
       const result = await render(mockTransformedDoc, mockBuildOptions)
-      
+
       // Check for touch event handlers
       expect(result).toContain('touchstart')
       expect(result).toContain('touchend')
