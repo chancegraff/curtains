@@ -18,9 +18,10 @@ interface MarkdownNode {
   lang?: string
   meta?: string
   ordered?: boolean
+  italic?: boolean
+  bold?: boolean
   start?: number
   spread?: boolean
-  bold?: boolean
   classes?: string[]
 }
 
@@ -178,8 +179,31 @@ function convertMdastNode(node: any): MarkdownNode {
       break
       
     case 'emphasis':
-      // Convert emphasis to children for now (italic not in current schema)
-      result.children = node.children?.map(convertMdastNode) ?? []
+      // Handle emphasis by extracting text and marking as italic
+      if (node.children && node.children.length === 1 && node.children[0].type === 'text') {
+        // Single text child - convert to italic text node
+        result.type = 'text'
+        result.value = node.children[0].value
+        result.italic = true
+      } else {
+        // Multiple children - need to handle recursively
+        result.type = 'paragraph'
+        result.children = node.children?.map((child: any) => {
+          if (child.type === 'text') {
+            return {
+              type: 'text',
+              value: child.value,
+              italic: true
+            }
+          }
+          const converted = convertMdastNode(child)
+          // Mark nested text nodes as italic
+          if (converted.type === 'text') {
+            converted.italic = true
+          }
+          return converted
+        }) ?? []
+      }
       break
       
     case 'link':

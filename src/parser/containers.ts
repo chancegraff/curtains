@@ -34,6 +34,7 @@ interface MarkdownNode {
   start?: number
   spread?: boolean
   bold?: boolean
+  italic?: boolean
   header?: boolean
   align?: 'left' | 'center' | 'right'
 }
@@ -217,7 +218,8 @@ export function buildAST(
         return TextNodeSchema.parse({
           type: 'text',
           value: node.value,
-          bold: node.bold
+          bold: node.bold,
+          italic: node.italic
         })
       
       case 'heading':

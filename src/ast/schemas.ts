@@ -13,7 +13,8 @@ export const NodeTypeSchema = z.enum(['root', 'container', 'heading', 'paragraph
 export const TextNodeSchema = z.object({
   type: z.literal('text'),
   value: z.string(),
-  bold: z.boolean().optional()
+  bold: z.boolean().optional(),
+  italic: z.boolean().optional()
 })
 
 export const HeadingNodeSchema = z.object({
