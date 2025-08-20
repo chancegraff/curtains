@@ -111,6 +111,34 @@ Content here
 More content
 ```
 
+### Styling
+
+**Global styles** - Place `<style>` tags before the first `===` to apply styles to all slides:
+
+```markdown
+<style>
+body { font-family: 'Inter', sans-serif; }
+h1 { color: #333; }
+</style>
+
+===
+# This heading uses the global styles
+```
+
+**Slide-scoped styles** - Place `<style>` tags within a slide (after `===`) to style only that slide:
+
+```markdown
+===
+
+# Special Slide
+
+<style>
+/* Only affects this slide */
+.slide-container { background: linear-gradient(to right, #667eea, #764ba2); }
+h1 { color: white; }
+</style>
+```
+
 ### Containers
 
 Use containers for advanced layouts:
