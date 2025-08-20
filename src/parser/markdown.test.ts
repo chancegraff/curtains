@@ -204,6 +204,32 @@ describe('Parser - Markdown Parsing', () => {
       expect((result.children[2] as TestASTNode).type).toBe('heading')
     })
 
+    it('should handle multiple containers separated by whitespace without creating empty paragraphs', () => {
+      // Arrange - This specific case was causing empty <p> elements before the fix
+      const content = `{{CONTAINER:container_0:## First Container}}   {{CONTAINER:container_1:## Second Container}}`
+
+      // Act
+      const result = parseMarkdown(content)
+
+      // Assert
+      expect(result.children).toHaveLength(2)
+      
+      if (!result.children) {
+        throw new Error('Expected children to be defined')
+      }
+      
+      // Both children should be paragraph nodes containing container placeholders
+      expect((result.children[0] as TestASTNode).type).toBe('paragraph')
+      expect((result.children[1] as TestASTNode).type).toBe('paragraph')
+      
+      // Verify the content of each paragraph
+      const firstParagraph = result.children[0] as TestASTNode
+      const secondParagraph = result.children[1] as TestASTNode
+      
+      expect(firstParagraph.children[0]?.value).toBe('{{CONTAINER:container_0:## First Container}}')
+      expect(secondParagraph.children[0]?.value).toBe('{{CONTAINER:container_1:## Second Container}}')
+    })
+
     it('should skip container closing tags', () => {
       // Arrange
       const content = `

@@ -107,14 +107,18 @@ function parseBasicMarkdown(content: string): MarkdownNode {
   // Check if content is just a single container placeholder
   const trimmedContent = content.trim()
   if (trimmedContent.startsWith('{{CONTAINER:') && trimmedContent.endsWith('}}')) {
-    // This is likely a complete container placeholder
-    // Return it as a paragraph so buildAST can process it
-    return {
-      type: 'root',
-      children: [{
-        type: 'paragraph',
-        children: [{ type: 'text', value: trimmedContent }]
-      }]
+    // Need to verify this is actually a single placeholder, not multiple
+    // Count the number of container placeholders to be sure
+    if (placeholders.length === 1) {
+      // This is truly a single container placeholder
+      // Return it as a paragraph so buildAST can process it
+      return {
+        type: 'root',
+        children: [{
+          type: 'paragraph',
+          children: [{ type: 'text', value: trimmedContent }]
+        }]
+      }
     }
   }
   
