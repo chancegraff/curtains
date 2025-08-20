@@ -387,4 +387,286 @@ describe('astToHTML', () => {
       expect(html).toContain('italic');
     });
   });
+
+  describe('table transformation', () => {
+    it('should convert table with headers to HTML', () => {
+      const doc: CurtainsDocument = {
+        type: 'curtains-document',
+        version: '0.1',
+        slides: [{
+          type: 'curtains-slide',
+          index: 0,
+          ast: {
+            type: 'root',
+            children: [{
+              type: 'table',
+              children: [
+                {
+                  type: 'tableRow',
+                  children: [
+                    {
+                      type: 'tableCell',
+                      header: true,
+                      children: [{ type: 'text', value: 'Name' }]
+                    },
+                    {
+                      type: 'tableCell',
+                      header: true,
+                      children: [{ type: 'text', value: 'Age' }]
+                    }
+                  ]
+                },
+                {
+                  type: 'tableRow',
+                  children: [
+                    {
+                      type: 'tableCell',
+                      children: [{ type: 'text', value: 'John' }]
+                    },
+                    {
+                      type: 'tableCell',
+                      children: [{ type: 'text', value: '30' }]
+                    }
+                  ]
+                }
+              ]
+            }]
+          },
+          slideCSS: ''
+        }],
+        globalCSS: ''
+      };
+      
+      const html = astToHTML(doc);
+      expect(html).toContain('<table>');
+      expect(html).toContain('<thead>');
+      expect(html).toContain('<tbody>');
+      expect(html).toContain('<th>Name</th>');
+      expect(html).toContain('<th>Age</th>');
+      expect(html).toContain('<td>John</td>');
+      expect(html).toContain('<td>30</td>');
+    });
+
+    it('should convert table without headers to HTML', () => {
+      const doc: CurtainsDocument = {
+        type: 'curtains-document',
+        version: '0.1',
+        slides: [{
+          type: 'curtains-slide',
+          index: 0,
+          ast: {
+            type: 'root',
+            children: [{
+              type: 'table',
+              children: [
+                {
+                  type: 'tableRow',
+                  children: [
+                    {
+                      type: 'tableCell',
+                      children: [{ type: 'text', value: 'Data 1' }]
+                    },
+                    {
+                      type: 'tableCell',
+                      children: [{ type: 'text', value: 'Data 2' }]
+                    }
+                  ]
+                },
+                {
+                  type: 'tableRow',
+                  children: [
+                    {
+                      type: 'tableCell',
+                      children: [{ type: 'text', value: 'More 1' }]
+                    },
+                    {
+                      type: 'tableCell',
+                      children: [{ type: 'text', value: 'More 2' }]
+                    }
+                  ]
+                }
+              ]
+            }]
+          },
+          slideCSS: ''
+        }],
+        globalCSS: ''
+      };
+      
+      const html = astToHTML(doc);
+      expect(html).toContain('<table>');
+      expect(html).toContain('<tbody>');
+      expect(html).not.toContain('<thead>');
+      expect(html).not.toContain('<th>');
+      expect(html).toContain('<td>Data 1</td>');
+      expect(html).toContain('<td>Data 2</td>');
+    });
+
+    it('should handle table cell alignment', () => {
+      const doc: CurtainsDocument = {
+        type: 'curtains-document',
+        version: '0.1',
+        slides: [{
+          type: 'curtains-slide',
+          index: 0,
+          ast: {
+            type: 'root',
+            children: [{
+              type: 'table',
+              children: [{
+                type: 'tableRow',
+                children: [
+                  {
+                    type: 'tableCell',
+                    align: 'left',
+                    children: [{ type: 'text', value: 'Left' }]
+                  },
+                  {
+                    type: 'tableCell',
+                    align: 'center',
+                    children: [{ type: 'text', value: 'Center' }]
+                  },
+                  {
+                    type: 'tableCell',
+                    align: 'right',
+                    children: [{ type: 'text', value: 'Right' }]
+                  }
+                ]
+              }]
+            }]
+          },
+          slideCSS: ''
+        }],
+        globalCSS: ''
+      };
+      
+      const html = astToHTML(doc);
+      expect(html).not.toContain('style="text-align: left"'); // Left alignment is default, no style needed
+      expect(html).toContain('style="text-align: center"');
+      expect(html).toContain('style="text-align: right"');
+    });
+
+    it('should handle tables with inline formatting in cells', () => {
+      const doc: CurtainsDocument = {
+        type: 'curtains-document',
+        version: '0.1',
+        slides: [{
+          type: 'curtains-slide',
+          index: 0,
+          ast: {
+            type: 'root',
+            children: [{
+              type: 'table',
+              children: [{
+                type: 'tableRow',
+                children: [
+                  {
+                    type: 'tableCell',
+                    children: [
+                      { type: 'text', value: 'bold', bold: true }
+                    ]
+                  },
+                  {
+                    type: 'tableCell',
+                    children: [{
+                      type: 'link',
+                      url: 'https://example.com',
+                      children: [{ type: 'text', value: 'link' }]
+                    }]
+                  }
+                ]
+              }]
+            }]
+          },
+          slideCSS: ''
+        }],
+        globalCSS: ''
+      };
+      
+      const html = astToHTML(doc);
+      expect(html).toContain('<strong>bold</strong>');
+      expect(html).toContain('<a href="https://example.com"');
+      expect(html).toContain('target="_blank"');
+    });
+  });
+
+  describe('code block transformation', () => {
+    it('should convert code blocks with language to HTML', () => {
+      const doc: CurtainsDocument = {
+        type: 'curtains-document',
+        version: '0.1',
+        slides: [{
+          type: 'curtains-slide',
+          index: 0,
+          ast: {
+            type: 'root',
+            children: [{
+              type: 'code',
+              lang: 'typescript',
+              value: 'interface User {\n  name: string;\n  age: number;\n}'
+            }]
+          },
+          slideCSS: ''
+        }],
+        globalCSS: ''
+      };
+      
+      const html = astToHTML(doc);
+      expect(html).toContain('<pre><code class="language-typescript">');
+      expect(html).toContain('interface User {');
+      expect(html).toContain('name: string;');
+      expect(html).toContain('age: number;');
+    });
+
+    it('should convert code blocks without language to HTML', () => {
+      const doc: CurtainsDocument = {
+        type: 'curtains-document',
+        version: '0.1',
+        slides: [{
+          type: 'curtains-slide',
+          index: 0,
+          ast: {
+            type: 'root',
+            children: [{
+              type: 'code',
+              value: 'plain text code'
+            }]
+          },
+          slideCSS: ''
+        }],
+        globalCSS: ''
+      };
+      
+      const html = astToHTML(doc);
+      expect(html).toContain('<pre><code>');
+      expect(html).not.toContain('class="language-');
+      expect(html).toContain('plain text code');
+    });
+
+    it('should escape HTML in code blocks', () => {
+      const doc: CurtainsDocument = {
+        type: 'curtains-document',
+        version: '0.1',
+        slides: [{
+          type: 'curtains-slide',
+          index: 0,
+          ast: {
+            type: 'root',
+            children: [{
+              type: 'code',
+              lang: 'html',
+              value: '<div class="example">Hello & Goodbye</div>'
+            }]
+          },
+          slideCSS: ''
+        }],
+        globalCSS: ''
+      };
+      
+      const html = astToHTML(doc);
+      expect(html).toContain('&lt;div class=&quot;example&quot;&gt;');
+      expect(html).toContain('Hello &amp; Goodbye');
+      expect(html).toContain('&lt;/div&gt;');
+    });
+  });
 });

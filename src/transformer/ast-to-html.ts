@@ -146,6 +146,42 @@ function convertNodeToHTML(node: ASTNode): string {
       return `<pre><code${langClass}>${escapeHtml(value)}</code></pre>`
     }
 
+    case 'table': {
+      const children = typedNode.children as ASTNode[] | undefined
+      if (!children || children.length === 0) return ''
+      
+      const rows = children.map(convertNodeToHTML)
+      
+      // Check if first row contains header cells
+      const firstRow = children[0] as Record<string, unknown>
+      const hasHeader = firstRow?.children && Array.isArray(firstRow.children) &&
+        (firstRow.children as Record<string, unknown>[]).some(cell => cell.header === true)
+      
+      if (hasHeader) {
+        const headerRow = rows[0]
+        const bodyRows = rows.slice(1)
+        return `<table><thead>${headerRow}</thead>${bodyRows.length > 0 ? `<tbody>${bodyRows.join('')}</tbody>` : ''}</table>`
+      } else {
+        return `<table><tbody>${rows.join('')}</tbody></table>`
+      }
+    }
+
+    case 'tableRow': {
+      const children = typedNode.children as ASTNode[] | undefined
+      const cells = children?.map(convertNodeToHTML).join('') ?? ''
+      return `<tr>${cells}</tr>`
+    }
+
+    case 'tableCell': {
+      const children = typedNode.children as ASTNode[] | undefined
+      const content = children?.map(convertNodeToHTML).join('') ?? ''
+      const isHeader = typedNode.header === true
+      const align = typedNode.align as string | undefined
+      const tag = isHeader ? 'th' : 'td'
+      const alignStyle = align && align !== 'left' ? ` style="text-align: ${align}"` : ''
+      return `<${tag}${alignStyle}>${content}</${tag}>`
+    }
+
     default:
       // For any unhandled node types, try to process children
       if ('children' in typedNode && Array.isArray(typedNode.children)) {

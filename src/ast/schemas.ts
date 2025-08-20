@@ -7,7 +7,7 @@ import { z } from 'zod'
 const VersionSchema = z.literal('0.1')
 
 // Base node types schema
-export const NodeTypeSchema = z.enum(['root', 'container', 'heading', 'paragraph', 'list', 'listItem', 'link', 'image', 'code', 'text'])
+export const NodeTypeSchema = z.enum(['root', 'container', 'heading', 'paragraph', 'list', 'listItem', 'link', 'image', 'code', 'text', 'table', 'tableRow', 'tableCell'])
 
 // Markdown node schemas (mdast compatible)
 export const TextNodeSchema = z.object({
@@ -58,6 +58,24 @@ export const CodeNodeSchema = z.object({
   lang: z.string().optional()
 })
 
+// Table node schemas
+export const TableCellNodeSchema = z.object({
+  type: z.literal('tableCell'),
+  header: z.boolean().optional(),
+  align: z.enum(['left', 'center', 'right']).optional(),
+  children: z.array(z.lazy(() => ASTNodeSchema))
+})
+
+export const TableRowNodeSchema = z.object({
+  type: z.literal('tableRow'),
+  children: z.array(z.lazy(() => ASTNodeSchema))
+})
+
+export const TableNodeSchema = z.object({
+  type: z.literal('table'),
+  children: z.array(z.lazy(() => ASTNodeSchema))
+})
+
 // Container node schema (Curtains-specific)
 export const ContainerNodeSchema = z.object({
   type: z.literal('container'),
@@ -75,7 +93,10 @@ export const ASTNodeSchema: z.ZodType = z.union([
   ListItemNodeSchema,
   LinkNodeSchema,
   ImageNodeSchema,
-  CodeNodeSchema
+  CodeNodeSchema,
+  TableNodeSchema,
+  TableRowNodeSchema,
+  TableCellNodeSchema
 ])
 
 // Root AST schema

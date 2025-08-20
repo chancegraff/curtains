@@ -9,7 +9,10 @@ import {
   ListItemNodeSchema,
   LinkNodeSchema,
   ImageNodeSchema,
-  CodeNodeSchema
+  CodeNodeSchema,
+  TableNodeSchema,
+  TableRowNodeSchema,
+  TableCellNodeSchema
 } from '../ast/schemas.js'
 import type { ContainerNode, ASTNode } from '../ast/types.js'
 import { validateClassName, validateNestingDepth } from './validate.js'
@@ -31,6 +34,8 @@ interface MarkdownNode {
   start?: number
   spread?: boolean
   bold?: boolean
+  header?: boolean
+  align?: 'left' | 'center' | 'right'
 }
 
 export interface ContainerParseResult {
@@ -293,6 +298,26 @@ export function buildAST(
           type: 'code',
           value: node.value,
           lang: node.lang
+        })
+      
+      case 'table':
+        return TableNodeSchema.parse({
+          type: 'table',
+          children: node.children ? node.children.flatMap((child: MarkdownNode) => convertNode(child)) : []
+        })
+      
+      case 'tableRow':
+        return TableRowNodeSchema.parse({
+          type: 'tableRow',
+          children: node.children ? node.children.flatMap((child: MarkdownNode) => convertNode(child)) : []
+        })
+      
+      case 'tableCell':
+        return TableCellNodeSchema.parse({
+          type: 'tableCell',
+          ...(node.header !== undefined && { header: node.header }),
+          ...(node.align !== undefined && { align: node.align }),
+          children: node.children ? node.children.flatMap((child: MarkdownNode) => convertNode(child)) : []
         })
       
       default:

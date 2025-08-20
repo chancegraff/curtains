@@ -163,13 +163,116 @@ function parseBasicMarkdown(content: string): MarkdownNode {
     }
   }
   
-  const lines = content.split('\n').filter(line => line.trim())
+  const lines = content.split('\n')
   const children: MarkdownNode[] = []
   
   let i = 0
   while (i < lines.length) {
     const line = lines[i] ?? ''
     const trimmed = line.trim()
+    
+    // Skip empty lines except in code blocks
+    if (trimmed === '') {
+      i++
+      continue
+    }
+    
+    // Parse code blocks (triple backticks)
+    if (trimmed.startsWith('```')) {
+      const langMatch = trimmed.match(/^```(.*)$/)
+      const lang = langMatch?.[1]?.trim() || undefined
+      const codeLines: string[] = []
+      i++ // Move past opening ```
+      
+      // Collect code lines until closing ``` (preserve exact formatting)
+      while (i < lines.length) {
+        const codeLine = lines[i] ?? ''
+        if (codeLine.trim() === '```') {
+          break // Found closing ```
+        }
+        codeLines.push(codeLine)
+        i++
+      }
+      
+      // Add code block node
+      children.push({
+        type: 'code',
+        value: codeLines.join('\n'),
+        ...(lang && { lang })
+      })
+      
+      i++ // Move past closing ```
+      continue
+    }
+    
+    // Parse tables (pipe syntax)
+    if (trimmed.includes('|')) {
+      const tableRows: MarkdownNode[] = []
+      let currentIndex = i
+      let alignments: ('left' | 'center' | 'right')[] = []
+      
+      // Collect consecutive table rows
+      while (currentIndex < lines.length) {
+        const tableLine = lines[currentIndex]?.trim() ?? ''
+        if (!tableLine.includes('|')) break
+        
+        // Check if this is a separator row (|---|---|)
+        const separatorMatch = tableLine.match(/^\|?[\s\-:]+\|[\s\-:|]*\|?$/)
+        if (separatorMatch) {
+          // Parse alignment from separator row
+          alignments = tableLine.split('|')
+            .filter(cell => cell.trim())
+            .map(cell => {
+              const trimmed = cell.trim()
+              if (trimmed.startsWith(':') && trimmed.endsWith(':')) return 'center'
+              if (trimmed.endsWith(':')) return 'right'
+              return 'left'
+            })
+          currentIndex++
+          continue
+        }
+        
+        // Parse table row
+        const cells = tableLine.split('|')
+          .filter((cell, index) => {
+            // Filter out empty cells at start/end that are just from leading/trailing |
+            if (index === 0 || index === tableLine.split('|').length - 1) {
+              return cell.trim() !== ''
+            }
+            return true
+          })
+          .map((cell, cellIndex) => {
+            const cellContent = cell.trim()
+            const isHeader = tableRows.length === 0 && alignments.length === 0
+            const align = alignments[cellIndex]
+            
+            return {
+              type: 'tableCell' as const,
+              ...(isHeader && { header: true }),
+              ...(align && { align }),
+              children: cellContent ? parseInlineText(cellContent) : [{ type: 'text' as const, value: '' }]
+            }
+          })
+        
+        if (cells.length > 0) {
+          tableRows.push({
+            type: 'tableRow',
+            children: cells
+          })
+        }
+        
+        currentIndex++
+      }
+      
+      if (tableRows.length > 0) {
+        children.push({
+          type: 'table',
+          children: tableRows
+        })
+        i = currentIndex
+        continue
+      }
+    }
     
     // Parse headings
     const headingMatch = trimmed.match(/^(#{1,6})\s+(.+)$/)

@@ -433,5 +433,424 @@ Paragraph content
       expect(paragraph?.type).toBe('paragraph')
       expect(paragraph.children[0]?.value).toContain('<img')
     })
+
+    describe('Code Blocks', () => {
+      it('should parse basic code blocks without language', () => {
+        // Arrange
+        const content = `
+\`\`\`
+const hello = 'world'
+console.log(hello)
+\`\`\`
+`
+
+        // Act
+        const result = parseMarkdown(content)
+
+        // Assert
+        if (!result.children) {
+          throw new Error('Expected children to be defined')
+        }
+
+        const codeNode = result.children.find((child: TestASTNode) => child.type === 'code')
+        expect(codeNode).toBeDefined()
+
+        if (codeNode?.type === 'code') {
+          expect(codeNode.value).toBe(`const hello = 'world'\nconsole.log(hello)`)
+          expect(codeNode.lang).toBeUndefined()
+        }
+      })
+
+      it('should parse code blocks with language identifier', () => {
+        // Arrange
+        const content = `
+\`\`\`javascript
+function greet(name) {
+  return \`Hello, \${name}!\`
+}
+\`\`\`
+`
+
+        // Act
+        const result = parseMarkdown(content)
+
+        // Assert
+        if (!result.children) {
+          throw new Error('Expected children to be defined')
+        }
+
+        const codeNode = result.children.find((child: TestASTNode) => child.type === 'code')
+        expect(codeNode).toBeDefined()
+
+        if (codeNode?.type === 'code') {
+          expect(codeNode.value).toBe(`function greet(name) {\n  return \`Hello, \${name}!\`\n}`)
+          expect(codeNode.lang).toBe('javascript')
+        }
+      })
+
+      it('should preserve indentation in code blocks', () => {
+        // Arrange
+        const content = `
+\`\`\`python
+def factorial(n):
+    if n <= 1:
+        return 1
+    else:
+        return n * factorial(n - 1)
+\`\`\`
+`
+
+        // Act
+        const result = parseMarkdown(content)
+
+        // Assert
+        if (!result.children) {
+          throw new Error('Expected children to be defined')
+        }
+
+        const codeNode = result.children.find((child: TestASTNode) => child.type === 'code')
+        expect(codeNode).toBeDefined()
+
+        if (codeNode?.type === 'code') {
+          expect(codeNode.value).toBe(`def factorial(n):\n    if n <= 1:\n        return 1\n    else:\n        return n * factorial(n - 1)`)
+          expect(codeNode.lang).toBe('python')
+        }
+      })
+
+      it('should handle empty code blocks', () => {
+        // Arrange
+        const content = `
+\`\`\`
+\`\`\`
+`
+
+        // Act
+        const result = parseMarkdown(content)
+
+        // Assert
+        if (!result.children) {
+          throw new Error('Expected children to be defined')
+        }
+
+        const codeNode = result.children.find((child: TestASTNode) => child.type === 'code')
+        expect(codeNode).toBeDefined()
+
+        if (codeNode?.type === 'code') {
+          expect(codeNode.value).toBe('')
+          expect(codeNode.lang).toBeUndefined()
+        }
+      })
+
+      it('should handle code blocks with empty lines', () => {
+        // Arrange
+        const content = `
+\`\`\`typescript
+interface User {
+  name: string
+
+  age: number
+}
+\`\`\`
+`
+
+        // Act
+        const result = parseMarkdown(content)
+
+        // Assert
+        if (!result.children) {
+          throw new Error('Expected children to be defined')
+        }
+
+        const codeNode = result.children.find((child: TestASTNode) => child.type === 'code')
+        expect(codeNode).toBeDefined()
+
+        if (codeNode?.type === 'code') {
+          expect(codeNode.value).toBe(`interface User {\n  name: string\n\n  age: number\n}`)
+          expect(codeNode.lang).toBe('typescript')
+        }
+      })
+
+      it('should handle unclosed code blocks gracefully', () => {
+        // Arrange
+        const content = `
+\`\`\`javascript
+const unclosed = 'code block'
+# This should not be a heading
+`
+
+        // Act
+        const result = parseMarkdown(content)
+
+        // Assert
+        if (!result.children) {
+          throw new Error('Expected children to be defined')
+        }
+
+        const codeNode = result.children.find((child: TestASTNode) => child.type === 'code')
+        expect(codeNode).toBeDefined()
+
+        if (codeNode?.type === 'code' && codeNode.value) {
+          expect(codeNode.value.trim()).toBe(`const unclosed = 'code block'\n# This should not be a heading`)
+          expect(codeNode.lang).toBe('javascript')
+        }
+      })
+    })
+
+    describe('Tables', () => {
+      it('should parse basic table without alignment', () => {
+        // Arrange
+        const content = `
+| Name | Age | City |
+|------|-----|------|
+| John | 30 | NYC |
+| Jane | 25 | LA |
+`
+
+        // Act
+        const result = parseMarkdown(content)
+
+        // Assert
+        if (!result.children) {
+          throw new Error('Expected children to be defined')
+        }
+
+        const tableNode = result.children.find((child: TestASTNode) => child.type === 'table')
+        expect(tableNode).toBeDefined()
+
+        if (tableNode?.type === 'table' && tableNode.children) {
+          expect(tableNode.children).toHaveLength(3) // 1 header + 2 data rows
+
+          // Check header row
+          const headerRow = tableNode.children[0] as TestASTNode
+          expect(headerRow.type).toBe('tableRow')
+          expect(headerRow.children).toHaveLength(3)
+
+          const headerCells = headerRow.children as TestASTNode[]
+          expect(headerCells[0]?.type).toBe('tableCell')
+          expect(headerCells[0]?.header).toBe(true)
+          expect(headerCells[0]?.children[0]?.value).toBe('Name')
+        }
+      })
+
+      it('should parse table with alignment indicators', () => {
+        // Arrange
+        const content = `
+| Left | Center | Right |
+|:-----|:------:|------:|
+| L1 | C1 | R1 |
+`
+
+        // Act
+        const result = parseMarkdown(content)
+
+        // Assert
+        if (!result.children) {
+          throw new Error('Expected children to be defined')
+        }
+
+        const tableNode = result.children.find((child: TestASTNode) => child.type === 'table')
+        expect(tableNode).toBeDefined()
+
+        if (tableNode?.type === 'table' && tableNode.children) {
+          expect(tableNode.children).toHaveLength(2) // 1 header + 1 data row
+
+          // Check data row alignment
+          const dataRow = tableNode.children[1] as TestASTNode
+          const dataCells = dataRow.children as TestASTNode[]
+          
+          expect(dataCells[0]?.align).toBe('left')
+          expect(dataCells[1]?.align).toBe('center')
+          expect(dataCells[2]?.align).toBe('right')
+        }
+      })
+
+      it('should handle tables with inline formatting', () => {
+        // Arrange
+        const content = `
+| Name | Description |
+|------|-------------|
+| **Bold** | This is [a link](https://example.com) |
+`
+
+        // Act
+        const result = parseMarkdown(content)
+
+        // Assert
+        if (!result.children) {
+          throw new Error('Expected children to be defined')
+        }
+
+        const tableNode = result.children.find((child: TestASTNode) => child.type === 'table')
+        expect(tableNode).toBeDefined()
+
+        if (tableNode?.type === 'table' && tableNode.children) {
+          const dataRow = tableNode.children[1] as TestASTNode
+          const dataCells = dataRow.children as TestASTNode[]
+          
+          // Check bold formatting in first cell
+          const firstCellChildren = dataCells[0]?.children as TestASTNode[]
+          expect(firstCellChildren[0]?.type).toBe('text')
+          expect(firstCellChildren[0]?.bold).toBe(true)
+          
+          // Check link in second cell
+          const secondCellChildren = dataCells[1]?.children as TestASTNode[]
+          const linkNode = secondCellChildren.find((child: TestASTNode) => child.type === 'link')
+          expect(linkNode).toBeDefined()
+          expect(linkNode?.url).toBe('https://example.com')
+        }
+      })
+
+      it('should handle tables without leading/trailing pipes', () => {
+        // Arrange
+        const content = `
+Name | Age | City
+-----|-----|-----
+John | 30 | NYC
+Jane | 25 | LA
+`
+
+        // Act
+        const result = parseMarkdown(content)
+
+        // Assert
+        if (!result.children) {
+          throw new Error('Expected children to be defined')
+        }
+
+        const tableNode = result.children.find((child: TestASTNode) => child.type === 'table')
+        expect(tableNode).toBeDefined()
+
+        if (tableNode?.type === 'table' && tableNode.children) {
+          expect(tableNode.children).toHaveLength(3) // 1 header + 2 data rows
+          
+          const headerRow = tableNode.children[0] as TestASTNode
+          expect(headerRow.children).toHaveLength(3)
+        }
+      })
+
+      it('should handle empty table cells', () => {
+        // Arrange
+        const content = `
+| Name | Age | City |
+|------|-----|------|
+| John |     | NYC |
+|      | 25  |     |
+`
+
+        // Act
+        const result = parseMarkdown(content)
+
+        // Assert
+        if (!result.children) {
+          throw new Error('Expected children to be defined')
+        }
+
+        const tableNode = result.children.find((child: TestASTNode) => child.type === 'table')
+        expect(tableNode).toBeDefined()
+
+        if (tableNode?.type === 'table' && tableNode.children) {
+          const dataRow1 = tableNode.children[1] as TestASTNode
+          const dataCells1 = dataRow1.children as TestASTNode[]
+          
+          // Check empty cell content
+          expect(dataCells1[1]?.children[0]?.value).toBe('')
+          
+          const dataRow2 = tableNode.children[2] as TestASTNode
+          const dataCells2 = dataRow2.children as TestASTNode[]
+          
+          expect(dataCells2[0]?.children[0]?.value).toBe('')
+          expect(dataCells2[2]?.children[0]?.value).toBe('')
+        }
+      })
+
+      it('should handle single row table (header only)', () => {
+        // Arrange
+        const content = `
+| Column 1 | Column 2 | Column 3 |
+|----------|----------|----------|
+`
+
+        // Act
+        const result = parseMarkdown(content)
+
+        // Assert
+        if (!result.children) {
+          throw new Error('Expected children to be defined')
+        }
+
+        const tableNode = result.children.find((child: TestASTNode) => child.type === 'table')
+        expect(tableNode).toBeDefined()
+
+        if (tableNode?.type === 'table' && tableNode.children) {
+          expect(tableNode.children).toHaveLength(1) // Just header row
+          
+          const headerRow = tableNode.children[0] as TestASTNode
+          const headerCells = headerRow.children as TestASTNode[]
+          
+          expect(headerCells[0]?.header).toBe(true)
+          expect(headerCells[0]?.children[0]?.value).toBe('Column 1')
+        }
+      })
+
+      it('should handle table without header separator', () => {
+        // Arrange
+        const content = `
+| Data 1 | Data 2 | Data 3 |
+| More 1 | More 2 | More 3 |
+`
+
+        // Act
+        const result = parseMarkdown(content)
+
+        // Assert
+        if (!result.children) {
+          throw new Error('Expected children to be defined')
+        }
+
+        const tableNode = result.children.find((child: TestASTNode) => child.type === 'table')
+        expect(tableNode).toBeDefined()
+
+        if (tableNode?.type === 'table' && tableNode.children) {
+          expect(tableNode.children).toHaveLength(2)
+          
+          // When no separator, first row should be treated as header
+          const firstRow = tableNode.children[0] as TestASTNode
+          const firstRowCells = firstRow.children as TestASTNode[]
+          
+          expect(firstRowCells[0]?.header).toBe(true)
+          expect(firstRowCells[0]?.children[0]?.value).toBe('Data 1')
+        }
+      })
+
+      it('should handle malformed table gracefully', () => {
+        // Arrange
+        const content = `
+| Column 1 | Column 2
+| Data 1 | Data 2 | Data 3 |
+`
+
+        // Act
+        const result = parseMarkdown(content)
+
+        // Assert
+        if (!result.children) {
+          throw new Error('Expected children to be defined')
+        }
+
+        const tableNode = result.children.find((child: TestASTNode) => child.type === 'table')
+        expect(tableNode).toBeDefined()
+
+        if (tableNode?.type === 'table' && tableNode.children) {
+          expect(tableNode.children).toHaveLength(2)
+          
+          // Should still parse each row independently
+          const firstRow = tableNode.children[0] as TestASTNode
+          expect(firstRow.children).toHaveLength(2)
+          
+          const secondRow = tableNode.children[1] as TestASTNode
+          expect(secondRow.children).toHaveLength(3)
+        }
+      })
+    })
   })
 })

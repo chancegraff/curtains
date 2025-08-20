@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Curtains presentation with 3 slides">
+  <meta name="description" content="Curtains presentation with 4 slides">
   <meta name="generator" content="Curtains Presentation Tool">
   <title>Presentation</title>
   <style>
@@ -531,21 +531,49 @@ html, body {
         <div class="curtains-stage">
           <section class="curtains-slide"><div class="hero"><h1>Welcome to My Presentation</h1>
 <p>This is the <strong>first slide</strong> with some content.</p></div></section>
-      <section class="curtains-slide"><div class="curtains-content"><h2>Content Slide</h2>
-<p>Here's a list of important points:</p>
-<ul><li><p>First important point</p></li>
-<li><p>Second <strong>bold</strong> point</p></li>
-<li><p>Third point with <a href="https://example.com" target="_blank" rel="noopener noreferrer">a link</a></p></li></ul></div>
-<div class="columns"><h3>Left Column</h3>
-<p>Some content here</p>
-<div class="nested"><p>Nested content</p></div></div></section>
+      <section class="curtains-slide"><div class="curtains-content"><h2>Features Demo</h2>
+<h3>Markdown Tables</h3>
+<p>Here's a comparison table with different alignments:</p>
+<table><thead><tr><th>Feature</th><th>Status</th><th>Priority</th><th>Notes</th></tr></thead><tbody><tr><td><strong>Tables</strong></td><td style="text-align: center">✅ Done</td><td style="text-align: right">High</td><td>Full markdown support</td></tr><tr><td>*Code blocks*</td><td style="text-align: center">✅ Done</td><td style="text-align: right">Medium</td><td>Syntax highlighting ready</td></tr><tr><td>Images</td><td style="text-align: center">✅ Done</td><td style="text-align: right">Low</td><td>SVG and raster support</td></tr><tr><td><a href="https://example.com" target="_blank" rel="noopener noreferrer">Links</a></td><td style="text-align: center">✅ Done</td><td style="text-align: right">Medium</td><td>External links work</td></tr></tbody></table>
+<h3>Code Blocks</h3>
+<pre><code class="language-javascript">// Example JavaScript code with syntax highlighting
+function greet(name) {
+  const message = `Hello, ${name}!`;
+  console.log(message);
+  return message;
+}
+
+// Call the function
+greet(&quot;Curtains&quot;);</code></pre>
+<pre><code class="language-python"># Python example
+def fibonacci(n):
+    &quot;&quot;&quot;Generate Fibonacci sequence up to n&quot;&quot;&quot;
+    a, b = 0, 1
+    while a &lt; n:
+        print(a, end=&#39; &#39;)
+        a, b = b, a + b
+    print()
+
+fibonacci(100)</code></pre></div></section>
+      <section class="curtains-slide"><div class="curtains-content"><h2>Advanced Features</h2></div>
+<div class="columns"><p><div></p>
+<h3>Tables in Containers</h3>
+<table><thead><tr><th>Language</th><th>Type</th><th>Year</th></tr></thead><tbody><tr><td>JavaScript</td><td>Dynamic</td><td style="text-align: right">1995</td></tr><tr><td>Python</td><td>Dynamic</td><td style="text-align: right">1991</td></tr><tr><td>Rust</td><td>Static</td><td style="text-align: right">2010</td></tr></tbody></table>
+<p></div></p>
+<p><div></p>
+<h3>Code in Containers</h3>
+<pre><code class="language-bash">    # Build and run
+    npm install
+    npm run build
+    npm start</code></pre>
+<p></div></p></div></section>
       <section class="curtains-slide"><div class="curtains-content"><h2>Final Slide</h2>
 <p>Thank you for your attention!</p>
 <img src="./test-image.svg" alt=""></div></section>
         </div>
       </div>
     </div>
-    <div class="curtains-counter">1/3</div>
+    <div class="curtains-counter">1/4</div>
   </div>
   <script>
 (function() {

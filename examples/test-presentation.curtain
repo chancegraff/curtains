@@ -42,21 +42,71 @@
 
 ===
 
-## Content Slide
+## Features Demo
 
-Here's a list of important points:
+### Markdown Tables
 
-- First important point
-- Second **bold** point
-- Third point with [a link](https://example.com)
+Here's a comparison table with different alignments:
+
+| Feature | Status | Priority | Notes |
+|:--------|:------:|--------:|-------|
+| **Tables** | ✅ Done | High | Full markdown support |
+| *Code blocks* | ✅ Done | Medium | Syntax highlighting ready |
+| Images | ✅ Done | Low | SVG and raster support |
+| [Links](https://example.com) | ✅ Done | Medium | External links work |
+
+### Code Blocks
+
+```javascript
+// Example JavaScript code with syntax highlighting
+function greet(name) {
+  const message = `Hello, ${name}!`;
+  console.log(message);
+  return message;
+}
+
+// Call the function
+greet("Curtains");
+```
+
+```python
+# Python example
+def fibonacci(n):
+    """Generate Fibonacci sequence up to n"""
+    a, b = 0, 1
+    while a < n:
+        print(a, end=' ')
+        a, b = b, a + b
+    print()
+
+fibonacci(100)
+```
+
+===
+
+## Advanced Features
 
 <container class="columns">
-  ### Left Column
-  Some content here
-
-  <container class="nested">
-  Nested content
-  </container>
+  <div>
+    ### Tables in Containers
+    
+    | Language | Type | Year |
+    |:---------|:-----|-----:|
+    | JavaScript | Dynamic | 1995 |
+    | Python | Dynamic | 1991 |
+    | Rust | Static | 2010 |
+  </div>
+  
+  <div>
+    ### Code in Containers
+    
+    ```bash
+    # Build and run
+    npm install
+    npm run build
+    npm start
+    ```
+  </div>
 </container>
 
 ===
