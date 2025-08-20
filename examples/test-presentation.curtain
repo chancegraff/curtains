@@ -90,7 +90,7 @@ fibonacci(100)
 ## Advanced Features
 
 <container class="columns">
-  <div>
+  <container>
     ### Tables in Containers
 
     | Language | Type | Year |
@@ -98,9 +98,9 @@ fibonacci(100)
     | JavaScript | Dynamic | 1995 |
     | Python | Dynamic | 1991 |
     | Rust | Static | 2010 |
-  </div>
+  </container>
 
-  <div>
+  <container>
     ### Code in Containers
 
     ```bash
@@ -109,7 +109,7 @@ fibonacci(100)
     npm run build
     npm start
     ```
-  </div>
+  </container>
 </container>
 
 ===

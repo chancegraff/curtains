@@ -97,6 +97,7 @@ export function parseContainers(content: string): ContainerParseResult {
     // Convert <container> tags to separate lines for proper nesting detection
     return text
       .replace(/<container\s+class="([^"]*)">(?!\s*$)/g, '<container class="$1">\n')
+      .replace(/<container>(?!\s*$)/g, '<container>\n')
       .replace(/<\/container>/g, '\n</container>')
   }
   
@@ -118,9 +119,12 @@ export function parseContainers(content: string): ContainerParseResult {
     const trimmedLine = line.trim()
     
     // Check for container opening tag (standalone line)
-    const openMatch = trimmedLine.match(/^<container\s+class="([^"]*)">\s*$/)
-    if (openMatch) {
-      const classesStr = openMatch[1] ?? ''
+    // Support both <container class="..."> and <container>
+    const openMatchWithClass = trimmedLine.match(/^<container\s+class="([^"]*)">\s*$/)
+    const openMatchNoClass = trimmedLine.match(/^<container>\s*$/)
+    
+    if (openMatchWithClass || openMatchNoClass) {
+      const classesStr = openMatchWithClass?.[1] ?? ''
       const classArray = classesStr.split(/\s+/).filter(Boolean)
       
       // Validate classes
@@ -191,7 +195,11 @@ export function parseContainers(content: string): ContainerParseResult {
     const container = multiLineContainerStack.pop()
     if (container) {
       // Add the opening tag back as text
-      result.push(`<container class="${container.classes.join(' ')}">`)
+      if (container.classes.length > 0) {
+        result.push(`<container class="${container.classes.join(' ')}">`)
+      } else {
+        result.push('<container>')
+      }
       result.push(...container.contentLines)
     }
   }

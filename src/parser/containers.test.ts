@@ -90,6 +90,60 @@ describe('Parser - Container Parsing', () => {
       expect(containerNode?.classes).toEqual([])
     })
 
+    it('should parse container without class attribute', () => {
+      // Arrange
+      const content = `
+<container>
+# Container Content
+</container>
+`
+
+      // Act
+      const result = parseContainers(content)
+
+      // Assert
+      expect(result.marked).toContain('{{CONTAINER:')
+      expect(result.containers.size).toBe(1)
+      
+      const containerNode = Array.from(result.containers.values())[0]
+      expect(containerNode?.type).toBe('container')
+      expect(containerNode?.classes).toEqual([])
+    })
+
+    it('should parse nested containers without class attributes', () => {
+      // Arrange
+      const content = `
+<container class="columns">
+  <container>
+    ### Tables in Containers
+    | Language | Type | Year |
+    |:---------|:-----|-----:|
+    | JavaScript | Dynamic | 1995 |
+  </container>
+
+  <container>
+    ### Code in Containers
+    \`\`\`bash
+    npm install
+    \`\`\`
+  </container>
+</container>
+`
+
+      // Act
+      const result = parseContainers(content)
+
+      // Assert
+      expect(result.containers.size).toBe(3)
+      
+      const containers = Array.from(result.containers.values())
+      const outerContainer = containers.find(c => c.classes.includes('columns'))
+      const innerContainers = containers.filter(c => c.classes.length === 0)
+      
+      expect(outerContainer).toBeDefined()
+      expect(innerContainers).toHaveLength(2)
+    })
+
     it('should throw error for invalid class names', () => {
       // Arrange
       const content = `
@@ -146,6 +200,23 @@ More content without closing tag
 
       // Assert
       expect(result.marked).toContain('<container class="unclosed">')
+      expect(result.marked).toContain('# Some content')
+      expect(result.containers.size).toBe(0)
+    })
+
+    it('should handle unclosed containers without class attribute', () => {
+      // Arrange
+      const content = `
+<container>
+# Some content
+More content without closing tag
+`
+
+      // Act
+      const result = parseContainers(content)
+
+      // Assert
+      expect(result.marked).toContain('<container>')
       expect(result.marked).toContain('# Some content')
       expect(result.containers.size).toBe(0)
     })
