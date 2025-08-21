@@ -5,8 +5,8 @@
 
 import { readFile, writeFile } from 'fs/promises'
 import { z } from 'zod'
-import { parse } from './parser/index.js'
-import { transform } from './transformer/index.js'
+import { parseContent, transformDocument } from './abstractions/index.js'
+import type { CurtainsError as AbstractionError } from './abstractions/index.js'
 import { render } from './renderer/index.js'
 import { 
   BuildOptionsSchema, 
@@ -180,8 +180,12 @@ export async function main(argv: unknown): Promise<void> {
     // 3. Parse source to AST
     let document
     try {
-      document = parse(source)
+      document = parseContent(source, 'curtains')
     } catch (error) {
+      // Handle abstraction layer errors
+      if ((error as AbstractionError).code === 'PARSE_ERROR') {
+        throw createError('PARSE_ERROR', `Parse failed: ${(error as Error).message}`)
+      }
       throw createError('PARSE_ERROR', `Parse failed: ${error instanceof Error ? error.message : String(error)}`)
     }
     
@@ -193,8 +197,12 @@ export async function main(argv: unknown): Promise<void> {
     // 5. Transform AST to HTML
     let transformed
     try {
-      transformed = await transform(document)
+      transformed = transformDocument(document)
     } catch (error) {
+      // Handle abstraction layer errors
+      if ((error as AbstractionError).code === 'TRANSFORM_ERROR') {
+        throw createError('PARSE_ERROR', `Transform failed: ${(error as Error).message}`)
+      }
       throw createError('PARSE_ERROR', `Transform failed: ${error instanceof Error ? error.message : String(error)}`)
     }
     
