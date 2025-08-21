@@ -4,7 +4,6 @@ import type { CurtainsSlide } from '../ast/types.js'
 import { validateSlideIndex } from './validate.js'
 import { extractStyles } from './styles.js'
 import { parseContainers, buildAST } from './containers.js'
-import { parseMarkdown } from './markdown.js'
 
 export interface SlideParseInput {
   content: string
@@ -38,10 +37,9 @@ export function processSlide(slideInput: SlideParseInput): CurtainsSlide {
   // Extract slide styles
   const extracted = extractStyles(content, 'slide')
   
-  // Parse containers and markdown
-  const { marked, containers } = parseContainers(extracted.content)
-  const mdast = parseMarkdown(marked)
-  const ast = buildAST(mdast, containers)
+  // Parse containers and markdown into AST
+  const containerResult = parseContainers(extracted.content)
+  const ast = buildAST(containerResult)
   
   // Validate and return slide
   return CurtainsSlideSchema.parse({

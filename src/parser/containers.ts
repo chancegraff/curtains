@@ -14,7 +14,7 @@ import {
   TableRowNodeSchema,
   TableCellNodeSchema
 } from '../ast/schemas.js'
-import type { ContainerNode, ASTNode } from '../ast/types.js'
+import type { ASTNode } from '../ast/types.js'
 import { validateClassName, validateNestingDepth } from './validate.js'
 import { parseMarkdown } from './markdown.js'
 
@@ -40,8 +40,7 @@ interface MarkdownNode {
 }
 
 export interface ContainerParseResult {
-  marked: string
-  containers: Map<string, ContainerNode>
+  ast: ASTNode[]
 }
 
 /**
@@ -84,14 +83,11 @@ function dedentContent(content: string): string {
 }
 
 /**
- * Parses container tags in content and returns marked content with container placeholders
+ * Parses container tags in content and returns AST nodes directly
  * @param content - The content containing container tags
- * @returns Object with marked content and container map
+ * @returns Object with parsed AST nodes
  */
 export function parseContainers(content: string): ContainerParseResult {
-  const containers = new Map<string, ContainerNode>()
-  let counter = 0
-  
   // Expand inline nested containers to multi-line format for easier processing
   function expandInlineContainers(text: string): string {
     // Convert <container> tags to separate lines for proper nesting detection
@@ -104,22 +100,56 @@ export function parseContainers(content: string): ContainerParseResult {
   // First, expand any inline containers to multi-line format
   const expandedContent = expandInlineContainers(content)
   
-  // Now, handle all containers using line-by-line parsing
-  const lines = expandedContent.split('\n')
-  const result: string[] = []
-  const multiLineContainerStack: Array<{
-    id: string
+  // Split content into blocks
+  const blocks = parseContentIntoBlocks(expandedContent)
+  
+  // Process blocks into AST nodes
+  return { ast: processBlocks(blocks) }
+}
+
+/**
+ * Represents different types of content blocks
+ */
+type ContentBlock = {
+  type: 'container'
+  classes: string[]
+  content: string
+  depth: number
+} | {
+  type: 'content'
+  content: string
+}
+
+/**
+ * Parses content into blocks (containers and regular content)
+ */
+function parseContentIntoBlocks(content: string): ContentBlock[] {
+  const lines = content.split('\n')
+  const blocks: ContentBlock[] = []
+  const containerStack: Array<{
     classes: string[]
     contentLines: string[]
     depth: number
   }> = []
   
+  let currentContentLines: string[] = []
+  
+  // Helper to flush current content
+  const flushCurrentContent = () => {
+    if (currentContentLines.length > 0) {
+      const contentText = currentContentLines.join('\n').trim()
+      if (contentText) {
+        blocks.push({ type: 'content', content: contentText })
+      }
+      currentContentLines = []
+    }
+  }
+  
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i] ?? ''
     const trimmedLine = line.trim()
     
-    // Check for container opening tag (standalone line)
-    // Support both <container class="..."> and <container>
+    // Check for container opening tag
     const openMatchWithClass = trimmedLine.match(/^<container\s+class="([^"]*)">\s*$/)
     const openMatchNoClass = trimmedLine.match(/^<container>\s*$/)
     
@@ -132,14 +162,17 @@ export function parseContainers(content: string): ContainerParseResult {
         validateClassName(cls)
       })
       
-      const depth = multiLineContainerStack.length + 1
+      const depth = containerStack.length + 1
       
       // Check nesting depth
       validateNestingDepth(depth)
       
-      const id = `container_${counter++}`
-      multiLineContainerStack.push({
-        id,
+      // If we're not in a container, flush current content first
+      if (containerStack.length === 0) {
+        flushCurrentContent()
+      }
+      
+      containerStack.push({
         classes: classArray,
         contentLines: [],
         depth
@@ -147,247 +180,240 @@ export function parseContainers(content: string): ContainerParseResult {
       continue
     }
     
-    // Check for container closing tag (standalone line)
+    // Check for container closing tag
     if (trimmedLine === '</container>') {
-      if (multiLineContainerStack.length === 0) {
+      if (containerStack.length === 0) {
         // Orphaned closing tag, treat as regular content
-        result.push(line)
+        currentContentLines.push(line)
         continue
       }
       
-      const container = multiLineContainerStack.pop()
+      const container = containerStack.pop()
       if (!container) continue
       
-      // Process the container content recursively
-      const innerContent = dedentContent(container.contentLines.join('\n'))
-      const { marked: innerProcessed } = parseContainers(innerContent)
+      // Create container block
+      const containerContent = dedentContent(container.contentLines.join('\n'))
       
-      // Create container node
-      const node = ContainerNodeSchema.parse({
-        type: 'container',
-        classes: container.classes,
-        children: [] // Will be populated in buildAST
-      })
-      
-      containers.set(container.id, node)
-      
-      // Create placeholder for this container
-      const placeholder = `{{CONTAINER:${container.id}:${innerProcessed}}}`
-      
-      if (multiLineContainerStack.length === 0) {
-        result.push(placeholder)
+      if (containerStack.length === 0) {
+        // This is a root-level container
+        blocks.push({
+          type: 'container',
+          classes: container.classes,
+          content: containerContent,
+          depth: container.depth
+        })
       } else {
-        multiLineContainerStack[multiLineContainerStack.length - 1]?.contentLines.push(placeholder)
+        // This container is nested, add it to parent's content
+        const containerTag = container.classes.length > 0 
+          ? `<container class="${container.classes.join(' ')}">`
+          : '<container>'
+        containerStack[containerStack.length - 1]?.contentLines.push(
+          containerTag,
+          ...container.contentLines.map(line => '  ' + line), // Indent nested content
+          '</container>'
+        )
       }
       continue
     }
     
     // Regular content line
-    if (multiLineContainerStack.length === 0) {
-      result.push(line)
+    if (containerStack.length === 0) {
+      currentContentLines.push(line)
     } else {
-      multiLineContainerStack[multiLineContainerStack.length - 1]?.contentLines.push(line)
+      containerStack[containerStack.length - 1]?.contentLines.push(line)
     }
   }
+  
+  // Flush any remaining content
+  flushCurrentContent()
   
   // Handle any unclosed containers by treating their content as regular text
-  while (multiLineContainerStack.length > 0) {
-    const container = multiLineContainerStack.pop()
+  while (containerStack.length > 0) {
+    const container = containerStack.pop()
     if (container) {
-      // Add the opening tag back as text
+      // Add the opening tag back as text and treat as regular content
+      const invalidContent: string[] = []
       if (container.classes.length > 0) {
-        result.push(`<container class="${container.classes.join(' ')}">`)
+        invalidContent.push(`<container class="${container.classes.join(' ')}">`)
       } else {
-        result.push('<container>')
+        invalidContent.push('<container>')
       }
-      result.push(...container.contentLines)
+      invalidContent.push(...container.contentLines)
+      
+      const invalidContentText = invalidContent.join('\n').trim()
+      if (invalidContentText) {
+        blocks.push({ type: 'content', content: invalidContentText })
+      }
     }
   }
   
-  const marked = result.join('\n')
-  
-  return { marked, containers }
+  return blocks
 }
 
 /**
- * Builds an AST from markdown AST and container information
- * @param mdast - The markdown AST from parseMarkdown
- * @param containers - Map of container nodes
- * @returns Complete AST with containers resolved
+ * Processes content blocks into AST nodes
  */
-export function buildAST(
-  mdast: ReturnType<typeof parseMarkdown>,
-  containers: Map<string, ContainerNode>
-): z.infer<typeof CurtainsASTSchema> {
+function processBlocks(blocks: ContentBlock[]): ASTNode[] {
+  const result: ASTNode[] = []
   
-  function convertNode(node: MarkdownNode): ASTNode | ASTNode[] {
-    switch (node.type) {
-      case 'text':
-        return TextNodeSchema.parse({
-          type: 'text',
-          value: node.value,
-          bold: node.bold,
-          italic: node.italic
-        })
+  for (const block of blocks) {
+    if (block.type === 'container') {
+      // Recursively process container content
+      const innerResult = parseContainers(block.content)
       
-      case 'heading':
-        return HeadingNodeSchema.parse({
-          type: 'heading',
-          depth: node.depth,
-          children: node.children ? node.children.flatMap((child: MarkdownNode) => convertNode(child)) : []
-        })
+      const containerNode = ContainerNodeSchema.parse({
+        type: 'container',
+        classes: block.classes,
+        children: innerResult.ast
+      })
       
-      case 'paragraph':
-        // Check if this paragraph contains container placeholders
-        if (node.children && node.children.length === 1 && node.children[0]) {
-          const firstChild = node.children[0]
-          if (firstChild.type === 'text' && 
-              (firstChild.value?.includes('{{CONTAINER:') === true)) {
-          
-            const text = firstChild.value
-          
-          // Use the same sophisticated matching as in parseBasicMarkdown
-          function extractSingleContainerPlaceholder(text: string): { id: string; content: string } | null {
-            const start = text.indexOf('{{CONTAINER:')
-            if (start !== 0) return null // Must start with placeholder
-            
-            let braceCount = 1 // Start with 1 to account for the opening {{
-            let end = start + 12 // length of '{{CONTAINER:'
-            
-            // Extract container ID (find first colon after CONTAINER:)
-            const idStart = end
-            while (end < text.length && text[end] !== ':') {
-              end++
-            }
-            if (end >= text.length) return null
-            
-            const containerId = text.substring(idStart, end)
-            end++ // Skip the colon
-            
-            // Now count braces to find the matching closing }}
-            while (end < text.length) {
-              if (text.substring(end, end + 2) === '{{') {
-                braceCount++
-                end += 2
-              } else if (text.substring(end, end + 2) === '}}') {
-                braceCount--
-                if (braceCount === 0) {
-                  // This is our closing brace
-                  const content = text.substring(idStart + containerId.length + 1, end)
-                  return { id: containerId, content }
-                } else {
-                  end += 2
-                }
-              } else {
-                end++
-              }
-            }
-            
-            return null
-          }
-          
-          const containerMatch = extractSingleContainerPlaceholder(text)
-          
-          if (containerMatch) {
-            const { id: containerId, content: innerContent } = containerMatch
-            const containerNode = containers.get(containerId)
-            
-            if (containerNode) {
-              // Parse inner content as markdown
-              const innerMdast = parseMarkdown(innerContent)
-              const innerAST = innerMdast.children ? 
-                innerMdast.children.flatMap((child: MarkdownNode) => convertNode(child)) : []
-              
-              return ContainerNodeSchema.parse({
-                type: 'container',
-                classes: containerNode.classes,
-                children: innerAST
-              })
-            }
-          }
-          }
-        }
-        
-        return ParagraphNodeSchema.parse({
-          type: 'paragraph',
-          children: node.children ? node.children.flatMap((child: MarkdownNode) => convertNode(child)) : []
-        })
-      
-      case 'list':
-        return ListNodeSchema.parse({
-          type: 'list',
-          ordered: node.ordered ?? false,
-          children: node.children ? node.children.flatMap((child: MarkdownNode) => convertNode(child)) : []
-        })
-      
-      case 'listItem':
-        return ListItemNodeSchema.parse({
-          type: 'listItem',
-          children: node.children ? node.children.flatMap((child: MarkdownNode) => convertNode(child)) : []
-        })
-      
-      case 'link':
-        return LinkNodeSchema.parse({
-          type: 'link',
-          url: node.url,
-          children: node.children ? node.children.flatMap((child: MarkdownNode) => convertNode(child)) : []
-        })
-      
-      case 'image':
-        return ImageNodeSchema.parse({
-          type: 'image',
-          url: node.url,
-          alt: node.alt,
-          title: node.title,
-          ...(node.classes && { classes: node.classes })
-        })
-      
-      case 'code':
-        return CodeNodeSchema.parse({
-          type: 'code',
-          value: node.value,
-          lang: node.lang
-        })
-      
-      case 'table':
-        return TableNodeSchema.parse({
-          type: 'table',
-          children: node.children ? node.children.flatMap((child: MarkdownNode) => convertNode(child)) : []
-        })
-      
-      case 'tableRow':
-        return TableRowNodeSchema.parse({
-          type: 'tableRow',
-          children: node.children ? node.children.flatMap((child: MarkdownNode) => convertNode(child)) : []
-        })
-      
-      case 'tableCell':
-        return TableCellNodeSchema.parse({
-          type: 'tableCell',
-          ...(node.header !== undefined && { header: node.header }),
-          ...(node.align !== undefined && { align: node.align }),
-          children: node.children ? node.children.flatMap((child: MarkdownNode) => convertNode(child)) : []
-        })
-      
-      default:
-        // For unknown node types, try to extract text content if available
-        if (node.value !== undefined && node.value !== null && node.value !== '') {
-          return TextNodeSchema.parse({
-            type: 'text',
-            value: String(node.value)
-          })
-        }
-        
-        // Skip unknown nodes
-        return []
+      result.push(containerNode)
+    } else {
+      // Process regular content as markdown
+      const contentNodes = parseNonContainerContent(block.content)
+      result.push(...contentNodes)
     }
   }
   
-  const children = mdast.children ? 
-    mdast.children.flatMap((child: MarkdownNode) => convertNode(child)) : []
+  return filterEmptyNodes(result)
+}
+
+/**
+ * Parses content that doesn't contain containers into AST nodes
+ */
+function parseNonContainerContent(content: string): ASTNode[] {
+  if (!content.trim()) return []
   
+  const mdast = parseMarkdown(content)
+  return convertMarkdownToAST(mdast)
+}
+
+/**
+ * Converts markdown AST to our AST format
+ */
+function convertMarkdownToAST(mdast: ReturnType<typeof parseMarkdown>): ASTNode[] {
+  if (!mdast.children) return []
+  return mdast.children.flatMap((child: MarkdownNode) => convertMarkdownNode(child))
+}
+
+/**
+ * Converts a single markdown node to our AST format
+ */
+function convertMarkdownNode(node: MarkdownNode): ASTNode | ASTNode[] {
+  switch (node.type) {
+    case 'text':
+      return TextNodeSchema.parse({
+        type: 'text',
+        value: node.value,
+        bold: node.bold,
+        italic: node.italic
+      })
+    
+    case 'heading':
+      return HeadingNodeSchema.parse({
+        type: 'heading',
+        depth: node.depth,
+        children: node.children ? node.children.flatMap((child: MarkdownNode) => convertMarkdownNode(child)) : []
+      })
+    
+    case 'paragraph':
+      return ParagraphNodeSchema.parse({
+        type: 'paragraph',
+        children: node.children ? node.children.flatMap((child: MarkdownNode) => convertMarkdownNode(child)) : []
+      })
+    
+    case 'list':
+      return ListNodeSchema.parse({
+        type: 'list',
+        ordered: node.ordered ?? false,
+        children: node.children ? node.children.flatMap((child: MarkdownNode) => convertMarkdownNode(child)) : []
+      })
+    
+    case 'listItem':
+      return ListItemNodeSchema.parse({
+        type: 'listItem',
+        children: node.children ? node.children.flatMap((child: MarkdownNode) => convertMarkdownNode(child)) : []
+      })
+    
+    case 'link':
+      return LinkNodeSchema.parse({
+        type: 'link',
+        url: node.url,
+        children: node.children ? node.children.flatMap((child: MarkdownNode) => convertMarkdownNode(child)) : []
+      })
+    
+    case 'image':
+      return ImageNodeSchema.parse({
+        type: 'image',
+        url: node.url,
+        alt: node.alt,
+        title: node.title,
+        ...(node.classes && { classes: node.classes })
+      })
+    
+    case 'code':
+      return CodeNodeSchema.parse({
+        type: 'code',
+        value: node.value,
+        lang: node.lang
+      })
+    
+    case 'table':
+      return TableNodeSchema.parse({
+        type: 'table',
+        children: node.children ? node.children.flatMap((child: MarkdownNode) => convertMarkdownNode(child)) : []
+      })
+    
+    case 'tableRow':
+      return TableRowNodeSchema.parse({
+        type: 'tableRow',
+        children: node.children ? node.children.flatMap((child: MarkdownNode) => convertMarkdownNode(child)) : []
+      })
+    
+    case 'tableCell':
+      return TableCellNodeSchema.parse({
+        type: 'tableCell',
+        ...(node.header !== undefined && { header: node.header }),
+        ...(node.align !== undefined && { align: node.align }),
+        children: node.children ? node.children.flatMap((child: MarkdownNode) => convertMarkdownNode(child)) : []
+      })
+    
+    default:
+      // For unknown node types, try to extract text content if available
+      if (node.value !== undefined && node.value !== null && node.value !== '') {
+        return TextNodeSchema.parse({
+          type: 'text',
+          value: String(node.value)
+        })
+      }
+      
+      // Skip unknown nodes
+      return []
+  }
+}
+
+/**
+ * Filters out empty nodes from the AST
+ */
+function filterEmptyNodes(nodes: ASTNode[]): ASTNode[] {
+  return (nodes as any[]).filter((node: any) => {
+    if (node.type === 'text') {
+      return node.value.trim().length > 0
+    }
+    return true
+  }) as ASTNode[]
+}
+
+/**
+ * Builds an AST from parsed container result - now a simple wrapper for backwards compatibility
+ * @param containerResult - The container parse result containing AST nodes
+ * @returns Complete AST with containers resolved
+ */
+export function buildAST(
+  containerResult: ContainerParseResult
+): z.infer<typeof CurtainsASTSchema> {
   return CurtainsASTSchema.parse({
     type: 'root',
-    children
+    children: containerResult.ast
   })
 }

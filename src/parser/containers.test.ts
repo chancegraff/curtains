@@ -1,5 +1,4 @@
 import { parseContainers, buildAST } from './containers.js'
-import { parseMarkdown } from './markdown.js'
 import { DEFAULTS } from '../config/constants.js'
 
 // Type helpers for tests
@@ -22,12 +21,13 @@ describe('Parser - Container Parsing', () => {
       const result = parseContainers(content)
 
       // Assert
-      expect(result.marked).toContain('{{CONTAINER:')
-      expect(result.containers.size).toBe(1)
+      expect(result.ast).toHaveLength(1)
       
-      const containerNode = Array.from(result.containers.values())[0]
+      const containerNode = result.ast[0] as TestASTNode
       expect(containerNode?.type).toBe('container')
       expect(containerNode?.classes).toEqual(['test'])
+      expect(containerNode?.children).toHaveLength(1)
+      expect(containerNode?.children[0]?.type).toBe('heading')
     })
 
     it('should parse nested containers', () => {
@@ -47,15 +47,16 @@ describe('Parser - Container Parsing', () => {
       const result = parseContainers(content)
 
       // Assert
-      expect(result.containers.size).toBe(2)
+      expect(result.ast).toHaveLength(1)
       
-      // Check that we have both outer and inner containers
-      const containers = Array.from(result.containers.values())
-      const outerContainer = containers.find(c => c.classes.includes('outer'))
-      const innerContainer = containers.find(c => c.classes.includes('inner'))
+      const outerContainer = result.ast[0] as TestASTNode
+      expect(outerContainer.type).toBe('container')
+      expect(outerContainer.classes).toEqual(['outer'])
       
-      expect(outerContainer).toBeDefined()
+      // Find the inner container among children
+      const innerContainer = outerContainer.children.find((child: TestASTNode) => child.type === 'container')
       expect(innerContainer).toBeDefined()
+      expect(innerContainer.classes).toEqual(['inner'])
     })
 
     it('should parse container with multiple classes', () => {
@@ -70,7 +71,8 @@ describe('Parser - Container Parsing', () => {
       const result = parseContainers(content)
 
       // Assert
-      const containerNode = Array.from(result.containers.values())[0]
+      expect(result.ast).toHaveLength(1)
+      const containerNode = result.ast[0] as TestASTNode
       expect(containerNode?.classes).toEqual(['class1', 'class-2', 'class_3'])
     })
 
@@ -86,7 +88,8 @@ describe('Parser - Container Parsing', () => {
       const result = parseContainers(content)
 
       // Assert
-      const containerNode = Array.from(result.containers.values())[0]
+      expect(result.ast).toHaveLength(1)
+      const containerNode = result.ast[0] as TestASTNode
       expect(containerNode?.classes).toEqual([])
     })
 
@@ -102,10 +105,9 @@ describe('Parser - Container Parsing', () => {
       const result = parseContainers(content)
 
       // Assert
-      expect(result.marked).toContain('{{CONTAINER:')
-      expect(result.containers.size).toBe(1)
+      expect(result.ast).toHaveLength(1)
       
-      const containerNode = Array.from(result.containers.values())[0]
+      const containerNode = result.ast[0] as TestASTNode
       expect(containerNode?.type).toBe('container')
       expect(containerNode?.classes).toEqual([])
     })
@@ -134,14 +136,16 @@ describe('Parser - Container Parsing', () => {
       const result = parseContainers(content)
 
       // Assert
-      expect(result.containers.size).toBe(3)
+      expect(result.ast).toHaveLength(1)
       
-      const containers = Array.from(result.containers.values())
-      const outerContainer = containers.find(c => c.classes.includes('columns'))
-      const innerContainers = containers.filter(c => c.classes.length === 0)
+      const outerContainer = result.ast[0] as TestASTNode
+      expect(outerContainer.type).toBe('container')
+      expect(outerContainer.classes).toEqual(['columns'])
       
-      expect(outerContainer).toBeDefined()
+      const innerContainers = outerContainer.children.filter((child: TestASTNode) => child.type === 'container')
       expect(innerContainers).toHaveLength(2)
+      expect(innerContainers[0]?.classes).toEqual([])
+      expect(innerContainers[1]?.classes).toEqual([])
     })
 
     it('should throw error for invalid class names', () => {
@@ -183,8 +187,16 @@ More content
       const result = parseContainers(content)
 
       // Assert
-      expect(result.marked).toContain('</container>')
-      expect(result.containers.size).toBe(0)
+      expect(result.ast.length).toBeGreaterThan(0)
+      // Orphaned closing tag should be filtered out (as it's empty), 
+      // but we should have the other content
+      expect(result.ast).toHaveLength(2)
+      expect((result.ast[0] as any)?.type).toBe('paragraph')
+      expect((result.ast[1] as any)?.type).toBe('paragraph')
+      
+      // Check content is preserved  
+      expect((result.ast[0] as any)?.children[0]?.value).toBe('Some content')
+      expect((result.ast[1] as any)?.children[0]?.value).toBe('More content')
     })
 
     it('should handle unclosed containers', () => {
@@ -199,9 +211,15 @@ More content without closing tag
       const result = parseContainers(content)
 
       // Assert
-      expect(result.marked).toContain('<container class="unclosed">')
-      expect(result.marked).toContain('# Some content')
-      expect(result.containers.size).toBe(0)
+      expect(result.ast.length).toBeGreaterThan(0)
+      // Unclosed container should be treated as regular content
+      // The opening tag should appear as a text node
+      expect((result.ast[0] as any)?.type).toBe('text')
+      expect((result.ast[0] as any)?.value).toBe('<container class="unclosed">')
+      
+      // And the content should be parsed normally
+      expect((result.ast[1] as any)?.type).toBe('heading')
+      expect((result.ast[2] as any)?.type).toBe('paragraph')
     })
 
     it('should handle unclosed containers without class attribute', () => {
@@ -216,9 +234,15 @@ More content without closing tag
       const result = parseContainers(content)
 
       // Assert
-      expect(result.marked).toContain('<container>')
-      expect(result.marked).toContain('# Some content')
-      expect(result.containers.size).toBe(0)
+      expect(result.ast.length).toBeGreaterThan(0)
+      // Unclosed container should be treated as regular content
+      // The opening tag should appear as a text node
+      expect((result.ast[0] as any)?.type).toBe('text')
+      expect((result.ast[0] as any)?.value).toBe('<container>')
+      
+      // And the content should be parsed normally
+      expect((result.ast[1] as any)?.type).toBe('heading')
+      expect((result.ast[2] as any)?.type).toBe('paragraph')
     })
   })
 
@@ -230,11 +254,10 @@ More content without closing tag
 # Container Content
 </container>
 `
-      const { marked, containers } = parseContainers(content)
-      const mdast = parseMarkdown(marked)
+      const containerResult = parseContainers(content)
 
       // Act
-      const result = buildAST(mdast, containers)
+      const result = buildAST(containerResult)
 
       // Assert
       expect(result.type).toBe('root')
@@ -258,11 +281,10 @@ More content without closing tag
   </container>
 </container>
 `
-      const { marked, containers } = parseContainers(content)
-      const mdast = parseMarkdown(marked)
+      const containerResult = parseContainers(content)
 
       // Act
-      const result = buildAST(mdast, containers)
+      const result = buildAST(containerResult)
 
       // Assert
       expect(result.children).toHaveLength(1)
@@ -291,11 +313,10 @@ More content without closing tag
 
 # After Container
 `
-      const { marked, containers } = parseContainers(content)
-      const mdast = parseMarkdown(marked)
+      const containerResult = parseContainers(content)
 
       // Act
-      const result = buildAST(mdast, containers)
+      const result = buildAST(containerResult)
 
       // Assert
       expect(result.children).toHaveLength(3)
@@ -314,11 +335,10 @@ This is a paragraph with **bold** text.
 ![Image](https://example.com/image.png)
 [Link](https://example.com)
 `
-      const { marked, containers } = parseContainers(content)
-      const mdast = parseMarkdown(marked)
+      const containerResult = parseContainers(content)
 
       // Act
-      const result = buildAST(mdast, containers)
+      const result = buildAST(containerResult)
 
       // Assert
       expect(result.children.length).toBeGreaterThan(0)

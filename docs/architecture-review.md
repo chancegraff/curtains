@@ -48,75 +48,6 @@ Input (.curtain) → Parser → Transformer → Renderer → Output (HTML)
 
 ---
 
-## Critical Architectural Issues
-
-### 1. **Custom Markdown Parser Implementation** 🔴
-
-The system implements its own markdown parser (`parseBasicMarkdown`) instead of using established libraries like remark/rehype (which are dependencies but unused).
-
-**Problems:**
-- **Reinventing the wheel** with 500+ lines of custom parsing logic
-- **Incomplete markdown spec compliance** (missing features like inline code, strikethrough, etc.)
-- **Maintenance burden** for edge cases and spec updates
-- **Security concerns** with HTML sanitization (only partial implementation)
-
-**Example of problematic code:**
-```typescript
-// src/parser/markdown.ts lines 53-168
-function parseBasicMarkdown(content: string): MarkdownNode {
-  // Custom parsing logic with nested complexity
-  // Multiple regex patterns and string manipulations
-  // Potential for edge case bugs
-}
-```
-
-**Recommendation:**
-Replace with remark/rehype pipeline already in dependencies:
-```typescript
-import { unified } from 'unified'
-import remarkParse from 'remark-parse'
-import remarkRehype from 'remark-rehype'
-
-export function parseMarkdown(content: string) {
-  return unified()
-    .use(remarkParse)
-    .use(remarkRehype)
-    .processSync(content)
-}
-```
-
----
-
-### 2. **Container Placeholder System Complexity** 🔴
-
-The container parsing uses a complex placeholder replacement system that violates clean architecture principles.
-
-**Problems:**
-- **String manipulation instead of AST transformation**
-- **Complex brace counting logic** prone to errors
-- **Nested container handling** through string replacement
-- **Tight coupling** between container and markdown parsing
-
-**Example:**
-```typescript
-// src/parser/containers.ts lines 119-137
-const placeholder = `{{CONTAINER:${container.id}:${innerProcessed}}}`
-// Later needs complex extraction logic to parse these placeholders
-```
-
-**Recommendation:**
-Use proper AST node injection:
-```typescript
-interface ContainerNode extends ASTNode {
-  type: 'container'
-  classes: string[]
-  children: ASTNode[]
-  // No string placeholders needed
-}
-```
-
----
-
 ### 3. **Missing Abstraction Layer** 🟡
 
 No interface abstraction between parser and transformer phases.
@@ -211,12 +142,12 @@ abstract class CurtainsError extends Error {
 // Use string builder pattern
 class HTMLBuilder {
   private chunks: string[] = []
-  
+
   append(html: string): this {
     this.chunks.push(html)
     return this
   }
-  
+
   toString(): string {
     return this.chunks.join('')
   }
@@ -252,11 +183,11 @@ interface MarkdownPlugin {
 
 class PluginRegistry {
   private plugins = new Map<string, MarkdownPlugin>()
-  
+
   register(plugin: MarkdownPlugin): void {
     this.plugins.set(plugin.nodeType, plugin)
   }
-  
+
   transform(node: ASTNode): string {
     const plugin = this.plugins.get(node.type)
     return plugin?.transform?.(node) ?? defaultTransform(node)

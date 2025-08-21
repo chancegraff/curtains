@@ -1,6 +1,5 @@
 // Markdown parser implementation using remark/unified ecosystem
-// Replaces the previous custom markdown parser with a more robust solution
-// while maintaining compatibility with the existing AST structure and container system
+// Provides clean markdown parsing without container handling (containers are handled separately)
 
 import { unified } from 'unified'
 import remarkParse from 'remark-parse'
@@ -59,7 +58,7 @@ function sanitizeImgAttributes(imgTagMatch: string): { src: string; alt: string;
 }
 
 /**
- * Custom remark plugin to handle container placeholders and HTML img tags
+ * Custom remark plugin to handle HTML img tags
  */
 function remarkCurtainsPlugin() {
   return function transformer(tree: any) {
@@ -77,12 +76,6 @@ function remarkCurtainsPlugin() {
   }
 
   function handleNode(node: any) {
-    // Handle container placeholders in text nodes
-    if (node.type === 'text' && node.value && node.value.includes('{{CONTAINER:')) {
-      // Keep container placeholders as-is for later processing
-      return
-    }
-    
     // Handle HTML img tags in both text and html nodes
     if ((node.type === 'text' || node.type === 'html') && node.value) {
       const htmlImgPattern = /<img[^>]*>/gi
@@ -288,10 +281,9 @@ function convertMdastNode(node: any): MarkdownNode {
  * Processes markdown with remark and converts to our AST format
  */
 function parseWithRemark(content: string): MarkdownNode {
-  // First, handle container placeholders by preserving them in the content
   let processedContent = content
   
-  // Skip container closing tags  
+  // Skip container closing tags - these are handled by the container parser
   processedContent = processedContent.replace(/^\s*<\/container>\s*$/gm, '')
   
   // Handle standalone HTML img tags on their own lines
@@ -351,131 +343,13 @@ function postProcessTables(node: MarkdownNode): MarkdownNode {
   return node
 }
 
-/**
- * Enhanced container placeholder extraction that handles nested containers
- */
-function extractContainerPlaceholders(text: string): string[] {
-  const placeholders: string[] = []
-  let index = 0
-  
-  while (index < text.length) {
-    const start = text.indexOf('{{CONTAINER:', index)
-    if (start === -1) break
-    
-    // Find the matching closing }}
-    let braceCount = 1 // Start with 1 to account for the opening {{
-    let end = start + 12 // length of '{{CONTAINER:'
-    
-    // Skip to the content part (after the colon following the container ID)
-    let colonCount = 0
-    while (end < text.length && colonCount < 1) {
-      if (text[end] === ':') {
-        colonCount++
-      }
-      end++
-    }
-    
-    // Now count braces to find the matching closing }}
-    while (end < text.length) {
-      if (text.substring(end, end + 2) === '{{') {
-        braceCount++
-        end += 2
-      } else if (text.substring(end, end + 2) === '}}') {
-        braceCount--
-        if (braceCount === 0) {
-          // This is our closing brace
-          end += 2
-          break
-        } else {
-          end += 2
-        }
-      } else {
-        end++
-      }
-    }
-    
-    placeholders.push(text.substring(start, end))
-    index = end
-  }
-  
-  return placeholders
-}
 
-/**
- * Handles container placeholders by processing them as separate markdown content
- */
-function handleContainerPlaceholders(content: string): MarkdownNode {
-  const placeholders = extractContainerPlaceholders(content)
-  
-  // Check if content is just a single container placeholder
-  const trimmedContent = content.trim()
-  if (trimmedContent.startsWith('{{CONTAINER:') && trimmedContent.endsWith('}}')) {
-    // Need to verify this is actually a single placeholder, not multiple
-    if (placeholders.length === 1) {
-      // This is truly a single container placeholder
-      // Return it as a paragraph so buildAST can process it
-      return {
-        type: 'root',
-        children: [{
-          type: 'paragraph',
-          children: [{ type: 'text', value: trimmedContent }]
-        }]
-      }
-    }
-  }
-  
-  // If content contains container placeholders, handle them as single units
-  if (placeholders.length > 0) {
-    const children: MarkdownNode[] = []
-    let remainingContent = content
-    
-    for (const placeholder of placeholders) {
-      const index = remainingContent.indexOf(placeholder)
-      if (index !== -1) {
-        // Add content before placeholder
-        const beforeContent = remainingContent.substring(0, index).trim()
-        if (beforeContent) {
-          const beforeAST = parseWithRemark(beforeContent)
-          if (beforeAST.children) {
-            children.push(...beforeAST.children)
-          }
-        }
-        
-        // Add placeholder as paragraph
-        children.push({
-          type: 'paragraph',
-          children: [{ type: 'text', value: placeholder }]
-        })
-        
-        // Continue with remaining content
-        remainingContent = remainingContent.substring(index + placeholder.length)
-      }
-    }
-    
-    // Add any remaining content
-    const afterContent = remainingContent.trim()
-    if (afterContent) {
-      const afterAST = parseWithRemark(afterContent)
-      if (afterAST.children) {
-        children.push(...afterAST.children)
-      }
-    }
-    
-    return {
-      type: 'root',
-      children
-    }
-  }
-  
-  // No container placeholders, use regular remark parsing
-  return parseWithRemark(content)
-}
 
 /**
  * Legacy function kept for compatibility - now delegates to remark-based parser
  */
 export function parseBasicMarkdown(content: string): MarkdownNode {
-  return handleContainerPlaceholders(content)
+  return parseWithRemark(content)
 }
 
 /**
@@ -494,6 +368,6 @@ export function parseInlineText(text: string): MarkdownNode[] {
  * @returns AST representation of the markdown
  */
 export function parseMarkdown(content: string): MarkdownNode {
-  // Use remark-based parser with container support
-  return handleContainerPlaceholders(content)
+  // Use remark-based parser
+  return parseWithRemark(content)
 }
