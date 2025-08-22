@@ -130,6 +130,7 @@ export interface MarkdownParser {
    * @param content - Raw content to parse
    * @returns Structured document
    */
+  // eslint-disable-next-line no-unused-vars
   parse(content: string): Document
 
   /**
@@ -137,6 +138,7 @@ export interface MarkdownParser {
    * @param format - Format identifier
    * @returns True if format is supported
    */
+  // eslint-disable-next-line no-unused-vars
   supports(format: string): boolean
 }
 
@@ -147,6 +149,7 @@ export interface DocumentTransformer {
    * @param document - Document to transform
    * @returns Transformed document with HTML and CSS
    */
+  // eslint-disable-next-line no-unused-vars
   transform(document: Document): TransformedDocument
 }
 

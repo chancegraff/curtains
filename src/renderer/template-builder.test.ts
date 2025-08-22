@@ -189,8 +189,8 @@ describe('Template Builder', () => {
       const result = buildCompleteHTML(mockParams)
 
       // Check for proper indentation structure
-      expect(result).toMatch(/<style>\n.*\n  <\/style>/)
-      expect(result).toMatch(/<script>\n.*\n  <\/script>/)
+      expect(result).toMatch(/<style>\n.*\n {2}<\/style>/)
+      expect(result).toMatch(/<script>\n.*\n {2}<\/script>/)
 
       // Should have newlines for readability
       expect(result).toContain('\n')
@@ -390,9 +390,9 @@ describe('Template Builder', () => {
       expect(result).not.toContain('</>')
 
       // Should have balanced major structural tags
-      expect((result.match(/<html/g) || []).length).toBe((result.match(/<\/html>/g) || []).length)
-      expect((result.match(/<head>/g) || []).length).toBe((result.match(/<\/head>/g) || []).length)
-      expect((result.match(/<body>/g) || []).length).toBe((result.match(/<\/body>/g) || []).length)
+      expect((result.match(/<html/g) ?? []).length).toBe((result.match(/<\/html>/g) ?? []).length)
+      expect((result.match(/<head>/g) ?? []).length).toBe((result.match(/<\/head>/g) ?? []).length)
+      expect((result.match(/<body>/g) ?? []).length).toBe((result.match(/<\/body>/g) ?? []).length)
     })
 
     it('should maintain consistent formatting', () => {

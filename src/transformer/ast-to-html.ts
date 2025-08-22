@@ -154,10 +154,10 @@ function convertNodeToHTML(node: ASTNode): string {
       
       // Check if first row contains header cells
       const firstRow = children[0] as Record<string, unknown>
-      const hasHeader = firstRow?.children && Array.isArray(firstRow.children) &&
+      const hasHeader = firstRow?.children !== null && Array.isArray(firstRow.children) &&
         (firstRow.children as Record<string, unknown>[]).some(cell => cell.header === true)
       
-      if (hasHeader) {
+      if (hasHeader === true) {
         const headerRow = rows[0]
         const bodyRows = rows.slice(1)
         return `<table><thead>${headerRow}</thead>${bodyRows.length > 0 ? `<tbody>${bodyRows.join('')}</tbody>` : ''}</table>`
@@ -178,7 +178,7 @@ function convertNodeToHTML(node: ASTNode): string {
       const isHeader = typedNode.header === true
       const align = typedNode.align as string | undefined
       const tag = isHeader ? 'th' : 'td'
-      const alignStyle = align && align !== 'left' ? ` style="text-align: ${align}"` : ''
+      const alignStyle = (align !== null && align !== undefined && align !== 'left') ? ` style="text-align: ${align}"` : ''
       return `<${tag}${alignStyle}>${content}</${tag}>`
     }
 

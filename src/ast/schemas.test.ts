@@ -24,11 +24,6 @@ import {
   TransformedDocumentSchema
 } from './schemas.js'
 import type {
-  TextNode,
-  HeadingNode,
-  ParagraphNode,
-  ListNode,
-  ContainerNode,
   ASTNode,
   CurtainsAST,
   CurtainsSlide,
@@ -1874,8 +1869,8 @@ describe('AST Schemas', () => {
       // Verify the structure is intact
       if (result.success) {
         expect(result.data.children).toHaveLength(1)
-        const paragraph = result.data.children[0]
-        if (paragraph && paragraph.type === 'paragraph') {
+        const paragraph = result.data.children[0] as ASTNode
+        if (paragraph !== null && typeof paragraph === 'object' && 'type' in paragraph && paragraph.type === 'paragraph' && 'children' in paragraph) {
           expect(paragraph.children).toHaveLength(1)
         }
       }

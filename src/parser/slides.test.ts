@@ -1,4 +1,13 @@
 import { splitIntoSlides, processSlide, processSlides } from './slides.js'
+import type { ASTNode } from '../abstractions/interfaces.js'
+
+// Type helper for tests
+type TestASTNode = {
+  type: string
+  children?: TestASTNode[]
+  classes?: string[]
+  [key: string]: unknown
+}
 
 describe('Parser - Slide Processing', () => {
   describe('splitIntoSlides', () => {
@@ -146,7 +155,7 @@ Important information here.
       expect(result.index).toBe(2)
       expect(result.ast.children).toHaveLength(2) // heading + container
       
-      const containerNode = result.ast.children.find((child: any) => child.type === 'container') as any
+      const containerNode = result.ast.children.find((child: TestASTNode) => child.type === 'container') as TestASTNode | undefined
       expect(containerNode).toBeDefined()
       if (containerNode !== undefined && containerNode.type === 'container') {
         expect(containerNode.classes).toEqual(['highlight'])
@@ -253,7 +262,7 @@ Content here.
       
       // Container slide
       const containerSlide = result[2]
-      const hasContainer = containerSlide?.ast.children.some((child: any) => child.type === 'container')
+      const hasContainer = containerSlide?.ast.children.some((child: ASTNode) => child.type === 'container')
       expect(hasContainer).toBe(true)
     })
 

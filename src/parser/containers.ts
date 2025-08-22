@@ -66,7 +66,7 @@ function dedentContent(content: string): string {
   // Find minimum indentation level
   const minIndent = Math.min(...nonEmptyLines.map(line => {
     const match = line.match(/^(\s*)/)
-    return match && match[1] ? match[1].length : 0
+    return match?.[1]?.length ?? 0
   }))
   
   // Remove the minimum indentation from all lines
@@ -135,7 +135,7 @@ function parseContentIntoBlocks(content: string): ContentBlock[] {
   let currentContentLines: string[] = []
   
   // Helper to flush current content
-  const flushCurrentContent = () => {
+  const flushCurrentContent = (): void => {
     if (currentContentLines.length > 0) {
       const contentText = currentContentLines.join('\n').trim()
       if (contentText) {
@@ -396,12 +396,12 @@ function convertMarkdownNode(node: MarkdownNode): ASTNode | ASTNode[] {
  * Filters out empty nodes from the AST
  */
 function filterEmptyNodes(nodes: ASTNode[]): ASTNode[] {
-  return (nodes as any[]).filter((node: any) => {
+  return nodes.filter((node: ASTNode) => {
     if (node.type === 'text') {
       return node.value.trim().length > 0
     }
     return true
-  }) as ASTNode[]
+  })
 }
 
 /**

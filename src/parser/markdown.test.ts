@@ -3,7 +3,20 @@ import { parseMarkdown, parseBasicMarkdown, parseInlineText } from './markdown.j
 // Type helpers for tests
 type TestASTNode = {
   type: string
-  [key: string]: any
+  children?: TestASTNode[]
+  value?: string
+  classes?: string[]
+  depth?: number
+  url?: string
+  alt?: string
+  title?: string
+  lang?: string
+  bold?: boolean
+  italic?: boolean
+  ordered?: boolean
+  align?: 'left' | 'center' | 'right'
+  header?: boolean
+  [key: string]: unknown
 }
 
 describe('Parser - Markdown Parsing', () => {
@@ -611,7 +624,7 @@ const unclosed = 'code block'
         const codeNode = result.children.find((child: TestASTNode) => child.type === 'code')
         expect(codeNode).toBeDefined()
 
-        if (codeNode?.type === 'code' && codeNode.value) {
+        if (codeNode?.type === 'code' && typeof codeNode.value === 'string' && codeNode.value.length > 0) {
           expect(codeNode.value.trim()).toBe(`const unclosed = 'code block'\n# This should not be a heading`)
           expect(codeNode.lang).toBe('javascript')
         }
@@ -835,7 +848,7 @@ Jane | 25 | LA
         const paragraphNode = result.children.find((child: TestASTNode) => child.type === 'paragraph')
         expect(paragraphNode).toBeDefined()
         
-        if (paragraphNode?.children && paragraphNode.children[0]) {
+        if (paragraphNode?.children?.[0]) {
           const textNode = paragraphNode.children[0] as TestASTNode
           expect(textNode.type).toBe('text')
           expect(textNode.value).toBe('| Data 1 | Data 2 | Data 3 |\n| More 1 | More 2 | More 3 |')
@@ -863,7 +876,7 @@ Jane | 25 | LA
         const paragraphNode = result.children.find((child: TestASTNode) => child.type === 'paragraph')
         expect(paragraphNode).toBeDefined()
         
-        if (paragraphNode?.children && paragraphNode.children[0]) {
+        if (paragraphNode?.children?.[0]) {
           const textNode = paragraphNode.children[0] as TestASTNode
           expect(textNode.type).toBe('text')
           expect(textNode.value).toBe('| Column 1 | Column 2\n| Data 1 | Data 2 | Data 3 |')
@@ -1059,7 +1072,7 @@ Some text with **bold** formatting.
         // Should have text nodes with proper values
         const textNodes = paragraph.children.filter((child: TestASTNode) => child.type === 'text')
         expect(textNodes.length).toBeGreaterThan(0)
-        expect(textNodes.some((node: TestASTNode) => node.value && node.value.length > 0)).toBe(true)
+        expect(textNodes.some((node: TestASTNode) => typeof node.value === 'string' && node.value.length > 0)).toBe(true)
       }
     })
 
@@ -1224,11 +1237,11 @@ More text after link.
       if (paragraph?.children) {
         // Should have text nodes with values preserved
         const textNodes = paragraph.children.filter((child: TestASTNode) => 
-          child.type === 'text' && child.value
+          child.type === 'text' && typeof child.value === 'string'
         )
         expect(textNodes.length).toBeGreaterThan(0)
         expect(textNodes.some((node: TestASTNode) => 
-          node.value && node.value.includes('&')
+          typeof node.value === 'string' && node.value.includes('&')
         )).toBe(true)
       }
     })

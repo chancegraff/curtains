@@ -15,7 +15,7 @@ import type { TransformedDocument as ZodTransformedDocument } from '../ast/types
  * @param doc - Clean interface document
  * @returns Zod-compatible document
  */
-function mapInterfaceToZodDocument(doc: Document) {
+function mapInterfaceToZodDocument(doc: Document): import('../ast/types.js').Document {
   return {
     type: doc.type,
     version: doc.version,

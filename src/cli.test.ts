@@ -534,8 +534,6 @@ describe('CLI', () => {
     it('should not execute main when imported as module', () => {
       // This test covers the import.meta.url check that prevents execution when imported
       // The actual line 232-233 check is for direct execution vs import
-      const originalArgv = process.argv[1]
-      const originalMetaUrl = import.meta.url
       
       // Simulate being imported (not matching the direct execution condition)
       expect(import.meta.url).not.toBe(`file://${process.argv[1]}`)

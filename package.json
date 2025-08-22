@@ -7,7 +7,7 @@
     "curtains": "./bin/curtains"
   },
   "scripts": {
-    "build": "tsc && npm run copy:templates && npm run build:bin",
+    "build": "tsc -p tsconfig.build.json && npm run copy:templates && npm run build:bin",
     "copy:templates": "mkdir -p dist/src/templates && cp src/templates/style.css dist/src/templates/",
     "build:bin": "chmod +x bin/curtains",
     "build:watch": "tsc --watch",
@@ -76,6 +76,8 @@
   },
   "dependencies": {
     "commander": "^14.0.0",
+    "postcss": "^8.5.6",
+    "postcss-selector-parser": "^7.1.0",
     "rehype": "^13.0.2",
     "remark": "^15.0.1",
     "remark-gfm": "^4.0.1",

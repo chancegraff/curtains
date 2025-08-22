@@ -4,7 +4,11 @@ import { DEFAULTS } from '../config/constants.js'
 // Type helpers for tests
 type TestASTNode = {
   type: string
-  [key: string]: any
+  children?: TestASTNode[]
+  value?: string
+  classes?: string[]
+  depth?: number
+  [key: string]: unknown
 }
 
 describe('Parser - Container Parsing', () => {
@@ -191,12 +195,12 @@ More content
       // Orphaned closing tag should be filtered out (as it's empty), 
       // but we should have the other content
       expect(result.ast).toHaveLength(2)
-      expect((result.ast[0] as any)?.type).toBe('paragraph')
-      expect((result.ast[1] as any)?.type).toBe('paragraph')
+      expect((result.ast[0] as TestASTNode)?.type).toBe('paragraph')
+      expect((result.ast[1] as TestASTNode)?.type).toBe('paragraph')
       
       // Check content is preserved  
-      expect((result.ast[0] as any)?.children[0]?.value).toBe('Some content')
-      expect((result.ast[1] as any)?.children[0]?.value).toBe('More content')
+      expect((result.ast[0] as TestASTNode)?.children[0]?.value).toBe('Some content')
+      expect((result.ast[1] as TestASTNode)?.children[0]?.value).toBe('More content')
     })
 
     it('should handle unclosed containers', () => {
@@ -214,12 +218,12 @@ More content without closing tag
       expect(result.ast.length).toBeGreaterThan(0)
       // Unclosed container should be treated as regular content
       // The opening tag should appear as a text node
-      expect((result.ast[0] as any)?.type).toBe('text')
-      expect((result.ast[0] as any)?.value).toBe('<container class="unclosed">')
+      expect((result.ast[0] as TestASTNode)?.type).toBe('text')
+      expect((result.ast[0] as TestASTNode)?.value).toBe('<container class="unclosed">')
       
       // And the content should be parsed normally
-      expect((result.ast[1] as any)?.type).toBe('heading')
-      expect((result.ast[2] as any)?.type).toBe('paragraph')
+      expect((result.ast[1] as TestASTNode)?.type).toBe('heading')
+      expect((result.ast[2] as TestASTNode)?.type).toBe('paragraph')
     })
 
     it('should handle unclosed containers without class attribute', () => {
@@ -237,12 +241,12 @@ More content without closing tag
       expect(result.ast.length).toBeGreaterThan(0)
       // Unclosed container should be treated as regular content
       // The opening tag should appear as a text node
-      expect((result.ast[0] as any)?.type).toBe('text')
-      expect((result.ast[0] as any)?.value).toBe('<container>')
+      expect((result.ast[0] as TestASTNode)?.type).toBe('text')
+      expect((result.ast[0] as TestASTNode)?.value).toBe('<container>')
       
       // And the content should be parsed normally
-      expect((result.ast[1] as any)?.type).toBe('heading')
-      expect((result.ast[2] as any)?.type).toBe('paragraph')
+      expect((result.ast[1] as TestASTNode)?.type).toBe('heading')
+      expect((result.ast[2] as TestASTNode)?.type).toBe('paragraph')
     })
   })
 
@@ -342,7 +346,7 @@ This is a paragraph with **bold** text.
 
       // Assert
       expect(result.children.length).toBeGreaterThan(0)
-      const types = result.children.map((child: any) => child.type)
+      const types = result.children.map((child: TestASTNode) => child.type)
       expect(types).toContain('heading')
       expect(types).toContain('paragraph')
     })
@@ -379,11 +383,6 @@ This is a paragraph with **bold** text.
 
     it('should handle unknown markdown node types gracefully', () => {
       // This tests the default case in convertNodeToAST that returns [] (line 391)
-      const mockMarkdownNode = {
-        type: 'unknownNodeType',
-        value: 'test content'
-      }
-      
       // We can't directly test the private function, but we can test that the parser
       // handles unknown node types without crashing
       const content = `# Valid Content\n\nNormal paragraph.`
@@ -429,12 +428,12 @@ This is a paragraph with **bold** text.
         if (node.type === 'text') {
           textNodes.push(node)
         }
-        if (node.children) {
-          node.children.forEach(collectTextNodes)
+        if (node.children !== null && node.children !== undefined && node.children.length > 0) {
+          (node.children as TestASTNode[]).forEach(collectTextNodes)
         }
       }
       
-      result.children.forEach(collectTextNodes)
+      (result.children as TestASTNode[]).forEach(collectTextNodes)
       expect(textNodes.length).toBeGreaterThan(0)
     })
   })

@@ -2,7 +2,6 @@
 // Comprehensive tests for Zod schema validation
 
 import { describe, it, expect } from 'vitest'
-import { z } from 'zod'
 import { 
   ThemeSchema, 
   BuildOptionsSchema, 
@@ -62,7 +61,7 @@ describe('Configuration Schemas', () => {
       const result = ThemeSchema.safeParse('invalid')
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error.issues[0].message).toContain('Invalid option')
+        expect(result.error.issues[0]?.message).toContain('Invalid option')
       }
     })
   })
@@ -93,7 +92,7 @@ describe('Configuration Schemas', () => {
         if (result.success) {
           expect(result.data.input).toBe(options.input)
           expect(result.data.output).toBe(options.output)
-          expect(result.data.theme).toBe(options.theme || 'light')
+          expect(result.data.theme).toBe(options.theme ?? 'light')
         }
       })
     })
@@ -257,7 +256,7 @@ describe('Configuration Schemas', () => {
       const result = ErrorCodeSchema.safeParse('UNKNOWN')
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error.issues[0].message).toContain('Invalid option')
+        expect(result.error.issues[0]?.message).toContain('Invalid option')
       }
     })
   })
@@ -414,10 +413,10 @@ describe('Configuration Schemas', () => {
         if (result.success) {
           expect(result.data.command).toBe('build')
           expect(result.data.input).toBe(args.input)
-          if (args.output) {
+          if (args.output !== null && args.output !== '') {
             expect(result.data.output).toBe(args.output)
           }
-          if (args.theme) {
+          if (args.theme !== null && args.theme !== '') {
             expect(result.data.theme).toBe(args.theme)
           }
         }
@@ -574,8 +573,8 @@ describe('Configuration Schemas', () => {
       if (argsResult.success) {
         const buildOptions = {
           input: argsResult.data.input,
-          output: argsResult.data.output || 'default.html',
-          theme: argsResult.data.theme || 'light'
+          output: argsResult.data.output ?? 'default.html',
+          theme: argsResult.data.theme ?? 'light'
         }
 
         const buildResult = BuildOptionsSchema.safeParse(buildOptions)

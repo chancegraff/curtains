@@ -116,12 +116,16 @@ Second slide content`
         const match = container.match(REGEX.CONTAINER)
         
         expect(match).not.toBeNull()
-        expect(match![0]).toBe(container)
+        if (match !== null) {
+          expect(match[0]).toBe(container)
+        }
         // Check captured groups via exec
         REGEX.CONTAINER.lastIndex = 0 // Reset for exec
         const execMatch = REGEX.CONTAINER.exec(container)
-        expect(execMatch![1]).toBe('test-class')
-        expect(execMatch![2]).toBe('Hello World')
+        if (execMatch !== null) {
+          expect(execMatch[1]).toBe('test-class')
+          expect(execMatch[2]).toBe('Hello World')
+        }
       })
 
       it('should handle nested containers', () => {
@@ -202,7 +206,9 @@ Second slide content`
         const match = REGEX.STYLE.exec(style)
         
         expect(match).not.toBeNull()
-        expect(match![1]).toBe('.test { color: red; }')
+        if (match !== null) {
+          expect(match[1]).toBe('.test { color: red; }')
+        }
       })
 
       it('should handle empty style blocks', () => {

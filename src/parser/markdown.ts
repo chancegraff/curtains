@@ -22,7 +22,172 @@ interface MarkdownNode {
   start?: number
   spread?: boolean
   classes?: string[]
+  align?: 'left' | 'center' | 'right'
+  header?: boolean
+  parent?: MdastNode
 }
+
+// Base interface for mdast nodes
+interface MdastNode {
+  type: string
+  value?: string
+  children?: MdastNode[]
+  position?: {
+    start: { line: number; column: number; offset: number }
+    end: { line: number; column: number; offset: number }
+  }
+  data?: Record<string, unknown>
+}
+
+// Specific mdast node interfaces
+interface MdastRoot extends MdastNode {
+  type: 'root'
+  children: MdastNode[]
+}
+
+interface MdastHeading extends MdastNode {
+  type: 'heading'
+  depth: number
+  children: MdastNode[]
+}
+
+interface MdastParagraph extends MdastNode {
+  type: 'paragraph'
+  children: MdastNode[]
+}
+
+interface MdastText extends MdastNode {
+  type: 'text'
+  value: string
+}
+
+interface MdastStrong extends MdastNode {
+  type: 'strong'
+  children: MdastNode[]
+}
+
+interface MdastEmphasis extends MdastNode {
+  type: 'emphasis'
+  children: MdastNode[]
+}
+
+interface MdastLink extends MdastNode {
+  type: 'link'
+  url: string
+  children: MdastNode[]
+}
+
+interface MdastImage extends MdastNode {
+  type: 'image'
+  url: string
+  alt?: string
+  classes?: string[]
+}
+
+interface MdastList extends MdastNode {
+  type: 'list'
+  ordered?: boolean
+  children: MdastNode[]
+}
+
+interface MdastListItem extends MdastNode {
+  type: 'listItem'
+  children: MdastNode[]
+}
+
+interface MdastCode extends MdastNode {
+  type: 'code'
+  value: string
+  lang?: string
+  meta?: string
+}
+
+interface MdastTable extends MdastNode {
+  type: 'table'
+  align?: Array<'left' | 'center' | 'right' | null>
+  children: MdastNode[]
+}
+
+interface MdastTableRow extends MdastNode {
+  type: 'tableRow'
+  children: MdastNode[]
+}
+
+interface MdastTableCell extends MdastNode {
+  type: 'tableCell'
+  children: MdastNode[]
+  align?: 'left' | 'center' | 'right'
+}
+
+interface MdastHtml extends MdastNode {
+  type: 'html'
+  value: string
+}
+
+// Type guards for mdast nodes
+function isMdastRoot(node: MdastNode): node is MdastRoot {
+  return node.type === 'root'
+}
+
+function isMdastHeading(node: MdastNode): node is MdastHeading {
+  return node.type === 'heading'
+}
+
+function isMdastParagraph(node: MdastNode): node is MdastParagraph {
+  return node.type === 'paragraph'
+}
+
+function isMdastText(node: MdastNode): node is MdastText {
+  return node.type === 'text'
+}
+
+function isMdastStrong(node: MdastNode): node is MdastStrong {
+  return node.type === 'strong'
+}
+
+function isMdastEmphasis(node: MdastNode): node is MdastEmphasis {
+  return node.type === 'emphasis'
+}
+
+function isMdastLink(node: MdastNode): node is MdastLink {
+  return node.type === 'link'
+}
+
+function isMdastImage(node: MdastNode): node is MdastImage {
+  return node.type === 'image'
+}
+
+function isMdastList(node: MdastNode): node is MdastList {
+  return node.type === 'list'
+}
+
+function isMdastListItem(node: MdastNode): node is MdastListItem {
+  return node.type === 'listItem'
+}
+
+function isMdastCode(node: MdastNode): node is MdastCode {
+  return node.type === 'code'
+}
+
+function isMdastTable(node: MdastNode): node is MdastTable {
+  return node.type === 'table'
+}
+
+function isMdastTableRow(node: MdastNode): node is MdastTableRow {
+  return node.type === 'tableRow'
+}
+
+function isMdastTableCell(node: MdastNode): node is MdastTableCell {
+  return node.type === 'tableCell'
+}
+
+function isMdastHtml(node: MdastNode): node is MdastHtml {
+  return node.type === 'html'
+}
+
+// Handler function type
+// eslint-disable-next-line no-unused-vars
+type NodeHandler = (_node: MdastNode) => void
 
 /**
  * Sanitizes HTML img tag attributes, allowing only src, alt, and class attributes
@@ -60,41 +225,42 @@ function sanitizeImgAttributes(imgTagMatch: string): { src: string; alt: string;
 /**
  * Custom remark plugin to handle HTML img tags
  */
-function remarkCurtainsPlugin() {
-  return function transformer(tree: any) {
+// eslint-disable-next-line no-unused-vars
+function remarkCurtainsPlugin(): (_tree: MdastNode) => void {
+  return function transformer(tree: MdastNode): void {
     visit(tree, handleNode)
   }
 
-  function visit(node: any, handler: (node: any, parent?: any) => void) {
+  function visit(node: MdastNode, handler: NodeHandler): void {
     handler(node)
-    if (node.children) {
+    if (node.children && Array.isArray(node.children)) {
       for (const child of node.children) {
-        child.parent = node // Set parent reference
+        (child as MdastNode & { parent?: MdastNode }).parent = node // Set parent reference
         visit(child, handler)
       }
     }
   }
 
-  function handleNode(node: any) {
+  function handleNode(node: MdastNode): void {
     // Handle HTML img tags in both text and html nodes
-    if ((node.type === 'text' || node.type === 'html') && node.value) {
+    if ((isMdastText(node) || isMdastHtml(node)) && typeof node.value === 'string') {
       const htmlImgPattern = /<img[^>]*>/gi
       let match
       let lastIndex = 0
-      const newNodes: any[] = []
+      const newNodes: MdastNode[] = []
       
       while ((match = htmlImgPattern.exec(node.value)) !== null) {
         // Add text before img tag
         if (match.index > lastIndex) {
           const beforeText = node.value.substring(lastIndex, match.index)
-          if (beforeText.trim()) {
+          if (beforeText.trim().length > 0) {
             newNodes.push({ type: 'text', value: beforeText })
           }
         }
         
         // Add img node
         const sanitized = sanitizeImgAttributes(match[0])
-        const imgNode: any = {
+        const imgNode: MdastImage = {
           type: 'image',
           url: sanitized.src,
           alt: sanitized.alt
@@ -112,16 +278,17 @@ function remarkCurtainsPlugin() {
         // Add remaining text
         if (lastIndex < node.value.length) {
           const remainingText = node.value.substring(lastIndex)
-          if (remainingText.trim()) {
+          if (remainingText.trim().length > 0) {
             newNodes.push({ type: 'text', value: remainingText })
           }
         }
         
         // Replace in parent
-        if (node.parent && node.parent.children) {
-          const nodeIndex = node.parent.children.indexOf(node)
+        const nodeWithParent = node as MdastNode & { parent?: MdastNode }
+        if (nodeWithParent.parent?.children && Array.isArray(nodeWithParent.parent.children)) {
+          const nodeIndex = nodeWithParent.parent.children.indexOf(node)
           if (nodeIndex !== -1) {
-            node.parent.children.splice(nodeIndex, 1, ...newNodes)
+            nodeWithParent.parent.children.splice(nodeIndex, 1, ...newNodes)
           }
         }
       }
@@ -132,146 +299,189 @@ function remarkCurtainsPlugin() {
 /**
  * Converts mdast node to our MarkdownNode format
  */
-function convertMdastNode(node: any): MarkdownNode {
+function convertMdastNode(node: MdastNode): MarkdownNode {
   const result: MarkdownNode = {
     type: node.type
   }
   
   // Handle specific node types
   switch (node.type) {
-    case 'root':
-      result.children = node.children?.map(convertMdastNode).filter(Boolean) ?? []
-      break
-      
-    case 'heading':
-      result.depth = node.depth
-      result.children = node.children?.map(convertMdastNode) ?? []
-      break
-      
-    case 'paragraph':
-      result.children = node.children?.map(convertMdastNode) ?? []
-      // If paragraph contains only a single image, return just the image for backwards compatibility
-      if (result.children && result.children.length === 1 && result.children[0]?.type === 'image') {
-        return result.children[0]
+    case 'root': {
+      if (isMdastRoot(node)) {
+        result.children = node.children.map(convertMdastNode).filter(Boolean)
       }
       break
+    }
       
-    case 'text':
-      result.value = node.value
-      break
-      
-    case 'strong':
-      // Convert strong to text with bold flag for compatibility
-      if (node.children && node.children.length === 1 && node.children[0].type === 'text') {
-        result.type = 'text'
-        result.value = node.children[0].value
-        result.bold = true
-      } else {
-        result.children = node.children?.map(convertMdastNode) ?? []
+    case 'heading': {
+      if (isMdastHeading(node)) {
+        result.depth = node.depth
+        result.children = node.children.map(convertMdastNode)
       }
       break
+    }
       
-    case 'emphasis':
-      // Handle emphasis by extracting text and marking as italic
-      if (node.children && node.children.length === 1 && node.children[0].type === 'text') {
-        // Single text child - convert to italic text node
-        result.type = 'text'
-        result.value = node.children[0].value
-        result.italic = true
-      } else {
-        // Multiple children - need to handle recursively
-        result.type = 'paragraph'
-        result.children = node.children?.map((child: any) => {
-          if (child.type === 'text') {
-            return {
-              type: 'text',
-              value: child.value,
-              italic: true
-            }
-          }
-          const converted = convertMdastNode(child)
-          // Mark nested text nodes as italic
-          if (converted.type === 'text') {
-            converted.italic = true
-          }
-          return converted
-        }) ?? []
-      }
-      break
-      
-    case 'link':
-      result.url = node.url
-      result.children = node.children?.map(convertMdastNode) ?? []
-      break
-      
-    case 'image':
-      result.url = node.url
-      result.alt = node.alt || ''
-      if (node.classes) {
-        result.classes = node.classes
-      }
-      break
-      
-    case 'list':
-      result.ordered = node.ordered || false
-      result.children = node.children?.map(convertMdastNode) ?? []
-      break
-      
-    case 'listItem':
-      result.children = node.children?.map(convertMdastNode) ?? []
-      break
-      
-    case 'code':
-      result.value = node.value
-      if (node.lang) {
-        result.lang = node.lang
-      }
-      break
-      
-    case 'table':
-      // Transfer alignment from table to cells
-      const tableAlign = node.align as ('left' | 'center' | 'right')[] | undefined
-      result.children = node.children?.map((rowNode: any) => {
-        if (rowNode.type === 'tableRow') {
-          const convertedRow = convertMdastNode(rowNode)
-          // Apply alignment to cells in this row
-          if (convertedRow.children && tableAlign) {
-            convertedRow.children = convertedRow.children.map((cell: any, index: number) => {
-              if (cell.type === 'tableCell' && tableAlign[index]) {
-                cell.align = tableAlign[index]
-              }
-              return cell
-            })
-          }
-          return convertedRow
+    case 'paragraph': {
+      if (isMdastParagraph(node)) {
+        result.children = node.children.map(convertMdastNode)
+        // If paragraph contains only a single image, return just the image for backwards compatibility
+        if (result.children.length === 1 && result.children[0]?.type === 'image') {
+          return result.children[0]
         }
-        return convertMdastNode(rowNode)
-      }) ?? []
-      break
-      
-    case 'tableRow':
-      result.children = node.children?.map(convertMdastNode) ?? []
-      break
-      
-    case 'tableCell':
-      result.children = node.children?.map(convertMdastNode) ?? []
-      // Handle table cell properties from mdast
-      if (node.align) {
-        (result as any).align = node.align
       }
-      // For GFM tables, first row cells are typically headers
-      // This is handled by the table processing logic
       break
+    }
       
-    default:
+    case 'text': {
+      if (isMdastText(node)) {
+        result.value = node.value
+      }
+      break
+    }
+      
+    case 'strong': {
+      if (isMdastStrong(node)) {
+        // Convert strong to text with bold flag for compatibility
+        if (node.children.length === 1 && isMdastText(node.children[0])) {
+          result.type = 'text'
+          result.value = node.children[0].value
+          result.bold = true
+        } else {
+          result.children = node.children.map(convertMdastNode)
+        }
+      }
+      break
+    }
+      
+    case 'emphasis': {
+      if (isMdastEmphasis(node)) {
+        // Handle emphasis by extracting text and marking as italic
+        if (node.children.length === 1 && isMdastText(node.children[0])) {
+          // Single text child - convert to italic text node
+          result.type = 'text'
+          result.value = node.children[0].value
+          result.italic = true
+        } else {
+          // Multiple children - need to handle recursively
+          result.type = 'paragraph'
+          result.children = node.children.map((child: MdastNode) => {
+            if (isMdastText(child)) {
+              return {
+                type: 'text',
+                value: child.value,
+                italic: true
+              }
+            }
+            const converted = convertMdastNode(child)
+            // Mark nested text nodes as italic
+            if (converted.type === 'text') {
+              converted.italic = true
+            }
+            return converted
+          })
+        }
+      }
+      break
+    }
+      
+    case 'link': {
+      if (isMdastLink(node)) {
+        result.url = node.url
+        result.children = node.children.map(convertMdastNode)
+      }
+      break
+    }
+      
+    case 'image': {
+      if (isMdastImage(node)) {
+        result.url = node.url
+        result.alt = node.alt ?? ''
+        if (node.classes && node.classes.length > 0) {
+          result.classes = node.classes
+        }
+      }
+      break
+    }
+      
+    case 'list': {
+      if (isMdastList(node)) {
+        result.ordered = node.ordered ?? false
+        result.children = node.children.map(convertMdastNode)
+      }
+      break
+    }
+      
+    case 'listItem': {
+      if (isMdastListItem(node)) {
+        result.children = node.children.map(convertMdastNode)
+      }
+      break
+    }
+      
+    case 'code': {
+      if (isMdastCode(node)) {
+        result.value = node.value
+        if (typeof node.lang === 'string' && node.lang.length > 0) {
+          result.lang = node.lang
+        }
+      }
+      break
+    }
+      
+    case 'table': {
+      if (isMdastTable(node)) {
+        // Transfer alignment from table to cells
+        const tableAlign = node.align
+        result.children = node.children.map((rowNode: MdastNode) => {
+          if (isMdastTableRow(rowNode)) {
+            const convertedRow = convertMdastNode(rowNode)
+            // Apply alignment to cells in this row
+            if (convertedRow.children && tableAlign) {
+              convertedRow.children = convertedRow.children.map((cell: MarkdownNode, index: number) => {
+                if (cell.type === 'tableCell' && tableAlign[index]) {
+                  cell.align = tableAlign[index]
+                }
+                return cell
+              })
+            }
+            return convertedRow
+          }
+          return convertMdastNode(rowNode)
+        })
+      }
+      break
+    }
+      
+    case 'tableRow': {
+      if (isMdastTableRow(node)) {
+        result.children = node.children.map(convertMdastNode)
+      }
+      break
+    }
+      
+    case 'tableCell': {
+      if (isMdastTableCell(node)) {
+        result.children = node.children.map(convertMdastNode)
+        // Handle table cell properties from mdast
+        if (node.align) {
+          result.align = node.align
+        }
+        // For GFM tables, first row cells are typically headers
+        // This is handled by the table processing logic
+      }
+      break
+    }
+      
+    default: {
       // For unknown nodes, try to preserve children
-      if (node.children) {
+      if (node.children && Array.isArray(node.children)) {
         result.children = node.children.map(convertMdastNode)
       }
       if (node.value !== undefined) {
         result.value = node.value
       }
       break
+    }
   }
   
   return result
@@ -315,16 +525,16 @@ function postProcessTables(node: MarkdownNode): MarkdownNode {
     if (firstRow && firstRow.type === 'tableRow' && firstRow.children) {
       for (const cell of firstRow.children) {
         if (cell.type === 'tableCell') {
-          (cell as any).header = true
+          cell.header = true
         }
       }
     }
     
     // Process all table cells to ensure empty cells have proper structure
     for (const row of node.children) {
-      if (row && row.type === 'tableRow' && row.children) {
+      if (row !== null && row.type === 'tableRow' && Array.isArray(row.children)) {
         for (const cell of row.children) {
-          if (cell && cell.type === 'tableCell') {
+          if (cell !== null && cell.type === 'tableCell') {
             // Ensure empty cells have at least one text node with empty value
             if (!cell.children || cell.children.length === 0) {
               cell.children = [{ type: 'text', value: '' }]

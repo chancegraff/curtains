@@ -4,7 +4,11 @@ import { DEFAULTS } from '../config/constants.js'
 // Type helpers for tests
 type TestASTNode = {
   type: string
-  [key: string]: any
+  children?: TestASTNode[]
+  value?: string
+  classes?: string[]
+  depth?: number
+  [key: string]: unknown
 }
 
 describe('Parser - Main Integration', () => {

@@ -40,7 +40,7 @@ export {
  * @param format - Format hint (defaults to 'curtains')
  * @returns Transformed document ready for rendering
  */
-export function processContent(content: string, format = 'curtains') {
+export function processContent(content: string, format = 'curtains'): import('./interfaces.js').TransformedDocument {
   const document = parseContent(content, format)
   return transformDocument(document)
 }
@@ -78,7 +78,7 @@ export function createPipeline(
   parser: MarkdownParser,
   transformer: DocumentTransformer
 ) {
-  return function process(content: string, format = 'curtains') {
+  return function process(content: string, format = 'curtains'): import('./interfaces.js').TransformedDocument {
     if (!parser.supports(format)) {
       throw new Error(`Parser does not support format: ${format}`)
     }

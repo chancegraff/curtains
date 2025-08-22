@@ -57,7 +57,7 @@ describe('transform', () => {
       })
 
       expect(mockAstToHTML).toHaveBeenCalledTimes(1)
-      expect(mockAstToHTML).toHaveBeenCalledWith(document.slides[0].ast)
+      expect(mockAstToHTML).toHaveBeenCalledWith(document.slides[0]?.ast)
       expect(mockScopeStyles).toHaveBeenCalledTimes(1)
       expect(mockScopeStyles).toHaveBeenCalledWith('.hero { color: blue; }', 0)
     })
@@ -311,7 +311,7 @@ describe('transform', () => {
       }
 
       mockAstToHTML.mockImplementation(() => '<p>Slide content</p>')
-      mockScopeStyles.mockImplementation((css: string, index: number) => 
+      mockScopeStyles.mockImplementation((_: string, index: number) => 
         `.curtains-slide:nth-child(${index + 1}) .slide-${index} { color: hsl(${index * 4}, 70%, 50%); }`
       )
 
@@ -404,7 +404,7 @@ describe('transform', () => {
 
       const result = transform(document)
 
-      expect(result.slides[0].css).toBe(expectedScopedCSS)
+      expect(result.slides[0]?.css).toBe(expectedScopedCSS)
       expect(mockScopeStyles).toHaveBeenCalledWith(complexCSS, 0)
     })
   })
@@ -448,8 +448,8 @@ describe('transform', () => {
       expect(result.slides).toHaveLength(1)
       expect(result.slides[0]).toHaveProperty('html')
       expect(result.slides[0]).toHaveProperty('css')
-      expect(typeof result.slides[0].html).toBe('string')
-      expect(typeof result.slides[0].css).toBe('string')
+      expect(typeof result.slides[0]?.html).toBe('string')
+      expect(typeof result.slides[0]?.css).toBe('string')
       expect(typeof result.globalCSS).toBe('string')
     })
 
@@ -664,7 +664,7 @@ describe('transform', () => {
 
       const result = transform(document)
 
-      expect(result.slides[0].css).toBe('')
+      expect(result.slides[0]?.css).toBe('')
       expect(result.globalCSS).toBe('   \n\t   \n   ')
       expect(mockScopeStyles).toHaveBeenCalledWith('   \n\t   \n   ', 0)
     })
@@ -694,8 +694,8 @@ describe('transform', () => {
       const result = transform(document)
 
       expect(result.slides).toHaveLength(1)
-      expect(result.slides[0].html).toBe('<p>Single slide</p>')
-      expect(result.slides[0].css).toBe('.curtains-slide:nth-child(1) .single { text-align: center; }')
+      expect(result.slides[0]?.html).toBe('<p>Single slide</p>')
+      expect(result.slides[0]?.css).toBe('.curtains-slide:nth-child(1) .single { text-align: center; }')
       expect(result.globalCSS).toBe('html, body { height: 100%; }')
     })
 
@@ -743,8 +743,8 @@ describe('transform', () => {
 
       const result = transform(document)
 
-      expect(result.slides[0].html).toBe(expectedHTML)
-      expect(result.slides[0].css).toBe(expectedCSS)
+      expect(result.slides[0]?.html).toBe(expectedHTML)
+      expect(result.slides[0]?.css).toBe(expectedCSS)
       expect(mockAstToHTML).toHaveBeenCalledWith(deeplyNestedAST)
     })
   })
@@ -786,12 +786,12 @@ describe('transform', () => {
       expect(result.slides).toHaveLength(1)
       
       // Verify HTML contains expected heading
-      expect(result.slides[0].html).toContain('<h1>')
-      expect(result.slides[0].html).toContain('Integration Test')
+      expect(result.slides[0]?.html).toContain('<h1>')
+      expect(result.slides[0]?.html).toContain('Integration Test')
       
       // Verify CSS was scoped
-      expect(result.slides[0].css).toContain('.curtains-slide:nth-child(1)')
-      expect(result.slides[0].css).toContain('.title')
+      expect(result.slides[0]?.css).toContain('.curtains-slide:nth-child(1)')
+      expect(result.slides[0]?.css).toContain('.title')
       
       // Verify global CSS is preserved
       expect(result.globalCSS).toBe('body { margin: 0; }')

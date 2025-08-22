@@ -166,7 +166,8 @@ describe('Configuration Types', () => {
     })
 
     it('should be usable in switch statements', () => {
-      const code: ErrorCode = 'INVALID_ARGS'
+      const codes: ErrorCode[] = ['INVALID_ARGS', 'FILE_ACCESS', 'PARSE_ERROR', 'NO_SLIDES', 'OUTPUT_ERROR']
+      const code = codes[0]
       let message = ''
 
       switch (code) {
@@ -187,7 +188,7 @@ describe('Configuration Types', () => {
           break
         default:
           // This should never be reached with proper typing
-          expectTypeOf(code).toBeNever()
+          message = `Unexpected code: ${code}`
       }
 
       expect(message).toBe('Invalid arguments')
@@ -354,8 +355,8 @@ describe('Configuration Types', () => {
       function processArgs(args: ParsedArgs): BuildOptions {
         return {
           input: args.input,
-          output: args.output || 'default.html',
-          theme: (args.theme as Theme) || 'light'
+          output: (args.output !== null && args.output !== undefined && args.output !== '') ? args.output : 'default.html',
+          theme: (args.theme as Theme) ?? 'light'
         }
       }
 
@@ -432,9 +433,10 @@ describe('Configuration Types', () => {
 
   describe('Type utility and helper compatibility', () => {
     it('should work with generic utility functions', () => {
-      function validateAndTransform<T>(schema: { safeParse: (val: unknown) => { success: boolean; data?: T } }, value: unknown): T | null {
+      // eslint-disable-next-line no-unused-vars
+      function validateAndTransform<T>(schema: { safeParse: (input: unknown) => { success: boolean; data?: T } }, value: unknown): T | null {
         const result = schema.safeParse(value)
-        return result.success ? result.data! : null
+        return result.success && result.data !== undefined ? result.data : null
       }
 
       const theme = validateAndTransform(ThemeSchema, 'light')

@@ -20,6 +20,27 @@ import type {
   TransformedSlide,
   TransformedDocument
 } from './types.js'
+
+// Type guard functions to help TypeScript with union type discrimination
+function isTextNode(node: unknown): node is TextNode {
+  return typeof node === 'object' && node !== null && 'type' in node && (node as {type: string}).type === 'text'
+}
+
+function isHeadingNode(node: unknown): node is HeadingNode {
+  return typeof node === 'object' && node !== null && 'type' in node && (node as {type: string}).type === 'heading'
+}
+
+function isContainerNode(node: unknown): node is ContainerNode {
+  return typeof node === 'object' && node !== null && 'type' in node && (node as {type: string}).type === 'container'
+}
+
+function isParagraphNode(node: unknown): node is ParagraphNode {
+  return typeof node === 'object' && node !== null && 'type' in node && (node as {type: string}).type === 'paragraph'
+}
+
+function hasChildren(node: unknown): node is HeadingNode | ParagraphNode | ListNode | ListItemNode | ContainerNode | LinkNode {
+  return typeof node === 'object' && node !== null && 'children' in node && Array.isArray((node as {children: unknown[]}).children)
+}
 import {
   NodeTypeSchema,
   TextNodeSchema,
@@ -249,17 +270,19 @@ describe('AST Types', () => {
     })
 
     it('should provide proper type discrimination', () => {
-      const testNode: ASTNode = { type: 'text', value: 'Hello' }
+      const testNode: TextNode = { type: 'text', value: 'Hello' }
 
       // TypeScript should provide proper type narrowing
       if (testNode.type === 'text') {
+        // Now TypeScript knows this is a TextNode
         expect(testNode.value).toBe('Hello')
         // TypeScript should know that 'depth' doesn't exist on TextNode
         expect('depth' in testNode).toBe(false)
       }
 
-      const headingNode: ASTNode = { type: 'heading', depth: 2, children: [] }
+      const headingNode: HeadingNode = { type: 'heading', depth: 2, children: [] }
       if (headingNode.type === 'heading') {
+        // Now TypeScript knows this is a HeadingNode
         expect(headingNode.depth).toBe(2)
         // TypeScript should know that 'value' doesn't exist on HeadingNode
         expect('value' in headingNode).toBe(false)
@@ -475,18 +498,27 @@ describe('AST Types', () => {
       }
 
       // Verify deep property access works
-      expect(complexStructure.slides[0]?.ast.children[0]?.type).toBe('container')
+      const firstSlide = complexStructure.slides[0]
+      expect(firstSlide).toBeDefined()
+      if (!firstSlide) return
+
+      const firstChild = firstSlide.ast.children[0] as unknown
+      expect(firstChild).toBeDefined()
+      if (typeof firstChild === 'object' && firstChild !== null && 'type' in firstChild) {
+        expect((firstChild as {type: string}).type).toBe('container')
+      }
+      if (firstChild === null) return
       
-      const container = complexStructure.slides[0]?.ast.children[0]
-      if (container && container.type === 'container') {
+      const container = firstChild
+      if (isContainerNode(container)) {
         expect(container.classes).toEqual(['slide-center'])
         
         const heading = container.children[0]
-        if (heading && heading.type === 'heading') {
+        if (heading !== null && isHeadingNode(heading)) {
           expect(heading.depth).toBe(1)
           
           const firstText = heading.children[0]
-          if (firstText && firstText.type === 'text') {
+          if (firstText !== null && isTextNode(firstText)) {
             expect(firstText.value).toBe('Welcome to ')
           }
         }
@@ -615,8 +647,14 @@ describe('AST Types', () => {
 
     it('should work with generic functions', () => {
       // Function that works with any AST node
-      function getNodeType<T extends ASTNode>(node: T): T['type'] {
-        return node.type
+      function getNodeType(node: unknown): NodeType {
+        if (typeof node === 'object' && node !== null && 'type' in node) {
+          const typedNode = node as {type: unknown}
+          if (typeof typedNode.type === 'string') {
+            return typedNode.type as NodeType
+          }
+        }
+        throw new Error('Invalid node type')
       }
 
       const textNode: TextNode = { type: 'text', value: 'Hello' }
@@ -629,13 +667,7 @@ describe('AST Types', () => {
     })
 
     it('should support type guards', () => {
-      function isTextNode(node: ASTNode): node is TextNode {
-        return node.type === 'text'
-      }
-
-      function isHeadingNode(node: ASTNode): node is HeadingNode {
-        return node.type === 'heading'
-      }
+      // Use the type guards defined above
 
       const mixedNodes: ASTNode[] = [
         { type: 'text', value: 'Hello' },
@@ -643,8 +675,8 @@ describe('AST Types', () => {
         { type: 'paragraph', children: [] }
       ]
 
-      const textNodes = mixedNodes.filter(isTextNode)
-      const headingNodes = mixedNodes.filter(isHeadingNode)
+      const textNodes = mixedNodes.filter((node): node is TextNode => isTextNode(node))
+      const headingNodes = mixedNodes.filter((node): node is HeadingNode => isHeadingNode(node))
 
       expect(textNodes).toHaveLength(1)
       expect(headingNodes).toHaveLength(1)
@@ -683,13 +715,13 @@ describe('AST Types', () => {
       }
 
       // Extract all text content
-      function extractTextContent(node: ASTNode): string {
-        if (node.type === 'text') {
+      function extractTextContent(node: unknown): string {
+        if (isTextNode(node)) {
           return node.value
         }
 
-        if ('children' in node && Array.isArray(node.children)) {
-          return node.children.map(extractTextContent).join(' ')
+        if (hasChildren(node)) {
+          return node.children.map(child => extractTextContent(child)).join(' ')
         }
 
         return ''
@@ -697,7 +729,7 @@ describe('AST Types', () => {
 
       const slide = document.slides[0]
       if (slide) {
-        const textContent = slide.ast.children.map(extractTextContent).join(' ')
+        const textContent = slide.ast.children.map((child: unknown) => extractTextContent(child)).join(' ')
         expect(textContent).toBe('Title Content')
       }
     })
@@ -734,14 +766,17 @@ describe('AST Types', () => {
       }
 
       // Count nodes by type
-      function countNodesByType(node: ASTNode | CurtainsAST): Record<string, number> {
+      function countNodesByType(node: object): Record<string, number> {
         const counts: Record<string, number> = {}
         
-        function traverse(n: ASTNode | CurtainsAST) {
-          counts[n.type] = (counts[n.type] || 0) + 1
+        function traverse(n: object): void {
+          if ('type' in n && typeof (n as {type: string}).type === 'string') {
+            const nodeType = (n as {type: string}).type
+            counts[nodeType] = (counts[nodeType] ?? 0) + 1
+          }
           
-          if ('children' in n && Array.isArray(n.children)) {
-            n.children.forEach(traverse)
+          if ('children' in n && Array.isArray((n as {children: object[]}).children)) {
+            (n as {children: object[]}).children.forEach(child => traverse(child))
           }
         }
         
@@ -761,17 +796,18 @@ describe('AST Types', () => {
     it('should support transformation patterns', () => {
       // Transform a document by modifying all text nodes
       function transformTextNodes(
-        node: ASTNode,
+        node: unknown,
+        // eslint-disable-next-line no-unused-vars
         transformer: (text: string) => string
-      ): ASTNode {
-        if (node.type === 'text') {
+      ): unknown {
+        if (isTextNode(node)) {
           return {
             ...node,
             value: transformer(node.value)
           }
         }
 
-        if ('children' in node && Array.isArray(node.children)) {
+        if (hasChildren(node)) {
           return {
             ...node,
             children: node.children.map(child => transformTextNodes(child, transformer))
@@ -789,17 +825,17 @@ describe('AST Types', () => {
         ]
       }
 
-      const transformedNode = transformTextNodes(originalNode, text => text.toUpperCase())
+      const transformedNode = transformTextNodes(originalNode, (text: string) => text.toUpperCase())
 
-      if (transformedNode.type === 'paragraph') {
+      if (isParagraphNode(transformedNode)) {
         const firstChild = transformedNode.children[0]
         const secondChild = transformedNode.children[1]
         
-        if (firstChild && firstChild.type === 'text') {
+        if (firstChild !== null && isTextNode(firstChild)) {
           expect(firstChild.value).toBe('HELLO WORLD')
         }
         
-        if (secondChild && secondChild.type === 'text') {
+        if (secondChild !== null && isTextNode(secondChild)) {
           expect(secondChild.value).toBe('CURTAINS ROCKS')
         }
       }

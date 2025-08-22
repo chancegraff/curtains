@@ -227,12 +227,12 @@ describe('Runtime JavaScript', () => {
       const result = getRuntimeJS()
 
       // Check for balanced braces and parentheses
-      const openBraces = (result.match(/{/g) || []).length
-      const closeBraces = (result.match(/}/g) || []).length
+      const openBraces = (result.match(/{/g) ?? []).length
+      const closeBraces = (result.match(/}/g) ?? []).length
       expect(openBraces).toBe(closeBraces)
 
-      const openParens = (result.match(/\(/g) || []).length
-      const closeParens = (result.match(/\)/g) || []).length
+      const openParens = (result.match(/\(/g) ?? []).length
+      const closeParens = (result.match(/\)/g) ?? []).length
       expect(openParens).toBe(closeParens)
 
       // Should not contain undefined variables

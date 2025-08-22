@@ -136,7 +136,8 @@ describe('CSS Merger', () => {
       expect(result).toContain('.slide-3 { color: green; }')
       // Should not contain multiple consecutive empty lines due to empty CSS
       const emptyLineSequences = result.match(/\n\s*\n\s*\n/g)
-      expect(emptyLineSequences?.length || 0).toBeLessThan(3)
+      const sequenceCount = emptyLineSequences?.length ?? 0
+      expect(sequenceCount).toBeLessThan(3)
     })
 
     it('should handle empty global CSS', async () => {
@@ -227,8 +228,8 @@ describe('CSS Merger', () => {
       expect(result).not.toMatch(/\s$/)
 
       // Should have balanced braces
-      const openBraces = (result.match(/{/g) || []).length
-      const closeBraces = (result.match(/}/g) || []).length
+      const openBraces = (result.match(/{/g) ?? []).length
+      const closeBraces = (result.match(/}/g) ?? []).length
       expect(openBraces).toBe(closeBraces)
     })
 

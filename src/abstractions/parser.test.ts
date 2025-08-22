@@ -653,7 +653,7 @@ describe('Parser Abstraction Layer', () => {
 
     it('should work with custom parser implementations', () => {
       class CustomParser implements MarkdownParser {
-        parse(_content: string): Document {
+        parse(): Document {
           return {
             type: 'curtains-document',
             version: '0.1',

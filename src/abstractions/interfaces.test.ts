@@ -433,7 +433,7 @@ describe('Abstraction Interfaces', () => {
   describe('MarkdownParser interface', () => {
     it('should define parser contract', () => {
       class TestParser implements MarkdownParser {
-        parse(_content: string): Document {
+        parse(): Document {
           return {
             type: 'curtains-document',
             version: '0.1',

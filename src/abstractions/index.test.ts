@@ -94,7 +94,7 @@ This is a test slide.
   describe('createPipeline', () => {
     it('should create a processing pipeline with custom parser and transformer', () => {
       const mockParser: MarkdownParser = {
-        parse: (content: string): Document => ({
+        parse: (): Document => ({
           type: 'curtains-document',
           version: '0.1',
           slides: [{
@@ -109,7 +109,7 @@ This is a test slide.
       }
 
       const mockTransformer: DocumentTransformer = {
-        transform: (document: Document): TransformedDocument => ({
+        transform: (): TransformedDocument => ({
           slides: [{
             html: '<p>Custom processed</p>',
             css: 'custom-style'
