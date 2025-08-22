@@ -48,30 +48,6 @@ Input (.curtain) → Parser → Transformer → Renderer → Output (HTML)
 
 ---
 
-### 3. **Missing Abstraction Layer** 🟡
-
-No interface abstraction between parser and transformer phases.
-
-**Problems:**
-- **Direct coupling** to specific AST structure
-- **Difficult to swap** parser implementations
-- **No adapter pattern** for different markdown flavors
-
-**Recommendation:**
-Introduce parser interface:
-```typescript
-interface IMarkdownParser {
-  parse(content: string): ASTNode
-  supports(format: string): boolean
-}
-
-interface ITransformer {
-  transform(ast: ASTNode): TransformedDocument
-}
-```
-
----
-
 ### 4. **Style Scoping Implementation** 🟡
 
 The CSS scoping uses string manipulation instead of proper CSS AST parsing.

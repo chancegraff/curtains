@@ -253,5 +253,86 @@ describe('scopeStyles', () => {
       
       expect(result).toBe(expected)
     })
+
+    it('should handle empty selectors gracefully', () => {
+      // Test lines 124-125 - empty selector handling
+      const css = `
+  ,
+  .valid-selector {
+    color: red;
+  }`
+      
+      const result = scopeStyles(css, 1)
+      
+      // Should skip empty selectors and only process valid ones
+      const expected = `
+  ,
+  .curtains-slide:nth-child(2) .valid-selector {
+    color: red;
+  }`
+      
+      expect(result).toBe(expected)
+    })
+
+    it('should handle combinator selectors correctly', () => {
+      // Test lines 139-140 - combinator selectors that start with combinators
+      const css = `
+  > .child {
+    color: blue;
+  }
+  + .sibling {
+    margin: 10px;
+  }
+  ~ .general-sibling {
+    padding: 5px;
+  }`
+      
+      const result = scopeStyles(css, 1)
+      
+      // Combinators should be handled correctly
+      const expected = `
+  .curtains-slide:nth-child(2)> .child {
+    color: blue;
+  }
+  .curtains-slide:nth-child(2)+ .sibling {
+    margin: 10px;
+  }
+  .curtains-slide:nth-child(2)~ .general-sibling {
+    padding: 5px;
+  }`
+      
+      expect(result).toBe(expected)
+    })
+
+    it('should handle CSS lines without selectors', () => {
+      // Test lines 94-95 - CSS lines without selectors (just pass through)
+      const css = `
+  /* Comment line */
+  
+  /* Another comment */
+  .valid { color: blue; }
+`
+      
+      const result = scopeStyles(css, 0)
+      
+      expect(result).toContain('/* Comment line */')
+      expect(result).toContain('/* Another comment */')
+      expect(result).toContain('.curtains-slide:nth-child(1) .valid { color: blue; }')
+    })
+
+    it('should handle CSS with malformed selector lines', () => {
+      // Test lines 94-95 - lines that appear to have selectors but don't match pattern
+      const css = `
+  this is not a selector {
+  }
+  .valid { color: red; }
+`
+      
+      const result = scopeStyles(css, 0)
+      
+      // Malformed lines should pass through unchanged
+      expect(result).toContain('this is not a selector {')
+      expect(result).toContain('.curtains-slide:nth-child(1) .valid { color: red; }')
+    })
   })
 })
