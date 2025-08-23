@@ -4,6 +4,30 @@ import { CurtainsDocument, ContainerNode } from '../ast/types';
 
 describe('astToHTML', () => {
   describe('basic conversion', () => {
+    it('should convert single AST to HTML', () => {
+      const ast = {
+        type: 'root',
+        children: [
+          {
+            type: 'heading',
+            depth: 1,
+            children: [{ type: 'text', value: 'Single AST Test' }]
+          },
+          {
+            type: 'paragraph',
+            children: [{ type: 'text', value: 'This tests direct AST input.' }]
+          }
+        ]
+      };
+      
+      const html = astToHTML(ast);
+      expect(html).toContain('<h1>Single AST Test</h1>');
+      expect(html).toContain('<p>This tests direct AST input.</p>');
+      expect(html).toContain('<div class="curtains-content">');
+      // Should not contain slide wrapper when passing AST directly
+      expect(html).not.toContain('<div class="curtains-slide">');
+    });
+
     it('should convert empty slide to HTML', () => {
       const doc: CurtainsDocument = {
         type: 'curtains-document',
@@ -590,6 +614,88 @@ describe('astToHTML', () => {
     });
   });
 
+  describe('image transformation', () => {
+    it('should convert image with classes to HTML', () => {
+      const doc: CurtainsDocument = {
+        type: 'curtains-document',
+        version: '0.1',
+        slides: [{
+          type: 'curtains-slide',
+          index: 0,
+          ast: {
+            type: 'root',
+            children: [{
+              type: 'image',
+              url: 'https://example.com/image.jpg',
+              alt: 'Example image',
+              classes: ['responsive', 'rounded']
+            }]
+          },
+          slideCSS: ''
+        }],
+        globalCSS: ''
+      };
+      
+      const html = astToHTML(doc);
+      expect(html).toContain('<img src="https://example.com/image.jpg"');
+      expect(html).toContain('alt="Example image"');
+      expect(html).toContain('class="responsive rounded"');
+    });
+
+    it('should convert image without alt text to HTML', () => {
+      const doc: CurtainsDocument = {
+        type: 'curtains-document',
+        version: '0.1',
+        slides: [{
+          type: 'curtains-slide',
+          index: 0,
+          ast: {
+            type: 'root',
+            children: [{
+              type: 'image',
+              url: 'https://example.com/image.jpg'
+            }]
+          },
+          slideCSS: ''
+        }],
+        globalCSS: ''
+      };
+      
+      const html = astToHTML(doc);
+      expect(html).toContain('<img src="https://example.com/image.jpg"');
+      expect(html).toContain('alt=""');
+      // The img tag itself should not have a class attribute
+      expect(html).not.toMatch(/<img[^>]*class=/);
+    });
+
+    it('should convert image without classes to HTML', () => {
+      const doc: CurtainsDocument = {
+        type: 'curtains-document',
+        version: '0.1',
+        slides: [{
+          type: 'curtains-slide',
+          index: 0,
+          ast: {
+            type: 'root',
+            children: [{
+              type: 'image',
+              url: 'local/path.png',
+              alt: 'Local image'
+            }]
+          },
+          slideCSS: ''
+        }],
+        globalCSS: ''
+      };
+      
+      const html = astToHTML(doc);
+      expect(html).toContain('<img src="local/path.png"');
+      expect(html).toContain('alt="Local image"');
+      // The img tag itself should not have a class attribute
+      expect(html).not.toMatch(/<img[^>]*class=/);
+    });
+  });
+
   describe('code block transformation', () => {
     it('should convert code blocks with language to HTML', () => {
       const doc: CurtainsDocument = {
@@ -667,6 +773,90 @@ describe('astToHTML', () => {
       expect(html).toContain('&lt;div class=&quot;example&quot;&gt;');
       expect(html).toContain('Hello &amp; Goodbye');
       expect(html).toContain('&lt;/div&gt;');
+    });
+  });
+
+  describe('content padding wrapper', () => {
+    it('should handle mixed container and non-container content', () => {
+      const doc: CurtainsDocument = {
+        type: 'curtains-document',
+        version: '0.1',
+        slides: [{
+          type: 'curtains-slide',
+          index: 0,
+          ast: {
+            type: 'root',
+            children: [
+              // Non-container content first
+              {
+                type: 'heading',
+                depth: 1,
+                children: [{ type: 'text', value: 'Title' }]
+              },
+              {
+                type: 'paragraph',
+                children: [{ type: 'text', value: 'Regular paragraph' }]
+              },
+              // Container in the middle
+              {
+                type: 'container',
+                classes: ['special'],
+                children: [{
+                  type: 'paragraph',
+                  children: [{ type: 'text', value: 'Container content' }]
+                }]
+              },
+              // More non-container content after
+              {
+                type: 'paragraph',
+                children: [{ type: 'text', value: 'Another paragraph' }]
+              }
+            ]
+          },
+          slideCSS: ''
+        }],
+        globalCSS: ''
+      };
+      
+      const html = astToHTML(doc);
+      expect(html).toContain('<div class="curtains-content">');
+      expect(html).toContain('<div class="special">');
+      expect(html).toContain('<h1>Title</h1>');
+      expect(html).toContain('<p>Regular paragraph</p>');
+      expect(html).toContain('<p>Container content</p>');
+      expect(html).toContain('<p>Another paragraph</p>');
+      
+      // Should have two curtains-content divs (before and after container)
+      const contentWrapperCount = (html.match(/<div class="curtains-content">/g) ?? []).length;
+      expect(contentWrapperCount).toBe(2);
+    });
+  });
+
+  describe('empty content handling', () => {
+    it('should handle empty tables gracefully', () => {
+      const doc: CurtainsDocument = {
+        type: 'curtains-document',
+        version: '0.1',
+        slides: [{
+          type: 'curtains-slide',
+          index: 0,
+          ast: {
+            type: 'root',
+            children: [{
+              type: 'table',
+              children: [] // Empty table
+            }]
+          },
+          slideCSS: ''
+        }],
+        globalCSS: ''
+      };
+      
+      const html = astToHTML(doc);
+      // Empty table should return empty string and not create any table HTML
+      expect(html).not.toContain('<table>');
+      expect(html).not.toContain('<thead>');
+      expect(html).not.toContain('<tbody>');
     });
   });
 });

@@ -405,5 +405,83 @@ This is a paragraph with **bold** text.
       expect(types).toContain('heading')
       expect(types).toContain('paragraph')
     })
+
+    it('should handle container with only empty lines', () => {
+      // Arrange - this will test lines 63-64 in dedentContent function
+      const content = `
+<container class="empty-lines">
+
+
+   
+
+</container>
+`
+
+      // Act
+      const result = parseContainers(content)
+
+      // Assert
+      expect(result.ast).toHaveLength(1)
+      const containerNode = result.ast[0]
+      if (isContainerNode(containerNode)) {
+        expect(containerNode.classes).toEqual(['empty-lines'])
+        expect(containerNode.children).toHaveLength(0) // Empty content should result in no children
+      }
+    })
+
+    it('should handle container with mixed empty and content lines', () => {
+      // Arrange - this will test lines 77-78 in dedentContent function
+      const content = `
+<container class="mixed-lines">
+    # Heading
+
+    
+    Content with empty lines
+    
+    More content
+</container>
+`
+
+      // Act
+      const result = parseContainers(content)
+
+      // Assert
+      expect(result.ast).toHaveLength(1)
+      const containerNode = result.ast[0]
+      if (isContainerNode(containerNode)) {
+        expect(containerNode.classes).toEqual(['mixed-lines'])
+        expect(containerNode.children.length).toBeGreaterThan(0)
+        // Should have heading and paragraph nodes
+        const types = containerNode.children.map((child: ASTNode) => child.type)
+        expect(types).toContain('heading')
+        expect(types).toContain('paragraph')
+      }
+    })
+
+    it('should handle content with strikethrough and inline code (unknown node types)', () => {
+      // Arrange - this will test line 416 in convertMarkdownNode function
+      // Using strikethrough and inline code which may produce 'delete' and 'inlineCode' nodes
+      const content = `
+<container class="unknown-test">
+This text has ~~strikethrough~~ and \`inline code\` in it.
+Regular text continues here.
+</container>
+`
+
+      // Act
+      const result = parseContainers(content)
+
+      // Assert
+      expect(result.ast).toHaveLength(1)
+      const containerNode = result.ast[0]
+      if (isContainerNode(containerNode)) {
+        expect(containerNode.classes).toEqual(['unknown-test'])
+        // The container should still process the text content it can handle
+        expect(containerNode.children.length).toBeGreaterThan(0)
+        // Should contain paragraph with text
+        const types = containerNode.children.map((child: ASTNode) => child.type)
+        expect(types).toContain('paragraph')
+      }
+    })
   })
 })

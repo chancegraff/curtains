@@ -84,6 +84,42 @@ Content here
       expect(result.globalContent).toBe('')
       expect(result.slideContents).toHaveLength(2)
     })
+
+    it('should handle completely empty source', () => {
+      // Arrange
+      const source = ''
+
+      // Act
+      const result = splitIntoSlides(source)
+
+      // Assert
+      expect(result.globalContent).toBe('')
+      expect(result.slideContents).toHaveLength(0)
+    })
+
+    it('should handle edge cases and ensure type safety with nullish coalescing', () => {
+      // This test covers the nullish coalescing operator on line 20
+      // While split() never returns undefined for parts[0], the ?? provides type safety
+      const edgeCases = [
+        { input: '', expectedGlobal: '', expectedSlides: 0 },
+        { input: ' ', expectedGlobal: ' ', expectedSlides: 0 },
+        { input: '\n', expectedGlobal: '\n', expectedSlides: 0 },
+        { input: '\t', expectedGlobal: '\t', expectedSlides: 0 },
+        { input: 'content', expectedGlobal: 'content', expectedSlides: 0 },
+        { input: 'global\n===\nslide', expectedGlobal: 'global\n', expectedSlides: 1 }
+      ]
+      
+      edgeCases.forEach(({ input, expectedGlobal, expectedSlides }) => {
+        const result = splitIntoSlides(input)
+        
+        // Ensure the nullish coalescing works correctly
+        expect(result.globalContent).toBe(expectedGlobal)
+        expect(result.globalContent).not.toBeUndefined()
+        expect(result.globalContent).not.toBeNull()
+        expect(typeof result.globalContent).toBe('string')
+        expect(result.slideContents).toHaveLength(expectedSlides)
+      })
+    })
   })
 
   describe('processSlide', () => {

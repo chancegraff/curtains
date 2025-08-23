@@ -192,6 +192,58 @@ describe('scopeStyles', () => {
       
       expect(result).toBe('.curtains-slide:nth-child(1) ::before { content: ""; }')
     })
+    
+    it('should handle empty selectors in comma-separated list', () => {
+      const css = '.valid, , .another { color: red; }'
+      const result = scopeStyles(css, 0)
+      
+      // Empty selector should remain empty, valid ones should be scoped
+      expect(result).toBe('.curtains-slide:nth-child(1) .valid, , .curtains-slide:nth-child(1) .another { color: red; }')
+    })
+    
+    it('should handle pseudo-selectors at start of selector', () => {
+      const css = ':hover { color: blue; }'
+      const result = scopeStyles(css, 0)
+      
+      expect(result).toBe('.curtains-slide:nth-child(1):hover { color: blue; }')
+    })
+    
+    it('should handle direct child combinators at start of selector', () => {
+      const css = '> .child { margin: 10px; }'
+      const result = scopeStyles(css, 0)
+      
+      expect(result).toBe('.curtains-slide:nth-child(1)> .child { margin: 10px; }')
+    })
+    
+    it('should handle adjacent sibling combinators at start of selector', () => {
+      const css = '+ .sibling { padding: 5px; }'
+      const result = scopeStyles(css, 0)
+      
+      expect(result).toBe('.curtains-slide:nth-child(1)+ .sibling { padding: 5px; }')
+    })
+    
+    it('should handle general sibling combinators at start of selector', () => {
+      const css = '~ .sibling { border: 1px solid; }'
+      const result = scopeStyles(css, 0)
+      
+      expect(result).toBe('.curtains-slide:nth-child(1)~ .sibling { border: 1px solid; }')
+    })
+    
+    it('should handle malformed CSS with empty selector before brace', () => {
+      const css = ' { color: red; }'
+      const result = scopeStyles(css, 0)
+      
+      // Should pass through malformed CSS unchanged
+      expect(result).toBe(' { color: red; }')
+    })
+    
+    it('should handle CSS line with brace but no selector part', () => {
+      const css = '{ color: blue; }'
+      const result = scopeStyles(css, 0)
+      
+      // Should pass through malformed CSS unchanged
+      expect(result).toBe('{ color: blue; }')
+    })
   })
   
   describe('real-world CSS examples', () => {

@@ -52,7 +52,7 @@ export function parseArgs(argv: unknown): z.infer<typeof BuildOptionsSchema> {
   
   const raw = {
     input: args[1],
-    output: outputIndex !== -1 ? args[outputIndex + 1] : args[1].replace(/\\.curtain$/, '.html'),
+    output: outputIndex !== -1 ? args[outputIndex + 1] : args[1].replace(/\.curtain$/, '.html'),
     theme: themeIndex !== -1 ? args[themeIndex + 1] : 'light'
   }
   
