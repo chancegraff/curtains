@@ -1,12 +1,6 @@
 import { parse } from './index.js'
 import { DEFAULTS } from '../config/constants.js'
 
-// Type helpers for tests
-type TestASTNode = {
-  type: string
-  [key: string]: any
-}
-
 describe('Parser - Main Integration', () => {
   describe('Basic functionality', () => {
     it('should parse valid curtains document with single slide', () => {
@@ -146,9 +140,12 @@ Content here
       // Assert
       const children = result.slides[0]?.ast.children
       expect(children).toHaveLength(3)
-      expect((children?.[0] as TestASTNode)?.type).toBe('heading')
-      expect((children?.[1] as TestASTNode)?.type).toBe('container')
-      expect((children?.[2] as TestASTNode)?.type).toBe('heading')
+      
+      if (children) {
+        expect(children[0]?.type).toBe('heading')
+        expect(children[1]?.type).toBe('container')
+        expect(children[2]?.type).toBe('heading')
+      }
     })
 
     it('should handle container at nesting depth limit', () => {

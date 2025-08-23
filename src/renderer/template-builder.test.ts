@@ -390,9 +390,9 @@ describe('Template Builder', () => {
       expect(result).not.toContain('</>')
 
       // Should have balanced major structural tags
-      expect((result.match(/<html/g) || []).length).toBe((result.match(/<\/html>/g) || []).length)
-      expect((result.match(/<head>/g) || []).length).toBe((result.match(/<\/head>/g) || []).length)
-      expect((result.match(/<body>/g) || []).length).toBe((result.match(/<\/body>/g) || []).length)
+      expect((result.match(/<html/g) ?? []).length).toBe((result.match(/<\/html>/g) ?? []).length)
+      expect((result.match(/<head>/g) ?? []).length).toBe((result.match(/<\/head>/g) ?? []).length)
+      expect((result.match(/<body>/g) ?? []).length).toBe((result.match(/<\/body>/g) ?? []).length)
     })
 
     it('should maintain consistent formatting', () => {

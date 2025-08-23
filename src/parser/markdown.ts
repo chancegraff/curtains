@@ -5,7 +5,7 @@ import { unified } from 'unified'
 import remarkParse from 'remark-parse'
 import remarkGfm from 'remark-gfm'
 
-// Type for markdown nodes
+// Type for markdown nodes - internal representation
 interface MarkdownNode {
   type: string
   value?: string
@@ -22,6 +22,24 @@ interface MarkdownNode {
   start?: number
   spread?: boolean
   classes?: string[]
+  header?: boolean
+  align?: 'left' | 'center' | 'right'
+}
+
+// Type for mdast nodes from unified/remark
+interface MdastNode {
+  type: string
+  value?: string
+  depth?: number
+  children?: MdastNode[]
+  url?: string
+  alt?: string
+  title?: string
+  lang?: string
+  meta?: string
+  ordered?: boolean
+  align?: ('left' | 'center' | 'right')[]
+  parent?: MdastNode
 }
 
 /**
@@ -61,13 +79,14 @@ function sanitizeImgAttributes(imgTagMatch: string): { src: string; alt: string;
  * Custom remark plugin to handle HTML img tags
  */
 function remarkCurtainsPlugin() {
-  return function transformer(tree: any) {
+  return function transformer(tree: MdastNode): void {
     visit(tree, handleNode)
   }
 
-  function visit(node: any, handler: (node: any, parent?: any) => void) {
+  // eslint-disable-next-line no-unused-vars -- node parameter is used throughout the function
+  function visit(node: MdastNode, handler: (node: MdastNode) => void): void {
     handler(node)
-    if (node.children) {
+    if (node.children && Array.isArray(node.children)) {
       for (const child of node.children) {
         child.parent = node // Set parent reference
         visit(child, handler)
@@ -75,13 +94,13 @@ function remarkCurtainsPlugin() {
     }
   }
 
-  function handleNode(node: any) {
+  function handleNode(node: MdastNode): void {
     // Handle HTML img tags in both text and html nodes
-    if ((node.type === 'text' || node.type === 'html') && node.value) {
+    if ((node.type === 'text' || node.type === 'html') && node.value !== undefined) {
       const htmlImgPattern = /<img[^>]*>/gi
-      let match
+      let match: RegExpExecArray | null
       let lastIndex = 0
-      const newNodes: any[] = []
+      const newNodes: MdastNode[] = []
       
       while ((match = htmlImgPattern.exec(node.value)) !== null) {
         // Add text before img tag
@@ -94,7 +113,7 @@ function remarkCurtainsPlugin() {
         
         // Add img node
         const sanitized = sanitizeImgAttributes(match[0])
-        const imgNode: any = {
+        const imgNode: MdastNode & { classes?: string[] } = {
           type: 'image',
           url: sanitized.src,
           alt: sanitized.alt
@@ -132,7 +151,7 @@ function remarkCurtainsPlugin() {
 /**
  * Converts mdast node to our MarkdownNode format
  */
-function convertMdastNode(node: any): MarkdownNode {
+function convertMdastNode(node: MdastNode & { classes?: string[] }): MarkdownNode {
   const result: MarkdownNode = {
     type: node.type
   }
@@ -144,25 +163,29 @@ function convertMdastNode(node: any): MarkdownNode {
       break
       
     case 'heading':
-      result.depth = node.depth
+      if (node.depth !== undefined) {
+        result.depth = node.depth
+      }
       result.children = node.children?.map(convertMdastNode) ?? []
       break
       
     case 'paragraph':
       result.children = node.children?.map(convertMdastNode) ?? []
       // If paragraph contains only a single image, return just the image for backwards compatibility
-      if (result.children && result.children.length === 1 && result.children[0]?.type === 'image') {
+      if (result.children !== null && result.children.length === 1 && result.children[0]?.type === 'image') {
         return result.children[0]
       }
       break
       
     case 'text':
-      result.value = node.value
+      if (node.value !== undefined) {
+        result.value = node.value
+      }
       break
       
     case 'strong':
       // Convert strong to text with bold flag for compatibility
-      if (node.children && node.children.length === 1 && node.children[0].type === 'text') {
+      if (node.children && node.children.length === 1 && node.children[0]?.type === 'text' && node.children[0].value !== undefined) {
         result.type = 'text'
         result.value = node.children[0].value
         result.bold = true
@@ -173,7 +196,7 @@ function convertMdastNode(node: any): MarkdownNode {
       
     case 'emphasis':
       // Handle emphasis by extracting text and marking as italic
-      if (node.children && node.children.length === 1 && node.children[0].type === 'text') {
+      if (node.children && node.children.length === 1 && node.children[0]?.type === 'text' && node.children[0].value !== undefined) {
         // Single text child - convert to italic text node
         result.type = 'text'
         result.value = node.children[0].value
@@ -181,8 +204,8 @@ function convertMdastNode(node: any): MarkdownNode {
       } else {
         // Multiple children - need to handle recursively
         result.type = 'paragraph'
-        result.children = node.children?.map((child: any) => {
-          if (child.type === 'text') {
+        result.children = node.children?.map((child: MdastNode) => {
+          if (child.type === 'text' && child.value !== undefined) {
             return {
               type: 'text',
               value: child.value,
@@ -200,20 +223,24 @@ function convertMdastNode(node: any): MarkdownNode {
       break
       
     case 'link':
-      result.url = node.url
+      if (node.url !== undefined) {
+        result.url = node.url
+      }
       result.children = node.children?.map(convertMdastNode) ?? []
       break
       
     case 'image':
-      result.url = node.url
-      result.alt = node.alt || ''
+      if (node.url !== undefined) {
+        result.url = node.url
+      }
+      result.alt = node.alt ?? ''
       if (node.classes) {
         result.classes = node.classes
       }
       break
       
     case 'list':
-      result.ordered = node.ordered || false
+      result.ordered = node.ordered ?? false
       result.children = node.children?.map(convertMdastNode) ?? []
       break
       
@@ -222,21 +249,23 @@ function convertMdastNode(node: any): MarkdownNode {
       break
       
     case 'code':
-      result.value = node.value
-      if (node.lang) {
+      if (node.value !== undefined) {
+        result.value = node.value
+      }
+      if (node.lang !== undefined && node.lang !== null) {
         result.lang = node.lang
       }
       break
       
-    case 'table':
+    case 'table': {
       // Transfer alignment from table to cells
-      const tableAlign = node.align as ('left' | 'center' | 'right')[] | undefined
-      result.children = node.children?.map((rowNode: any) => {
+      const tableAlign = node.align
+      result.children = node.children?.map((rowNode: MdastNode) => {
         if (rowNode.type === 'tableRow') {
           const convertedRow = convertMdastNode(rowNode)
           // Apply alignment to cells in this row
           if (convertedRow.children && tableAlign) {
-            convertedRow.children = convertedRow.children.map((cell: any, index: number) => {
+            convertedRow.children = convertedRow.children.map((cell: MarkdownNode, index: number) => {
               if (cell.type === 'tableCell' && tableAlign[index]) {
                 cell.align = tableAlign[index]
               }
@@ -248,6 +277,7 @@ function convertMdastNode(node: any): MarkdownNode {
         return convertMdastNode(rowNode)
       }) ?? []
       break
+    }
       
     case 'tableRow':
       result.children = node.children?.map(convertMdastNode) ?? []
@@ -256,11 +286,10 @@ function convertMdastNode(node: any): MarkdownNode {
     case 'tableCell':
       result.children = node.children?.map(convertMdastNode) ?? []
       // Handle table cell properties from mdast
-      if (node.align) {
-        (result as any).align = node.align
+      if (node.align && Array.isArray(node.align)) {
+        // This is alignment from table node, not individual cell
+        // Individual cell alignment is handled in table processing
       }
-      // For GFM tables, first row cells are typically headers
-      // This is handled by the table processing logic
       break
       
     default:
@@ -315,16 +344,16 @@ function postProcessTables(node: MarkdownNode): MarkdownNode {
     if (firstRow && firstRow.type === 'tableRow' && firstRow.children) {
       for (const cell of firstRow.children) {
         if (cell.type === 'tableCell') {
-          (cell as any).header = true
+          cell.header = true
         }
       }
     }
     
     // Process all table cells to ensure empty cells have proper structure
     for (const row of node.children) {
-      if (row && row.type === 'tableRow' && row.children) {
+      if (row !== null && row !== undefined && row.type === 'tableRow' && row.children) {
         for (const cell of row.children) {
-          if (cell && cell.type === 'tableCell') {
+          if (cell !== null && cell !== undefined && cell.type === 'tableCell') {
             // Ensure empty cells have at least one text node with empty value
             if (!cell.children || cell.children.length === 0) {
               cell.children = [{ type: 'text', value: '' }]

@@ -1,9 +1,60 @@
 import { parseMarkdown } from './markdown.js'
 
-// Type helpers for tests
-type TestASTNode = {
+// Type for the raw markdown AST node from parseMarkdown (before conversion to our AST)
+interface RawMarkdownNode {
   type: string
-  [key: string]: any
+  children?: RawMarkdownNode[]
+  depth?: number
+  value?: string
+  url?: string
+  alt?: string
+  classes?: string[]
+  ordered?: boolean
+  header?: boolean
+  align?: 'left' | 'center' | 'right'
+  bold?: boolean
+  lang?: string
+}
+
+// Type guards for better type safety in tests
+function isParagraphNode(node: RawMarkdownNode): node is RawMarkdownNode & { type: 'paragraph'; children: RawMarkdownNode[] } {
+  return node.type === 'paragraph'
+}
+
+function isHeadingNode(node: RawMarkdownNode): node is RawMarkdownNode & { type: 'heading'; depth: number; children: RawMarkdownNode[] } {
+  return node.type === 'heading'
+}
+
+function isListNode(node: RawMarkdownNode): node is RawMarkdownNode & { type: 'list'; ordered?: boolean; children: RawMarkdownNode[] } {
+  return node.type === 'list'
+}
+
+function isLinkNode(node: RawMarkdownNode): node is RawMarkdownNode & { type: 'link'; url: string; children: RawMarkdownNode[] } {
+  return node.type === 'link'
+}
+
+function isImageNode(node: RawMarkdownNode): node is RawMarkdownNode & { type: 'image'; url: string; alt?: string; classes?: string[] } {
+  return node.type === 'image'
+}
+
+function isCodeNode(node: RawMarkdownNode): node is RawMarkdownNode & { type: 'code'; value: string; lang?: string } {
+  return node.type === 'code'
+}
+
+function isTableNode(node: RawMarkdownNode): node is RawMarkdownNode & { type: 'table'; children: RawMarkdownNode[] } {
+  return node.type === 'table'
+}
+
+function isTableRowNode(node: RawMarkdownNode): node is RawMarkdownNode & { type: 'tableRow'; children: RawMarkdownNode[] } {
+  return node.type === 'tableRow'
+}
+
+function isTableCellNode(node: RawMarkdownNode): node is RawMarkdownNode & { type: 'tableCell'; children: RawMarkdownNode[]; header?: boolean; align?: 'left' | 'center' | 'right' } {
+  return node.type === 'tableCell'
+}
+
+function isTextNode(node: RawMarkdownNode): node is RawMarkdownNode & { type: 'text'; value: string; bold?: boolean } {
+  return node.type === 'text'
 }
 
 describe('Parser - Markdown Parsing', () => {
@@ -26,17 +77,23 @@ describe('Parser - Markdown Parsing', () => {
         throw new Error('Expected children to be defined')
       }
       
-      const child0 = result.children[0] as TestASTNode
-      const child1 = result.children[1] as TestASTNode
-      const child2 = result.children[2] as TestASTNode
+      const child0 = result.children[0]
+      const child1 = result.children[1]
+      const child2 = result.children[2]
       
-      expect(child0.type).toBe('heading')
-      expect(child1.type).toBe('heading')
-      expect(child2.type).toBe('heading')
+      expect(child0?.type).toBe('heading')
+      expect(child1?.type).toBe('heading')
+      expect(child2?.type).toBe('heading')
       
-      expect(child0.depth).toBe(1)
-      expect(child1.depth).toBe(2)
-      expect(child2.depth).toBe(3)
+      if (child0 && isHeadingNode(child0)) {
+        expect(child0.depth).toBe(1)
+      }
+      if (child1 && isHeadingNode(child1)) {
+        expect(child1.depth).toBe(2)
+      }
+      if (child2 && isHeadingNode(child2)) {
+        expect(child2.depth).toBe(3)
+      }
     })
 
     it('should parse paragraphs with inline formatting', () => {
@@ -51,9 +108,11 @@ describe('Parser - Markdown Parsing', () => {
         throw new Error('Expected children to be defined')
       }
       
-      const paragraph = result.children[0] as TestASTNode
+      const paragraph = result.children[0]
       expect(paragraph?.type).toBe('paragraph')
-      expect(paragraph.children.length).toBeGreaterThan(0)
+      if (paragraph && isParagraphNode(paragraph)) {
+        expect(paragraph.children.length).toBeGreaterThan(0)
+      }
     })
 
     it('should parse unordered lists correctly', () => {
@@ -72,15 +131,12 @@ describe('Parser - Markdown Parsing', () => {
         throw new Error('Expected children to be defined')
       }
       
-      const list = result.children.find((child: TestASTNode) => 
+      const list = result.children.find((child: RawMarkdownNode) => 
         child.type === 'list' && child.ordered !== true
       )
       expect(list).toBeDefined()
       
-      if (list) {
-        if (!list.children) {
-          throw new Error('Expected list children to be defined')
-        }
+      if (list && isListNode(list)) {
         expect(list.children).toHaveLength(3)
         expect(list.children[0]?.type).toBe('listItem')
       }
@@ -102,15 +158,12 @@ describe('Parser - Markdown Parsing', () => {
         throw new Error('Expected children to be defined')
       }
       
-      const orderedList = result.children.find((child: TestASTNode) => 
+      const orderedList = result.children.find((child: RawMarkdownNode) => 
         child.type === 'list' && child.ordered === true
       )
       expect(orderedList).toBeDefined()
       
-      if (orderedList) {
-        if (!orderedList.children) {
-          throw new Error('Expected orderedList children to be defined')
-        }
+      if (orderedList && isListNode(orderedList)) {
         expect(orderedList.children).toHaveLength(3)
         expect(orderedList.children[0]?.type).toBe('listItem')
       }
@@ -128,14 +181,14 @@ describe('Parser - Markdown Parsing', () => {
         throw new Error('Expected children to be defined')
       }
       
-      const paragraph = result.children[0] as TestASTNode
+      const paragraph = result.children[0]
       expect(paragraph?.type).toBe('paragraph')
       
-      if (paragraph?.type === 'paragraph') {
-        const linkNode = paragraph.children.find((child: TestASTNode) => child.type === 'link')
+      if (paragraph && isParagraphNode(paragraph)) {
+        const linkNode = paragraph.children.find((child: RawMarkdownNode) => child.type === 'link')
         expect(linkNode).toBeDefined()
         
-        if (linkNode !== undefined && linkNode.type === 'link') {
+        if (linkNode && isLinkNode(linkNode)) {
           expect(linkNode.url).toBe('https://example.com')
         }
       }
@@ -153,10 +206,10 @@ describe('Parser - Markdown Parsing', () => {
         throw new Error('Expected children to be defined')
       }
       
-      const imageNode = result.children.find((child: TestASTNode) => child.type === 'image')
+      const imageNode = result.children.find((child: RawMarkdownNode) => child.type === 'image')
       expect(imageNode).toBeDefined()
       
-      if (imageNode?.type === 'image') {
+      if (imageNode && isImageNode(imageNode)) {
         expect(imageNode.url).toBe('https://example.com/image.png')
         expect(imageNode.alt).toBe('Alt text')
       }
@@ -176,9 +229,14 @@ describe('Parser - Markdown Parsing', () => {
         throw new Error('Expected children to be defined')
       }
       
-      const paragraph = result.children[0] as TestASTNode
-      expect(paragraph.type).toBe('paragraph')
-      expect(paragraph.children[0]?.value).toContain('{{CONTAINER:')
+      const paragraph = result.children[0]
+      expect(paragraph?.type).toBe('paragraph')
+      if (paragraph && isParagraphNode(paragraph)) {
+        const firstChild = paragraph.children[0]
+        if (firstChild && isTextNode(firstChild)) {
+          expect(firstChild.value).toContain('{{CONTAINER:')
+        }
+      }
     })
 
     it('should handle mixed content with container placeholders', () => {
@@ -199,9 +257,9 @@ describe('Parser - Markdown Parsing', () => {
         throw new Error('Expected children to be defined')
       }
       
-      expect((result.children[0] as TestASTNode).type).toBe('heading')
-      expect((result.children[1] as TestASTNode).type).toBe('paragraph')
-      expect((result.children[2] as TestASTNode).type).toBe('heading')
+      expect(result.children[0]?.type).toBe('heading')
+      expect(result.children[1]?.type).toBe('paragraph')
+      expect(result.children[2]?.type).toBe('heading')
     })
 
     it('should handle multiple containers separated by whitespace without creating empty paragraphs', () => {
@@ -219,11 +277,16 @@ describe('Parser - Markdown Parsing', () => {
       }
       
       // Should be a single paragraph containing the full text
-      expect((result.children[0] as TestASTNode).type).toBe('paragraph')
+      expect(result.children[0]?.type).toBe('paragraph')
       
       // Verify the content contains the placeholder text
-      const paragraph = result.children[0] as TestASTNode
-      expect(paragraph.children[0]?.value).toContain('{{CONTAINER:container_0:## First Container}}')
+      const paragraph = result.children[0]
+      if (paragraph && isParagraphNode(paragraph)) {
+        const firstChild = paragraph.children[0]
+        if (firstChild && isTextNode(firstChild)) {
+          expect(firstChild.value).toContain('{{CONTAINER:container_0:## First Container}}')
+        }
+      }
     })
 
     it('should skip container closing tags', () => {
@@ -244,8 +307,8 @@ Paragraph content
         throw new Error('Expected children to be defined')
       }
       
-      expect((result.children[0] as TestASTNode).type).toBe('heading')
-      expect((result.children[1] as TestASTNode).type).toBe('paragraph')
+      expect(result.children[0]?.type).toBe('heading')
+      expect(result.children[1]?.type).toBe('paragraph')
     })
 
     it('should handle empty content', () => {
@@ -284,10 +347,10 @@ Paragraph content
         throw new Error('Expected children to be defined')
       }
       
-      const imageNode = result.children.find((child: TestASTNode) => child.type === 'image')
+      const imageNode = result.children.find((child: RawMarkdownNode) => child.type === 'image')
       expect(imageNode).toBeDefined()
       
-      if (imageNode?.type === 'image') {
+      if (imageNode && isImageNode(imageNode)) {
         expect(imageNode.url).toBe('./logo.svg')
         expect(imageNode.alt).toBe('Logo')
         expect(imageNode.classes).toBeUndefined()
@@ -306,10 +369,10 @@ Paragraph content
         throw new Error('Expected children to be defined')
       }
       
-      const imageNode = result.children.find((child: TestASTNode) => child.type === 'image')
+      const imageNode = result.children.find((child: RawMarkdownNode) => child.type === 'image')
       expect(imageNode).toBeDefined()
       
-      if (imageNode?.type === 'image') {
+      if (imageNode && isImageNode(imageNode)) {
         expect(imageNode.url).toBe('./logo.svg')
         expect(imageNode.alt).toBe('Logo')
         expect(imageNode.classes).toEqual(['responsive-logo'])
@@ -328,10 +391,10 @@ Paragraph content
         throw new Error('Expected children to be defined')
       }
       
-      const imageNode = result.children.find((child: TestASTNode) => child.type === 'image')
+      const imageNode = result.children.find((child: RawMarkdownNode) => child.type === 'image')
       expect(imageNode).toBeDefined()
       
-      if (imageNode?.type === 'image') {
+      if (imageNode && isImageNode(imageNode)) {
         expect(imageNode.url).toBe('./logo.svg')
         expect(imageNode.alt).toBe('Logo')
         expect(imageNode.classes).toEqual(['responsive-logo', 'centered'])
@@ -350,10 +413,10 @@ Paragraph content
         throw new Error('Expected children to be defined')
       }
       
-      const imageNode = result.children.find((child: TestASTNode) => child.type === 'image')
+      const imageNode = result.children.find((child: RawMarkdownNode) => child.type === 'image')
       expect(imageNode).toBeDefined()
       
-      if (imageNode?.type === 'image') {
+      if (imageNode && isImageNode(imageNode)) {
         expect(imageNode.url).toBe('./logo.svg')
         expect(imageNode.alt).toBe('Logo')
         expect(imageNode.classes).toEqual(['safe'])
@@ -375,21 +438,21 @@ Paragraph content
         throw new Error('Expected children to be defined')
       }
       
-      const paragraph = result.children[0] as TestASTNode
+      const paragraph = result.children[0]
       expect(paragraph?.type).toBe('paragraph')
       
-      if (paragraph?.type === 'paragraph') {
-        const imageNode = paragraph.children.find((child: TestASTNode) => child.type === 'image')
+      if (paragraph && isParagraphNode(paragraph)) {
+        const imageNode = paragraph.children.find((child: RawMarkdownNode) => child.type === 'image')
         expect(imageNode).toBeDefined()
         
-        if (imageNode?.type === 'image') {
+        if (imageNode && isImageNode(imageNode)) {
           expect(imageNode.url).toBe('./logo.svg')
           expect(imageNode.alt).toBe('Logo')
           expect(imageNode.classes).toEqual(['inline-img'])
         }
         
         // Should have text nodes before and after the image
-        const textNodes = paragraph.children.filter((child: TestASTNode) => child.type === 'text')
+        const textNodes = paragraph.children.filter((child: RawMarkdownNode) => child.type === 'text')
         expect(textNodes.length).toBeGreaterThan(1)
       }
     })
@@ -406,10 +469,10 @@ Paragraph content
         throw new Error('Expected children to be defined')
       }
       
-      const imageNode = result.children.find((child: TestASTNode) => child.type === 'image')
+      const imageNode = result.children.find((child: RawMarkdownNode) => child.type === 'image')
       expect(imageNode).toBeDefined()
       
-      if (imageNode?.type === 'image') {
+      if (imageNode && isImageNode(imageNode)) {
         expect(imageNode.url).toBe('./logo.svg')
         expect(imageNode.alt).toBe('')
         expect(imageNode.classes).toEqual(['no-alt'])
@@ -428,10 +491,10 @@ Paragraph content
         throw new Error('Expected children to be defined')
       }
       
-      const imageNode = result.children.find((child: TestASTNode) => child.type === 'image')
+      const imageNode = result.children.find((child: RawMarkdownNode) => child.type === 'image')
       expect(imageNode).toBeDefined()
       
-      if (imageNode?.type === 'image') {
+      if (imageNode && isImageNode(imageNode)) {
         expect(imageNode.url).toBe('./logo.svg')
         expect(imageNode.alt).toBe('Logo')
         expect(imageNode.classes).toBeUndefined()
@@ -451,9 +514,14 @@ Paragraph content
         throw new Error('Expected children to be defined')
       }
       
-      const paragraph = result.children[0] as TestASTNode
+      const paragraph = result.children[0]
       expect(paragraph?.type).toBe('paragraph')
-      expect(paragraph.children[0]?.value).toContain('<img')
+      if (paragraph && isParagraphNode(paragraph)) {
+        const firstChild = paragraph.children[0]
+        if (firstChild && isTextNode(firstChild)) {
+          expect(firstChild.value).toContain('<img')
+        }
+      }
     })
 
     describe('Code Blocks', () => {
@@ -474,10 +542,10 @@ console.log(hello)
           throw new Error('Expected children to be defined')
         }
 
-        const codeNode = result.children.find((child: TestASTNode) => child.type === 'code')
+        const codeNode = result.children.find((child: RawMarkdownNode) => child.type === 'code')
         expect(codeNode).toBeDefined()
 
-        if (codeNode?.type === 'code') {
+        if (codeNode && isCodeNode(codeNode)) {
           expect(codeNode.value).toBe(`const hello = 'world'\nconsole.log(hello)`)
           expect(codeNode.lang).toBeUndefined()
         }
@@ -501,10 +569,10 @@ function greet(name) {
           throw new Error('Expected children to be defined')
         }
 
-        const codeNode = result.children.find((child: TestASTNode) => child.type === 'code')
+        const codeNode = result.children.find((child: RawMarkdownNode) => child.type === 'code')
         expect(codeNode).toBeDefined()
 
-        if (codeNode?.type === 'code') {
+        if (codeNode && isCodeNode(codeNode)) {
           expect(codeNode.value).toBe(`function greet(name) {\n  return \`Hello, \${name}!\`\n}`)
           expect(codeNode.lang).toBe('javascript')
         }
@@ -530,10 +598,10 @@ def factorial(n):
           throw new Error('Expected children to be defined')
         }
 
-        const codeNode = result.children.find((child: TestASTNode) => child.type === 'code')
+        const codeNode = result.children.find((child: RawMarkdownNode) => child.type === 'code')
         expect(codeNode).toBeDefined()
 
-        if (codeNode?.type === 'code') {
+        if (codeNode && isCodeNode(codeNode)) {
           expect(codeNode.value).toBe(`def factorial(n):\n    if n <= 1:\n        return 1\n    else:\n        return n * factorial(n - 1)`)
           expect(codeNode.lang).toBe('python')
         }
@@ -554,10 +622,10 @@ def factorial(n):
           throw new Error('Expected children to be defined')
         }
 
-        const codeNode = result.children.find((child: TestASTNode) => child.type === 'code')
+        const codeNode = result.children.find((child: RawMarkdownNode) => child.type === 'code')
         expect(codeNode).toBeDefined()
 
-        if (codeNode?.type === 'code') {
+        if (codeNode && isCodeNode(codeNode)) {
           expect(codeNode.value).toBe('')
           expect(codeNode.lang).toBeUndefined()
         }
@@ -583,10 +651,10 @@ interface User {
           throw new Error('Expected children to be defined')
         }
 
-        const codeNode = result.children.find((child: TestASTNode) => child.type === 'code')
+        const codeNode = result.children.find((child: RawMarkdownNode) => child.type === 'code')
         expect(codeNode).toBeDefined()
 
-        if (codeNode?.type === 'code') {
+        if (codeNode && isCodeNode(codeNode)) {
           expect(codeNode.value).toBe(`interface User {\n  name: string\n\n  age: number\n}`)
           expect(codeNode.lang).toBe('typescript')
         }
@@ -608,10 +676,10 @@ const unclosed = 'code block'
           throw new Error('Expected children to be defined')
         }
 
-        const codeNode = result.children.find((child: TestASTNode) => child.type === 'code')
+        const codeNode = result.children.find((child: RawMarkdownNode) => child.type === 'code')
         expect(codeNode).toBeDefined()
 
-        if (codeNode?.type === 'code' && codeNode.value) {
+        if (codeNode?.type === 'code' && codeNode.value !== undefined) {
           expect(codeNode.value.trim()).toBe(`const unclosed = 'code block'\n# This should not be a heading`)
           expect(codeNode.lang).toBe('javascript')
         }
@@ -636,21 +704,28 @@ const unclosed = 'code block'
           throw new Error('Expected children to be defined')
         }
 
-        const tableNode = result.children.find((child: TestASTNode) => child.type === 'table')
+        const tableNode = result.children.find((child: RawMarkdownNode) => child.type === 'table')
         expect(tableNode).toBeDefined()
 
-        if (tableNode?.type === 'table' && tableNode.children) {
+        if (tableNode && isTableNode(tableNode)) {
           expect(tableNode.children).toHaveLength(3) // 1 header + 2 data rows
 
           // Check header row
-          const headerRow = tableNode.children[0] as TestASTNode
-          expect(headerRow.type).toBe('tableRow')
-          expect(headerRow.children).toHaveLength(3)
+          const headerRow = tableNode.children[0]
+          expect(headerRow?.type).toBe('tableRow')
+          if (headerRow && isTableRowNode(headerRow)) {
+            expect(headerRow.children).toHaveLength(3)
 
-          const headerCells = headerRow.children as TestASTNode[]
-          expect(headerCells[0]?.type).toBe('tableCell')
-          expect(headerCells[0]?.header).toBe(true)
-          expect(headerCells[0]?.children[0]?.value).toBe('Name')
+            const firstCell = headerRow.children[0]
+            expect(firstCell?.type).toBe('tableCell')
+            if (firstCell && isTableCellNode(firstCell)) {
+              expect(firstCell.header).toBe(true)
+              const firstTextChild = firstCell.children[0]
+              if (firstTextChild && isTextNode(firstTextChild)) {
+                expect(firstTextChild.value).toBe('Name')
+              }
+            }
+          }
         }
       })
 
@@ -670,19 +745,23 @@ const unclosed = 'code block'
           throw new Error('Expected children to be defined')
         }
 
-        const tableNode = result.children.find((child: TestASTNode) => child.type === 'table')
+        const tableNode = result.children.find((child: RawMarkdownNode) => child.type === 'table')
         expect(tableNode).toBeDefined()
 
-        if (tableNode?.type === 'table' && tableNode.children) {
+        if (tableNode && isTableNode(tableNode)) {
           expect(tableNode.children).toHaveLength(2) // 1 header + 1 data row
 
           // Check data row alignment
-          const dataRow = tableNode.children[1] as TestASTNode
-          const dataCells = dataRow.children as TestASTNode[]
-          
-          expect(dataCells[0]?.align).toBe('left')
-          expect(dataCells[1]?.align).toBe('center')
-          expect(dataCells[2]?.align).toBe('right')
+          const dataRow = tableNode.children[1]
+          if (dataRow && isTableRowNode(dataRow)) {
+            const cell0 = dataRow.children[0]
+            const cell1 = dataRow.children[1]
+            const cell2 = dataRow.children[2]
+            
+            if (cell0 && isTableCellNode(cell0)) expect(cell0.align).toBe('left')
+            if (cell1 && isTableCellNode(cell1)) expect(cell1.align).toBe('center')
+            if (cell2 && isTableCellNode(cell2)) expect(cell2.align).toBe('right')
+          }
         }
       })
 
@@ -702,23 +781,33 @@ const unclosed = 'code block'
           throw new Error('Expected children to be defined')
         }
 
-        const tableNode = result.children.find((child: TestASTNode) => child.type === 'table')
+        const tableNode = result.children.find((child: RawMarkdownNode) => child.type === 'table')
         expect(tableNode).toBeDefined()
 
-        if (tableNode?.type === 'table' && tableNode.children) {
-          const dataRow = tableNode.children[1] as TestASTNode
-          const dataCells = dataRow.children as TestASTNode[]
-          
-          // Check bold formatting in first cell
-          const firstCellChildren = dataCells[0]?.children as TestASTNode[]
-          expect(firstCellChildren[0]?.type).toBe('text')
-          expect(firstCellChildren[0]?.bold).toBe(true)
-          
-          // Check link in second cell
-          const secondCellChildren = dataCells[1]?.children as TestASTNode[]
-          const linkNode = secondCellChildren.find((child: TestASTNode) => child.type === 'link')
-          expect(linkNode).toBeDefined()
-          expect(linkNode?.url).toBe('https://example.com')
+        if (tableNode && isTableNode(tableNode)) {
+          const dataRow = tableNode.children[1]
+          if (dataRow && isTableRowNode(dataRow)) {
+            const firstCell = dataRow.children[0]
+            const secondCell = dataRow.children[1]
+            
+            // Check bold formatting in first cell
+            if (firstCell && isTableCellNode(firstCell)) {
+              const firstTextNode = firstCell.children[0]
+              expect(firstTextNode?.type).toBe('text')
+              if (firstTextNode && isTextNode(firstTextNode)) {
+                expect(firstTextNode.bold).toBe(true)
+              }
+            }
+            
+            // Check link in second cell
+            if (secondCell && isTableCellNode(secondCell)) {
+              const linkNode = secondCell.children.find((child: RawMarkdownNode) => child.type === 'link')
+              expect(linkNode).toBeDefined()
+              if (linkNode && isLinkNode(linkNode)) {
+                expect(linkNode.url).toBe('https://example.com')
+              }
+            }
+          }
         }
       })
 
@@ -739,14 +828,16 @@ Jane | 25 | LA
           throw new Error('Expected children to be defined')
         }
 
-        const tableNode = result.children.find((child: TestASTNode) => child.type === 'table')
+        const tableNode = result.children.find((child: RawMarkdownNode) => child.type === 'table')
         expect(tableNode).toBeDefined()
 
-        if (tableNode?.type === 'table' && tableNode.children) {
+        if (tableNode && isTableNode(tableNode)) {
           expect(tableNode.children).toHaveLength(3) // 1 header + 2 data rows
           
-          const headerRow = tableNode.children[0] as TestASTNode
-          expect(headerRow.children).toHaveLength(3)
+          const headerRow = tableNode.children[0]
+          if (headerRow && isTableRowNode(headerRow)) {
+            expect(headerRow.children).toHaveLength(3)
+          }
         }
       })
 
@@ -767,21 +858,40 @@ Jane | 25 | LA
           throw new Error('Expected children to be defined')
         }
 
-        const tableNode = result.children.find((child: TestASTNode) => child.type === 'table')
+        const tableNode = result.children.find((child: RawMarkdownNode) => child.type === 'table')
         expect(tableNode).toBeDefined()
 
-        if (tableNode?.type === 'table' && tableNode.children) {
-          const dataRow1 = tableNode.children[1] as TestASTNode
-          const dataCells1 = dataRow1.children as TestASTNode[]
+        if (tableNode && isTableNode(tableNode)) {
+          const dataRow1 = tableNode.children[1]
+          const dataRow2 = tableNode.children[2]
           
           // Check empty cell content
-          expect(dataCells1[1]?.children[0]?.value).toBe('')
+          if (dataRow1 && isTableRowNode(dataRow1)) {
+            const middleCell = dataRow1.children[1]
+            if (middleCell && isTableCellNode(middleCell)) {
+              const firstTextNode = middleCell.children[0]
+              if (firstTextNode && isTextNode(firstTextNode)) {
+                expect(firstTextNode.value).toBe('')
+              }
+            }
+          }
           
-          const dataRow2 = tableNode.children[2] as TestASTNode
-          const dataCells2 = dataRow2.children as TestASTNode[]
-          
-          expect(dataCells2[0]?.children[0]?.value).toBe('')
-          expect(dataCells2[2]?.children[0]?.value).toBe('')
+          if (dataRow2 && isTableRowNode(dataRow2)) {
+            const firstCell = dataRow2.children[0]
+            if (firstCell && isTableCellNode(firstCell)) {
+              const firstTextNode = firstCell.children[0]
+              if (firstTextNode && isTextNode(firstTextNode)) {
+                expect(firstTextNode.value).toBe('')
+              }
+            }
+            const lastCell = dataRow2.children[2]
+            if (lastCell && isTableCellNode(lastCell)) {
+              const firstTextNode = lastCell.children[0]
+              if (firstTextNode && isTextNode(firstTextNode)) {
+                expect(firstTextNode.value).toBe('')
+              }
+            }
+          }
         }
       })
 
@@ -800,17 +910,23 @@ Jane | 25 | LA
           throw new Error('Expected children to be defined')
         }
 
-        const tableNode = result.children.find((child: TestASTNode) => child.type === 'table')
+        const tableNode = result.children.find((child: RawMarkdownNode) => child.type === 'table')
         expect(tableNode).toBeDefined()
 
-        if (tableNode?.type === 'table' && tableNode.children) {
+        if (tableNode && isTableNode(tableNode)) {
           expect(tableNode.children).toHaveLength(1) // Just header row
           
-          const headerRow = tableNode.children[0] as TestASTNode
-          const headerCells = headerRow.children as TestASTNode[]
-          
-          expect(headerCells[0]?.header).toBe(true)
-          expect(headerCells[0]?.children[0]?.value).toBe('Column 1')
+          const headerRow = tableNode.children[0]
+          if (headerRow && isTableRowNode(headerRow)) {
+            const firstHeaderCell = headerRow.children[0]
+            if (firstHeaderCell && isTableCellNode(firstHeaderCell)) {
+              expect(firstHeaderCell.header).toBe(true)
+              const firstTextNode = firstHeaderCell.children[0]
+              if (firstTextNode && isTextNode(firstTextNode)) {
+                expect(firstTextNode.value).toBe('Column 1')
+              }
+            }
+          }
         }
       })
 
@@ -832,12 +948,12 @@ Jane | 25 | LA
         }
 
         // Should be parsed as paragraph, not table (GFM spec compliance)
-        const paragraphNode = result.children.find((child: TestASTNode) => child.type === 'paragraph')
+        const paragraphNode = result.children.find((child: RawMarkdownNode) => child.type === 'paragraph')
         expect(paragraphNode).toBeDefined()
         
         if (paragraphNode?.children?.[0]) {
-          const textNode = paragraphNode.children[0] as TestASTNode
-          expect(textNode.type).toBe('text')
+          const textNode = paragraphNode.children[0]
+          expect(textNode?.type).toBe('text')
           expect(textNode.value).toBe('| Data 1 | Data 2 | Data 3 |\n| More 1 | More 2 | More 3 |')
         }
       })
@@ -860,12 +976,12 @@ Jane | 25 | LA
         }
 
         // Should be parsed as paragraph, not table (GFM spec compliance)
-        const paragraphNode = result.children.find((child: TestASTNode) => child.type === 'paragraph')
+        const paragraphNode = result.children.find((child: RawMarkdownNode) => child.type === 'paragraph')
         expect(paragraphNode).toBeDefined()
         
         if (paragraphNode?.children?.[0]) {
-          const textNode = paragraphNode.children[0] as TestASTNode
-          expect(textNode.type).toBe('text')
+          const textNode = paragraphNode.children[0]
+          expect(textNode?.type).toBe('text')
           expect(textNode.value).toBe('| Column 1 | Column 2\n| Data 1 | Data 2 | Data 3 |')
         }
       })

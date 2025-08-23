@@ -37,22 +37,20 @@ function convertASTToHTML(ast: CurtainsAST): string {
   const paddedContent: string[] = []
   
   for (const node of ast.children) {
-    const typedNode = node as Record<string, unknown>
-    
-    if (typedNode.type === 'container') {
+    if (node.type === 'container') {
       // If we have accumulated padded content, wrap it first
       if (paddedContent.length > 0) {
         htmlParts.push(`<div class="curtains-content">${paddedContent.join('\n')}</div>`)
         paddedContent.length = 0
       }
       // Add container directly without padding wrapper
-      const html = convertNodeToHTML(node as ASTNode)
+      const html = convertNodeToHTML(node)
       if (html) {
         htmlParts.push(html)
       }
     } else {
       // Accumulate non-container content for padding wrapper
-      const html = convertNodeToHTML(node as ASTNode)
+      const html = convertNodeToHTML(node)
       if (html) {
         paddedContent.push(html)
       }
@@ -71,43 +69,35 @@ function convertASTToHTML(ast: CurtainsAST): string {
  * Converts AST node to HTML
  */
 function convertNodeToHTML(node: ASTNode): string {
-  const typedNode = node as Record<string, unknown>
-
-  switch (typedNode.type) {
+  switch (node.type) {
     case 'container': {
-      const classes = (typedNode.classes as string[])?.length
-        ? ` class="${(typedNode.classes as string[]).join(' ')}"`
-        : ''
-      const children = typedNode.children as ASTNode[] | undefined
-      const childrenHtml = children?.map(convertNodeToHTML).join('\n') ?? ''
+      const classes = node.classes.length > 0 ? ` class="${node.classes.join(' ')}"` : ''
+      const childrenHtml = node.children.map(convertNodeToHTML).join('\n')
       return `<div${classes}>${childrenHtml}</div>`
     }
 
     case 'heading': {
-      const depth = (typedNode.depth as number) ?? 1
-      const children = typedNode.children as ASTNode[] | undefined
-      const content = children?.map(convertNodeToHTML).join('') ?? ''
+      const depth = node.depth
+      const content = node.children.map(convertNodeToHTML).join('')
       return `<h${depth}>${content}</h${depth}>`
     }
 
     case 'paragraph': {
-      const children = typedNode.children as ASTNode[] | undefined
-      const content = children?.map(convertNodeToHTML).join('') ?? ''
+      const content = node.children.map(convertNodeToHTML).join('')
       return `<p>${content}</p>`
     }
 
     case 'text': {
-      let text = (typedNode.value as string) ?? ''
+      let text = node.value
       // Apply formatting if present
-      if (typedNode.bold === true) text = `<strong>${text}</strong>`
-      if (typedNode.italic === true) text = `<em>${text}</em>`
+      if (node.bold === true) text = `<strong>${text}</strong>`
+      if (node.italic === true) text = `<em>${text}</em>`
       return text
     }
 
     case 'link': {
-      const url = (typedNode.url as string) ?? '#'
-      const children = typedNode.children as ASTNode[] | undefined
-      const content = children?.map(convertNodeToHTML).join('') ?? ''
+      const url = node.url
+      const content = node.children.map(convertNodeToHTML).join('')
 
       // Check if external link
       const isExternal = /^(https?:)?\/\//i.test(url)
@@ -119,45 +109,42 @@ function convertNodeToHTML(node: ASTNode): string {
     }
 
     case 'image': {
-      const src = (typedNode.url as string) ?? ''
-      const alt = (typedNode.alt as string) ?? ''
-      const classes = typedNode.classes as string[] | undefined
+      const src = node.url
+      const alt = node.alt ?? ''
+      const classes = node.classes
       const classAttr = classes && classes.length > 0 ? ` class="${classes.join(' ')}"` : ''
       return `<img src="${src}" alt="${alt}"${classAttr}>`
     }
 
     case 'list': {
-      const tag = typedNode.ordered === true ? 'ol' : 'ul'
-      const children = typedNode.children as ASTNode[] | undefined
-      const items = children?.map(convertNodeToHTML).join('\n') ?? ''
+      const tag = node.ordered === true ? 'ol' : 'ul'
+      const items = node.children.map(convertNodeToHTML).join('\n')
       return `<${tag}>${items}</${tag}>`
     }
 
     case 'listItem': {
-      const children = typedNode.children as ASTNode[] | undefined
-      const content = children?.map(convertNodeToHTML).join('') ?? ''
+      const content = node.children.map(convertNodeToHTML).join('')
       return `<li>${content}</li>`
     }
 
     case 'code': {
-      const lang = typedNode.lang as string | undefined
+      const lang = node.lang
       const langClass = lang !== undefined && lang !== '' ? ` class="language-${lang}"` : ''
-      const value = (typedNode.value as string) ?? ''
+      const value = node.value
       return `<pre><code${langClass}>${escapeHtml(value)}</code></pre>`
     }
 
     case 'table': {
-      const children = typedNode.children as ASTNode[] | undefined
-      if (!children || children.length === 0) return ''
+      if (node.children.length === 0) return ''
       
-      const rows = children.map(convertNodeToHTML)
+      const rows = node.children.map(convertNodeToHTML)
       
       // Check if first row contains header cells
-      const firstRow = children[0] as Record<string, unknown>
-      const hasHeader = firstRow?.children && Array.isArray(firstRow.children) &&
-        (firstRow.children as Record<string, unknown>[]).some(cell => cell.header === true)
+      const firstRow = node.children[0]
+      const hasHeader = firstRow && firstRow.type === 'tableRow' && 
+        firstRow.children.some(cell => cell.type === 'tableCell' && cell.header === true)
       
-      if (hasHeader) {
+      if (hasHeader === true) {
         const headerRow = rows[0]
         const bodyRows = rows.slice(1)
         return `<table><thead>${headerRow}</thead>${bodyRows.length > 0 ? `<tbody>${bodyRows.join('')}</tbody>` : ''}</table>`
@@ -167,26 +154,20 @@ function convertNodeToHTML(node: ASTNode): string {
     }
 
     case 'tableRow': {
-      const children = typedNode.children as ASTNode[] | undefined
-      const cells = children?.map(convertNodeToHTML).join('') ?? ''
+      const cells = node.children.map(convertNodeToHTML).join('')
       return `<tr>${cells}</tr>`
     }
 
     case 'tableCell': {
-      const children = typedNode.children as ASTNode[] | undefined
-      const content = children?.map(convertNodeToHTML).join('') ?? ''
-      const isHeader = typedNode.header === true
-      const align = typedNode.align as string | undefined
+      const content = node.children.map(convertNodeToHTML).join('')
+      const isHeader = node.header === true
+      const align = node.align
       const tag = isHeader ? 'th' : 'td'
-      const alignStyle = align && align !== 'left' ? ` style="text-align: ${align}"` : ''
+      const alignStyle = align !== undefined && align !== 'left' ? ` style="text-align: ${align}"` : ''
       return `<${tag}${alignStyle}>${content}</${tag}>`
     }
 
     default:
-      // For any unhandled node types, try to process children
-      if ('children' in typedNode && Array.isArray(typedNode.children)) {
-        return (typedNode.children as ASTNode[]).map(convertNodeToHTML).join('')
-      }
       return ''
   }
 }

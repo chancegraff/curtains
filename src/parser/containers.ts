@@ -14,7 +14,7 @@ import {
   TableRowNodeSchema,
   TableCellNodeSchema
 } from '../ast/schemas.js'
-import type { ASTNode } from '../ast/types.js'
+import type { ASTNode, TextNode } from '../ast/types.js'
 import { validateClassName, validateNestingDepth } from './validate.js'
 import { parseMarkdown } from './markdown.js'
 
@@ -66,7 +66,8 @@ function dedentContent(content: string): string {
   // Find minimum indentation level
   const minIndent = Math.min(...nonEmptyLines.map(line => {
     const match = line.match(/^(\s*)/)
-    return match?.[1] ? match[1].length : 0
+    const matchedWhitespace = match?.[1]
+    return matchedWhitespace !== undefined ? matchedWhitespace.length : 0
   }))
   
   // Remove the minimum indentation from all lines
@@ -135,7 +136,7 @@ function parseContentIntoBlocks(content: string): ContentBlock[] {
   let currentContentLines: string[] = []
   
   // Helper to flush current content
-  const flushCurrentContent = () => {
+  const flushCurrentContent = (): void => {
     if (currentContentLines.length > 0) {
       const contentText = currentContentLines.join('\n').trim()
       if (contentText) {
@@ -261,7 +262,7 @@ function processBlocks(blocks: ContentBlock[]): ASTNode[] {
       // Recursively process container content
       const innerResult = parseContainers(block.content)
       
-      const containerNode = ContainerNodeSchema.parse({
+      const containerNode: ASTNode = ContainerNodeSchema.parse({
         type: 'container',
         classes: block.classes,
         children: innerResult.ast
@@ -270,7 +271,7 @@ function processBlocks(blocks: ContentBlock[]): ASTNode[] {
       result.push(containerNode)
     } else {
       // Process regular content as markdown
-      const contentNodes = parseNonContainerContent(block.content)
+      const contentNodes: ASTNode[] = parseNonContainerContent(block.content)
       result.push(...contentNodes)
     }
   }
@@ -293,98 +294,122 @@ function parseNonContainerContent(content: string): ASTNode[] {
  */
 function convertMarkdownToAST(mdast: ReturnType<typeof parseMarkdown>): ASTNode[] {
   if (!mdast.children) return []
-  return mdast.children.flatMap((child: MarkdownNode) => convertMarkdownNode(child))
+  const nodes: ASTNode[] = mdast.children.flatMap((child: MarkdownNode) => convertMarkdownNode(child))
+  return nodes
 }
 
 /**
  * Converts a single markdown node to our AST format
  */
-function convertMarkdownNode(node: MarkdownNode): ASTNode | ASTNode[] {
+function convertMarkdownNode(node: MarkdownNode): ASTNode[] {
   switch (node.type) {
-    case 'text':
-      return TextNodeSchema.parse({
+    case 'text': {
+      const textNode: ASTNode = TextNodeSchema.parse({
         type: 'text',
         value: node.value,
         bold: node.bold,
         italic: node.italic
       })
+      return [textNode]
+    }
     
-    case 'heading':
-      return HeadingNodeSchema.parse({
+    case 'heading': {
+      const headingNode: ASTNode = HeadingNodeSchema.parse({
         type: 'heading',
         depth: node.depth,
         children: node.children ? node.children.flatMap((child: MarkdownNode) => convertMarkdownNode(child)) : []
       })
+      return [headingNode]
+    }
     
-    case 'paragraph':
-      return ParagraphNodeSchema.parse({
+    case 'paragraph': {
+      const paragraphNode: ASTNode = ParagraphNodeSchema.parse({
         type: 'paragraph',
         children: node.children ? node.children.flatMap((child: MarkdownNode) => convertMarkdownNode(child)) : []
       })
+      return [paragraphNode]
+    }
     
-    case 'list':
-      return ListNodeSchema.parse({
+    case 'list': {
+      const listNode: ASTNode = ListNodeSchema.parse({
         type: 'list',
         ordered: node.ordered ?? false,
         children: node.children ? node.children.flatMap((child: MarkdownNode) => convertMarkdownNode(child)) : []
       })
+      return [listNode]
+    }
     
-    case 'listItem':
-      return ListItemNodeSchema.parse({
+    case 'listItem': {
+      const listItemNode: ASTNode = ListItemNodeSchema.parse({
         type: 'listItem',
         children: node.children ? node.children.flatMap((child: MarkdownNode) => convertMarkdownNode(child)) : []
       })
+      return [listItemNode]
+    }
     
-    case 'link':
-      return LinkNodeSchema.parse({
+    case 'link': {
+      const linkNode: ASTNode = LinkNodeSchema.parse({
         type: 'link',
         url: node.url,
         children: node.children ? node.children.flatMap((child: MarkdownNode) => convertMarkdownNode(child)) : []
       })
+      return [linkNode]
+    }
     
-    case 'image':
-      return ImageNodeSchema.parse({
+    case 'image': {
+      const imageNode: ASTNode = ImageNodeSchema.parse({
         type: 'image',
         url: node.url,
         alt: node.alt,
         title: node.title,
         ...(node.classes && { classes: node.classes })
       })
+      return [imageNode]
+    }
     
-    case 'code':
-      return CodeNodeSchema.parse({
+    case 'code': {
+      const codeNode: ASTNode = CodeNodeSchema.parse({
         type: 'code',
         value: node.value,
         lang: node.lang
       })
+      return [codeNode]
+    }
     
-    case 'table':
-      return TableNodeSchema.parse({
+    case 'table': {
+      const tableNode: ASTNode = TableNodeSchema.parse({
         type: 'table',
         children: node.children ? node.children.flatMap((child: MarkdownNode) => convertMarkdownNode(child)) : []
       })
+      return [tableNode]
+    }
     
-    case 'tableRow':
-      return TableRowNodeSchema.parse({
+    case 'tableRow': {
+      const tableRowNode: ASTNode = TableRowNodeSchema.parse({
         type: 'tableRow',
         children: node.children ? node.children.flatMap((child: MarkdownNode) => convertMarkdownNode(child)) : []
       })
+      return [tableRowNode]
+    }
     
-    case 'tableCell':
-      return TableCellNodeSchema.parse({
+    case 'tableCell': {
+      const tableCellNode: ASTNode = TableCellNodeSchema.parse({
         type: 'tableCell',
         ...(node.header !== undefined && { header: node.header }),
         ...(node.align !== undefined && { align: node.align }),
         children: node.children ? node.children.flatMap((child: MarkdownNode) => convertMarkdownNode(child)) : []
       })
+      return [tableCellNode]
+    }
     
     default:
       // For unknown node types, try to extract text content if available
       if (node.value !== undefined && node.value !== null && node.value !== '') {
-        return TextNodeSchema.parse({
+        const textNode: ASTNode = TextNodeSchema.parse({
           type: 'text',
           value: String(node.value)
         })
+        return [textNode]
       }
       
       // Skip unknown nodes
@@ -396,12 +421,19 @@ function convertMarkdownNode(node: MarkdownNode): ASTNode | ASTNode[] {
  * Filters out empty nodes from the AST
  */
 function filterEmptyNodes(nodes: ASTNode[]): ASTNode[] {
-  return (nodes as any[]).filter((node: any) => {
-    if (node.type === 'text') {
-      return node.value.trim().length > 0
+  const result: ASTNode[] = []
+  for (const node of nodes) {
+    const astNode = node as ASTNode
+    if (astNode.type === 'text') {
+      const textNode = astNode as TextNode
+      if (textNode.value && textNode.value.trim().length > 0) {
+        result.push(astNode)
+      }
+    } else {
+      result.push(astNode)
     }
-    return true
-  }) as ASTNode[]
+  }
+  return result
 }
 
 /**
