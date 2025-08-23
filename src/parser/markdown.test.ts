@@ -835,7 +835,7 @@ Jane | 25 | LA
         const paragraphNode = result.children.find((child: TestASTNode) => child.type === 'paragraph')
         expect(paragraphNode).toBeDefined()
         
-        if (paragraphNode?.children && paragraphNode.children[0]) {
+        if (paragraphNode?.children?.[0]) {
           const textNode = paragraphNode.children[0] as TestASTNode
           expect(textNode.type).toBe('text')
           expect(textNode.value).toBe('| Data 1 | Data 2 | Data 3 |\n| More 1 | More 2 | More 3 |')
@@ -863,7 +863,7 @@ Jane | 25 | LA
         const paragraphNode = result.children.find((child: TestASTNode) => child.type === 'paragraph')
         expect(paragraphNode).toBeDefined()
         
-        if (paragraphNode?.children && paragraphNode.children[0]) {
+        if (paragraphNode?.children?.[0]) {
           const textNode = paragraphNode.children[0] as TestASTNode
           expect(textNode.type).toBe('text')
           expect(textNode.value).toBe('| Column 1 | Column 2\n| Data 1 | Data 2 | Data 3 |')

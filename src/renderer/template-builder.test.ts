@@ -189,8 +189,8 @@ describe('Template Builder', () => {
       const result = buildCompleteHTML(mockParams)
 
       // Check for proper indentation structure
-      expect(result).toMatch(/<style>\n.*\n  <\/style>/)
-      expect(result).toMatch(/<script>\n.*\n  <\/script>/)
+      expect(result).toMatch(/<style>\n.*\n {2}<\/style>/)
+      expect(result).toMatch(/<script>\n.*\n {2}<\/script>/)
 
       // Should have newlines for readability
       expect(result).toContain('\n')

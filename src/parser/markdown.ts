@@ -118,7 +118,7 @@ function remarkCurtainsPlugin() {
         }
         
         // Replace in parent
-        if (node.parent && node.parent.children) {
+        if (node.parent?.children) {
           const nodeIndex = node.parent.children.indexOf(node)
           if (nodeIndex !== -1) {
             node.parent.children.splice(nodeIndex, 1, ...newNodes)

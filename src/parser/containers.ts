@@ -66,7 +66,7 @@ function dedentContent(content: string): string {
   // Find minimum indentation level
   const minIndent = Math.min(...nonEmptyLines.map(line => {
     const match = line.match(/^(\s*)/)
-    return match && match[1] ? match[1].length : 0
+    return match?.[1] ? match[1].length : 0
   }))
   
   // Remove the minimum indentation from all lines
