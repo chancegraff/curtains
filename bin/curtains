@@ -1,12 +1,16 @@
 #!/usr/bin/env node
 
-// Global CLI entry point for curtains
+// Global CLI entry point for curtains using bundled esbuild output
 // This script enables global installation via `npm install -g curtains`
 
-import { main } from '../dist/src/cli.js'
-
-// Execute main CLI function with process arguments
-main(process.argv).catch(error => {
+// Execute the bundled CLI directly
+import('../dist/curtains-cli.js').then(module => {
+  if (module.main) {
+    return module.main(process.argv)
+  } else {
+    throw new Error('main function not found in bundled CLI')
+  }
+}).catch(error => {
   console.error('CLI Error:', error)
   process.exit(1)
 })
