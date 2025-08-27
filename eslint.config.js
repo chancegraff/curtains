@@ -38,6 +38,7 @@ const rules = {
   'prefer-const': 'error',
   'no-var': 'error',
   'dot-notation': 'warn',
+  'no-ternary': 'warn',
   eqeqeq: 'error',
   curly: 'error',
   'no-warning-comments': [
