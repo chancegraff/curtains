@@ -337,31 +337,6 @@ export const ContainerTransformerSchema = z.object({
   }),
 })
 
-// Container Query Schema
-export const ContainerQuerySchema = z.object({
-  query: z.function({
-    input: [z.unknown(), z.string()], // (root, selector)
-    output: z.array(z.unknown()) // matching containers
-  }),
-  findByClass: z.function({
-    input: [z.unknown(), z.string()], // (root, className)
-    output: z.array(z.unknown()) // matching containers
-  }),
-  findByType: z.function({
-    input: [z.unknown(), z.string()], // (root, type)
-    output: z.array(z.unknown()) // matching elements
-  }),
-  getStats: z.function({
-    input: [z.unknown()], // root
-    output: z.object({
-      totalContainers: z.number(),
-      maxDepth: z.number(),
-      classDistribution: z.record(z.string(), z.number()),
-      elementCounts: z.record(z.string(), z.number())
-    })
-  }),
-})
-
 // Container Statistics Schema
 export const ContainerStatsSchema = z.object({
   totalContainers: z.number().nonnegative(),
@@ -421,7 +396,7 @@ export const ElementEventSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).optional(),
 })
 
-// Element Event Handler Schema  
+// Element Event Handler Schema
 export const ElementEventHandlerSchema = z.function({
   input: [z.object({
     type: z.enum(['created', 'modified', 'deleted', 'moved']),
@@ -496,7 +471,6 @@ export type NestingRules = z.infer<typeof NestingRulesSchema>
 export type NestingValidator = z.infer<typeof NestingValidatorSchema>
 export type ContainerValidationResult = z.infer<typeof ContainerValidationResultSchema>
 export type ContainerTransformer = z.infer<typeof ContainerTransformerSchema>
-export type ContainerQuery = z.infer<typeof ContainerQuerySchema>
 export type ContainerStats = z.infer<typeof ContainerStatsSchema>
 export type ClassMappingConfig = z.infer<typeof ClassMappingConfigSchema>
 export type ClassMapping = z.infer<typeof ClassMappingSchema>

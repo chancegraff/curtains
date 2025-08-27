@@ -3,7 +3,6 @@ import { MiddlewareSchema, ValidationResultSchema } from './common'
 import { RendererInterfaceSchema } from './rendering'
 import { EventCoordinatorSchema } from './events'
 import { PresentationStateSchema } from './state'
-import { ContainerQuerySchema } from './containers'
 import {
   BaseParserInterfaceSchema,
   ParserPluginManagerSchema,
@@ -114,7 +113,6 @@ export const PipelineCoordinatorSchema = z.object({
   registry: GlobalRegistrySchema,
   stateManager: PresentationStateSchema,
   eventCoordinator: EventCoordinatorSchema,
-  containerSystem: ContainerQuerySchema,
   process: z.function({
     input: [z.string(), z.unknown().optional()], // (input, options?)
     output: z.unknown() // pipeline result

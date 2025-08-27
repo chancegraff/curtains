@@ -29,14 +29,10 @@ import {
   EventCoordinator,
   EventCoordinatorSchema,
 } from '../schemas/events'
-import {
-  ContainerQuery,
-} from '../schemas/containers'
 
 import { createGlobalRegistry } from '../core/registry'
 import { createStateStore } from '../state/store'
 import { createEventBus } from '../events/eventBus'
-import { createContainerQuery } from '../containers/factory'
 
 // Type inference from schemas - no type casting
 type PipelineContextType = z.infer<typeof PipelineContextSchema>
@@ -202,7 +198,6 @@ export const createPipelineCoordinator = (
   registry: GlobalRegistry,
   stateManager: PresentationState,
   eventCoordinator: EventCoordinator,
-  containerSystem: ContainerQuery
 ): PipelineCoordinator => {
 
   const parsePhase = (context: unknown, registryParam: unknown): unknown => {
@@ -538,7 +533,6 @@ export const createPipelineCoordinator = (
     registry,
     stateManager,
     eventCoordinator,
-    containerSystem,
     process,
     parsePhase,
     transformPhase,
@@ -709,9 +703,8 @@ export const createIntegratedPipeline = (): Pipeline => {
   const registry = createGlobalRegistry()
   const state = createPresentationStateWrapper()
   const events = createEventCoordinatorWrapper()
-  const containerSystem = createContainerQuery()
 
-  const coordinator = createPipelineCoordinator(registry, state, events, containerSystem)
+  const coordinator = createPipelineCoordinator(registry, state, events)
 
   const integratedPipeline: Pipeline = {
     process: coordinator.process,
