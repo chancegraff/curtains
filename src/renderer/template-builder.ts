@@ -1,18 +1,19 @@
 // Template Builder
 // Assembles the complete HTML document structure
 
-import type { z } from 'zod'
-import type { RuntimeConfigSchema } from './schemas.js'
+import type { z } from 'zod';
+
+import type { RuntimeConfigSchema } from './schemas.js';
 
 /**
  * Task 3: Inject into template
  * Builds the complete HTML document structure
  */
 export function buildCompleteHTML(params: {
-  slidesHTML: string
-  css: string
-  runtimeConfig: z.infer<typeof RuntimeConfigSchema>
-  runtimeJS: string
+  slidesHTML: string;
+  css: string;
+  runtimeConfig: z.infer<typeof RuntimeConfigSchema>;
+  runtimeJS: string;
 }): string {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -41,5 +42,5 @@ ${params.css}
 ${params.runtimeJS}
   </script>
 </body>
-</html>`
+</html>`;
 }

@@ -5,14 +5,15 @@
 
 import { readFile, writeFile } from 'fs/promises'
 import { z } from 'zod'
-import { parse } from './parser/index.js'
-import { transform } from './transformer/index.js'
-import { render } from './renderer/index.js'
+
 import { 
   BuildOptionsSchema, 
   CurtainsErrorSchema 
 } from './config/schemas.js'
-import type { ErrorCode, CurtainsError } from './config/types.js'
+import type { CurtainsError,ErrorCode } from './config/types.js'
+import { parse } from './parser/index.js'
+import { render } from './renderer/index.js'
+import { transform } from './transformer/index.js'
 
 /**
  * Parse command line arguments with proper validation

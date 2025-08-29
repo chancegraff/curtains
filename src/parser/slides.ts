@@ -1,13 +1,13 @@
-import { CurtainsSlideSchema } from '../ast/schemas.js'
-import { REGEX } from '../config/constants.js'
-import type { CurtainsSlide } from '../ast/types.js'
-import { validateSlideIndex } from './validate.js'
-import { extractStyles } from './styles.js'
-import { parseContainers, buildAST } from './containers.js'
+import { CurtainsSlideSchema } from '../ast/schemas.js';
+import type { CurtainsSlide } from '../ast/types.js';
+import { REGEX } from '../config/constants.js';
+import { buildAST, parseContainers } from './containers.js';
+import { extractStyles } from './styles.js';
+import { validateSlideIndex } from './validate.js';
 
 export interface SlideParseInput {
-  content: string
-  index: number
+  content: string;
+  index: number;
 }
 
 /**
@@ -15,12 +15,15 @@ export interface SlideParseInput {
  * @param source - The raw input source
  * @returns Object containing global content and array of slide contents
  */
-export function splitIntoSlides(source: string): { globalContent: string; slideContents: string[] } {
-  const parts = source.split(REGEX.DELIMITER)
-  const globalContent = parts[0] ?? ''
-  const slideContents = parts.slice(1)
-  
-  return { globalContent, slideContents }
+export function splitIntoSlides(source: string): {
+  globalContent: string;
+  slideContents: string[];
+} {
+  const parts = source.split(REGEX.DELIMITER);
+  const globalContent = parts[0] ?? '';
+  const slideContents = parts.slice(1);
+
+  return { globalContent, slideContents };
 }
 
 /**
@@ -29,25 +32,25 @@ export function splitIntoSlides(source: string): { globalContent: string; slideC
  * @returns Complete CurtainsSlide object
  */
 export function processSlide(slideInput: SlideParseInput): CurtainsSlide {
-  const { content, index } = slideInput
-  
+  const { content, index } = slideInput;
+
   // Validate slide index
-  validateSlideIndex(index)
-  
+  validateSlideIndex(index);
+
   // Extract slide styles
-  const extracted = extractStyles(content, 'slide')
-  
+  const extracted = extractStyles(content, 'slide');
+
   // Parse containers and markdown into AST
-  const containerResult = parseContainers(extracted.content)
-  const ast = buildAST(containerResult)
-  
+  const containerResult = parseContainers(extracted.content);
+  const ast = buildAST(containerResult);
+
   // Validate and return slide
   return CurtainsSlideSchema.parse({
     type: 'curtains-slide',
     index,
     ast,
-    slideCSS: extracted.styles.map(s => s.css).join('\n')
-  })
+    slideCSS: extracted.styles.map(s => s.css).join('\n'),
+  });
 }
 
 /**
@@ -56,7 +59,5 @@ export function processSlide(slideInput: SlideParseInput): CurtainsSlide {
  * @returns Array of processed CurtainsSlide objects
  */
 export function processSlides(slideContents: string[]): CurtainsSlide[] {
-  return slideContents.map((content, index) => 
-    processSlide({ content, index })
-  )
+  return slideContents.map((content, index) => processSlide({ content, index }));
 }

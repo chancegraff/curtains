@@ -231,5 +231,5 @@ export function getRuntimeJS(): string {
   // Export navigation for debugging/testing
   window.curtainsNavigation = navigation;
 })();
-  `.trim()
+  `.trim();
 }

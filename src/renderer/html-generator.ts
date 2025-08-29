@@ -1,7 +1,7 @@
 // HTML Generator
 // Builds HTML slide structure from transformed documents
 
-import type { TransformedDocument } from '../ast/types.js'
+import type { TransformedDocument } from '../ast/types.js';
 
 /**
  * Task 1: Build HTML slide structure
@@ -10,5 +10,5 @@ import type { TransformedDocument } from '../ast/types.js'
 export function buildSlidesHTML(doc: TransformedDocument): string {
   return doc.slides
     .map(slide => `<section class="curtains-slide">${slide.html}</section>`)
-    .join('\n      ')
+    .join('\n      ');
 }

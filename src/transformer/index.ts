@@ -1,7 +1,7 @@
-import { CurtainsDocumentSchema, TransformedDocumentSchema } from '../ast/schemas.js'
-import type { TransformedDocument } from '../ast/types.js'
-import { astToHTML } from './ast-to-html.js'
-import { scopeStyles } from './style-scoping.js'
+import { CurtainsDocumentSchema, TransformedDocumentSchema } from '../ast/schemas.js';
+import type { TransformedDocument } from '../ast/types.js';
+import { astToHTML } from './ast-to-html.js';
+import { scopeStyles } from './style-scoping.js';
 
 /**
  * Transforms a validated CurtainsDocument to a TransformedDocument ready for rendering
@@ -10,29 +10,29 @@ import { scopeStyles } from './style-scoping.js'
  */
 export function transform(document: unknown): TransformedDocument {
   // Validate input document
-  const doc = CurtainsDocumentSchema.parse(document)
-  
+  const doc = CurtainsDocumentSchema.parse(document);
+
   // Transform each slide
   const slides = doc.slides.map(slide => {
     // Convert AST to HTML with rehype
-    const html = astToHTML(slide.ast)
-    
+    const html = astToHTML(slide.ast);
+
     // Scope slide-specific styles with nth-child selectors
-    const css = scopeStyles(slide.slideCSS, slide.index)
-    
+    const css = scopeStyles(slide.slideCSS, slide.index);
+
     return {
       html,
-      css
-    }
-  })
-  
+      css,
+    };
+  });
+
   // Validate and return transformed document
   return TransformedDocumentSchema.parse({
     slides,
-    globalCSS: doc.globalCSS
-  })
+    globalCSS: doc.globalCSS,
+  });
 }
 
 // Re-export utilities for testing
-export { astToHTML } from './ast-to-html.js'
-export { scopeStyles } from './style-scoping.js'
+export { astToHTML } from './ast-to-html.js';
+export { scopeStyles } from './style-scoping.js';

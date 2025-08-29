@@ -1,27 +1,27 @@
 // CSS Merger
 // Handles CSS merging in correct cascade order
 
-import { readFile } from 'fs/promises'
-import { join, dirname } from 'path'
-import { fileURLToPath } from 'url'
+import { readFile } from 'fs/promises';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
 
 /**
  * Task 2: Merge CSS in correct order
  * Order: base styles → theme styles → global CSS → slide-specific CSS
  */
 export async function mergeCSS(params: {
-  globalCSS: string
-  slidesCSS: string[]
-  theme: 'light' | 'dark'
+  globalCSS: string;
+  slidesCSS: string[];
+  theme: 'light' | 'dark';
 }): Promise<string> {
   // Load base styles from template
   // Get the directory of this module to resolve the template path correctly
-  const __dirname = dirname(fileURLToPath(import.meta.url))
-  const templatePath = join(__dirname, '..', 'templates', 'style.css')
-  const baseCSS = await readFile(templatePath, 'utf-8')
+  const __dirname = dirname(fileURLToPath(import.meta.url));
+  const templatePath = join(__dirname, '..', 'templates', 'style.css');
+  const baseCSS = await readFile(templatePath, 'utf-8');
 
   // Get base layout styles (these go before theme variables)
-  const layoutCSS = getBaseLayoutCSS()
+  const layoutCSS = getBaseLayoutCSS();
 
   // Merge in correct cascade order
   const cssLayers = [
@@ -35,10 +35,10 @@ export async function mergeCSS(params: {
     params.globalCSS,
     '',
     '/* Slide-specific Scoped Styles */',
-    ...params.slidesCSS.filter(css => css.trim())
-  ]
+    ...params.slidesCSS.filter(css => css.trim()),
+  ];
 
-  return cssLayers.filter(layer => layer !== undefined).join('\n')
+  return cssLayers.filter(layer => layer !== undefined).join('\n');
 }
 
 /**
@@ -210,5 +210,5 @@ html, body {
 .columns * {
   font-size: inherit;
 }
-  `.trim()
+  `.trim();
 }
