@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { DEFAULTS, REGEX } from '../config/constants.js';
+import { DEFAULTS, REGEX } from '../config/constants';
 
 // Input validation schema
 const ParseInputSchema = z.string().min(1, 'Input cannot be empty');

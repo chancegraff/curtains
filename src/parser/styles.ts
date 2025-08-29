@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { REGEX } from '../config/constants.js';
+import { REGEX } from '../config/constants';
 
 // Style extraction result schema
 const ExtractedStyleSchema = z.object({

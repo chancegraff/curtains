@@ -1,7 +1,7 @@
 import { build } from 'esbuild'
 
 const config = {
-  entryPoints: ['src/index.ts'],
+  entryPoints: ['src/cli.ts'],
   bundle: true,
   platform: 'node',
   target: 'node18',
@@ -32,17 +32,17 @@ const config = {
 async function buildCLI() {
   try {
     console.log('Building CLI with esbuild...')
-    
+
     const result = await build(config)
-    
+
     if (result.metafile) {
       console.log('Build completed successfully!')
       console.log(`Output file: ${config.outfile}`)
-      
+
       // Make the output file executable
       const fs = await import('fs')
       await fs.promises.chmod(config.outfile, 0o755)
-      
+
       // Log bundle analysis
       const outputs = result.metafile.outputs
       for (const [file, info] of Object.entries(outputs)) {

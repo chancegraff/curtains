@@ -21,7 +21,7 @@ import type {
   TextNodeSchema,
   TransformedDocumentSchema,
   TransformedSlideSchema,
-} from './schemas.js';
+} from './schemas';
 
 // Base node types - inferred from schema
 export type NodeType = z.infer<typeof NodeTypeSchema>;

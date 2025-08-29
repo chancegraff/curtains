@@ -1,7 +1,7 @@
 // HTML Generator
 // Builds HTML slide structure from transformed documents
 
-import type { TransformedDocument } from '../ast/types.js';
+import type { TransformedDocument } from '../ast/types';
 
 /**
  * Task 1: Build HTML slide structure

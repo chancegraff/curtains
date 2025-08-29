@@ -3,7 +3,7 @@
 
 import type { z } from 'zod';
 
-import type { RuntimeConfigSchema } from './schemas.js';
+import type { RuntimeConfigSchema } from './schemas';
 
 /**
  * Task 3: Inject into template

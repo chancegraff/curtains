@@ -1,9 +1,9 @@
-import { CurtainsSlideSchema } from '../ast/schemas.js';
-import type { CurtainsSlide } from '../ast/types.js';
-import { REGEX } from '../config/constants.js';
-import { buildAST, parseContainers } from './containers.js';
-import { extractStyles } from './styles.js';
-import { validateSlideIndex } from './validate.js';
+import { CurtainsSlideSchema } from '../ast/schemas';
+import type { CurtainsSlide } from '../ast/types';
+import { REGEX } from '../config/constants';
+import { buildAST, parseContainers } from './containers';
+import { extractStyles } from './styles';
+import { validateSlideIndex } from './validate';
 
 export interface SlideParseInput {
   content: string;

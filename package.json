@@ -7,10 +7,9 @@
     "curtains": "./dist/curtains-cli.js"
   },
   "scripts": {
-    "build": "npm run build:esbuild && npm run copy:templates",
+    "build": "npm run build:esbuild",
     "build:esbuild": "node esbuild.config.js",
     "build:tsc": "tsc",
-    "copy:templates": "mkdir -p dist/src/abstractions/rendering && cp src/abstractions/rendering/style.css dist/src/abstractions/rendering/",
     "build:watch": "tsc --watch",
     "clean": "rm -rf dist",
     "prebuild": "npm run clean",

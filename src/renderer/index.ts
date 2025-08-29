@@ -1,13 +1,13 @@
 // Renderer Implementation
 // Phase 4: Converts TransformedDocument to complete HTML presentation
 
-import { TransformedDocumentSchema } from '../ast/schemas.js';
-import { BuildOptionsSchema } from '../config/schemas.js';
-import { mergeCSS } from './css-merger.js';
-import { buildSlidesHTML } from './html-generator.js';
-import { getRuntimeJS } from './runtime.js';
-import { HTMLOutputSchema, RuntimeConfigSchema } from './schemas.js';
-import { buildCompleteHTML } from './template-builder.js';
+import { TransformedDocumentSchema } from '../ast/schemas';
+import { BuildOptionsSchema } from '../config/schemas';
+import { mergeCSS } from './css-merger';
+import { buildSlidesHTML } from './html-generator';
+import { getRuntimeJS } from './runtime';
+import { HTMLOutputSchema, RuntimeConfigSchema } from './schemas';
+import { buildCompleteHTML } from './template-builder';
 
 /**
  * Renders a TransformedDocument to complete HTML presentation

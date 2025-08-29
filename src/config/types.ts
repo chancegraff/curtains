@@ -10,7 +10,7 @@ import type {
   ErrorCodeSchema,
   ParsedArgsSchema,
   ThemeSchema,
-} from './schemas.js';
+} from './schemas';
 
 // Theme types - inferred from schema
 export type Theme = z.infer<typeof ThemeSchema>;

@@ -1,7 +1,7 @@
-import { CurtainsDocumentSchema, TransformedDocumentSchema } from '../ast/schemas.js';
-import type { TransformedDocument } from '../ast/types.js';
-import { astToHTML } from './ast-to-html.js';
-import { scopeStyles } from './style-scoping.js';
+import { CurtainsDocumentSchema, TransformedDocumentSchema } from '../ast/schemas';
+import type { TransformedDocument } from '../ast/types';
+import { astToHTML } from './ast-to-html';
+import { scopeStyles } from './style-scoping';
 
 /**
  * Transforms a validated CurtainsDocument to a TransformedDocument ready for rendering
@@ -34,5 +34,5 @@ export function transform(document: unknown): TransformedDocument {
 }
 
 // Re-export utilities for testing
-export { astToHTML } from './ast-to-html.js';
-export { scopeStyles } from './style-scoping.js';
+export { astToHTML } from './ast-to-html';
+export { scopeStyles } from './style-scoping';

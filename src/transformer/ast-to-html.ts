@@ -1,5 +1,5 @@
-import { CurtainsASTSchema, CurtainsDocumentSchema } from '../ast/schemas.js';
-import type { ASTNode, CurtainsAST } from '../ast/types.js';
+import { CurtainsASTSchema, CurtainsDocumentSchema } from '../ast/schemas';
+import type { ASTNode, CurtainsAST } from '../ast/types';
 
 /**
  * Converts a slide AST or CurtainsDocument to HTML string

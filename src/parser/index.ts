@@ -1,8 +1,8 @@
-import { CurtainsDocumentSchema } from '../ast/schemas.js';
-import type { CurtainsDocument } from '../ast/types.js';
-import { processSlides, splitIntoSlides } from './slides.js';
-import { extractGlobalStyles } from './styles.js';
-import { validateInput, validateSlideCount } from './validate.js';
+import { CurtainsDocumentSchema } from '../ast/schemas';
+import type { CurtainsDocument } from '../ast/types';
+import { processSlides, splitIntoSlides } from './slides';
+import { extractGlobalStyles } from './styles';
+import { validateInput, validateSlideCount } from './validate';
 
 /**
  * Parses curtains presentation input into a structured document
@@ -36,13 +36,13 @@ export function parse(input: unknown): CurtainsDocument {
 }
 
 // Re-export key functions for modular usage if needed
-export { buildAST, parseContainers } from './containers.js';
-export { parseMarkdown } from './markdown.js';
-export { processSlide, processSlides, splitIntoSlides } from './slides.js';
-export { extractGlobalStyles, extractSlideStyles, extractStyles } from './styles.js';
-export { validateInput } from './validate.js';
+export { buildAST, parseContainers } from './containers';
+export { parseMarkdown } from './markdown';
+export { processSlide, processSlides, splitIntoSlides } from './slides';
+export { extractGlobalStyles, extractSlideStyles, extractStyles } from './styles';
+export { validateInput } from './validate';
 
 // Export types for consumers
-export type { ContainerParseResult } from './containers.js';
-export type { SlideParseInput } from './slides.js';
-export type { ExtractedStyle } from './styles.js';
+export type { ContainerParseResult } from './containers';
+export type { SlideParseInput } from './slides';
+export type { ExtractedStyle } from './styles';

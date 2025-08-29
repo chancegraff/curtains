@@ -1,19 +1,17 @@
-#!/usr/bin/env node
-
 // CLI Implementation
 // Command-line interface for the Curtains presentation builder
 
 import { readFile, writeFile } from 'fs/promises'
 import { z } from 'zod'
 
-import { 
-  BuildOptionsSchema, 
-  CurtainsErrorSchema 
-} from './config/schemas.js'
-import type { CurtainsError,ErrorCode } from './config/types.js'
-import { parse } from './parser/index.js'
-import { render } from './renderer/index.js'
-import { transform } from './transformer/index.js'
+import {
+  BuildOptionsSchema,
+  CurtainsErrorSchema
+} from './config/schemas'
+import type { CurtainsError,ErrorCode } from './config/types'
+import { parse } from './parser/index'
+import { render } from './renderer/index'
+import { transform } from './transformer/index'
 
 /**
  * Parse command line arguments with proper validation
@@ -25,44 +23,44 @@ export function parseArgs(argv: unknown): z.infer<typeof BuildOptionsSchema> {
   // Validate argv is string array
   const argvSchema = z.array(z.string())
   const validatedArgv = argvSchema.parse(argv)
-  
+
   // Skip 'node' and script name
   const args = validatedArgv.slice(2)
-  
+
   // Check for help or version flags first
   if (args.includes('-h') || args.includes('--help')) {
     showHelp()
     process.exit(0)
   }
-  
+
   if (args.includes('-v') || args.includes('--version')) {
     console.log('curtains v1.0.0')
     process.exit(0)
   }
-  
+
   if (args.length === 0 || args[0] !== 'build') {
     throw createError('INVALID_ARGS', 'Use: curtains build <input.curtain> -o <output.html> [--theme light|dark]')
   }
-  
+
   if (!args[1]) {
     throw createError('INVALID_ARGS', 'Input file is required')
   }
-  
+
   const outputIndex = args.indexOf('-o') !== -1 ? args.indexOf('-o') : args.indexOf('--output')
   const themeIndex = args.indexOf('--theme')
-  
+
   const raw = {
     input: args[1],
     output: outputIndex !== -1 ? args[outputIndex + 1] : args[1].replace(/\.curtain$/, '.html'),
     theme: themeIndex !== -1 ? args[themeIndex + 1] : 'light'
   }
-  
+
   // Validate with Zod
   const result = BuildOptionsSchema.safeParse(raw)
   if (!result.success) {
     throw createError('INVALID_ARGS', formatZodError(result.error))
   }
-  
+
   return result.data
 }
 
@@ -80,7 +78,7 @@ function createError(code: ErrorCode, message: string): CurtainsError {
     NO_SLIDES: 4,
     OUTPUT_ERROR: 5
   }
-  
+
   return CurtainsErrorSchema.parse({
     code,
     message,
@@ -95,7 +93,7 @@ function createError(code: ErrorCode, message: string): CurtainsError {
 function handleError(error: unknown): never {
   // Validate error structure
   const result = CurtainsErrorSchema.safeParse(error)
-  
+
   if (result.success) {
     console.error(`Error: ${result.data.message}`)
     process.exit(result.data.exitCode)
@@ -105,11 +103,11 @@ function handleError(error: unknown): never {
       console.error(`Parse Error: ${error.message}`)
       process.exit(3)
     }
-    
+
     // Unexpected error - try to get message
     const fallbackSchema = z.object({ message: z.string() })
     const fallback = fallbackSchema.safeParse(error)
-    
+
     if (fallback.success) {
       console.error('Error:', fallback.data.message)
     } else {
@@ -156,7 +154,7 @@ EXAMPLES:
 EXIT CODES:
   0  Success
   1  Invalid arguments
-  2  File access error  
+  2  File access error
   3  Parse error
   4  No slides found
   5  Output write error
@@ -171,13 +169,13 @@ export async function main(argv: unknown): Promise<void> {
   try {
     // 1. Parse and validate arguments
     const options = parseArgs(argv)
-    
+
     // 2. Read input file
     const source = await readFile(options.input, 'utf-8')
       .catch(() => {
         throw createError('FILE_ACCESS', `Cannot read ${options.input}`)
       })
-    
+
     // 3. Parse source to AST
     let document
     try {
@@ -185,12 +183,12 @@ export async function main(argv: unknown): Promise<void> {
     } catch (error) {
       throw createError('PARSE_ERROR', `Parse failed: ${error instanceof Error ? error.message : String(error)}`)
     }
-    
+
     // 4. Check for slides
     if (!document.slides || document.slides.length === 0) {
       throw createError('NO_SLIDES', 'No slides found in input file')
     }
-    
+
     // 5. Transform AST to HTML
     let transformed
     try {
@@ -198,7 +196,7 @@ export async function main(argv: unknown): Promise<void> {
     } catch (error) {
       throw createError('PARSE_ERROR', `Transform failed: ${error instanceof Error ? error.message : String(error)}`)
     }
-    
+
     // 6. Render final HTML
     let html
     try {
@@ -206,15 +204,15 @@ export async function main(argv: unknown): Promise<void> {
     } catch (error) {
       throw createError('OUTPUT_ERROR', `Render failed: ${error instanceof Error ? error.message : String(error)}`)
     }
-    
+
     // 7. Write output
     await writeFile(options.output, html, 'utf-8')
       .catch(() => {
         throw createError('OUTPUT_ERROR', `Cannot write ${options.output}`)
       })
-    
+
     console.log(`✓ Built ${options.output} (${document.slides.length} slides)`)
-    
+
   } catch (error) {
     handleError(error)
   }

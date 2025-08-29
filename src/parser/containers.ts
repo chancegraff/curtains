@@ -14,10 +14,10 @@ import {
   TableNodeSchema,
   TableRowNodeSchema,
   TextNodeSchema,
-} from '../ast/schemas.js';
-import type { ASTNode } from '../ast/types.js';
-import { parseMarkdown } from './markdown.js';
-import { validateClassName, validateNestingDepth } from './validate.js';
+} from '../ast/schemas';
+import type { ASTNode } from '../ast/types';
+import { parseMarkdown } from './markdown';
+import { validateClassName, validateNestingDepth } from './validate';
 
 // Type for markdown nodes from the parser
 interface MarkdownNode {
