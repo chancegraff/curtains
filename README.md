@@ -17,7 +17,7 @@ Curtains converts extended Markdown files (`.curtain`) into self-contained HTML 
 Use `npx`:
 
 ```bash
-npx curtains build presentation.curtain -o slides.html
+npx curtains presentation.curtain -o slides.html
 ```
 
 Or install globally:
@@ -58,7 +58,7 @@ This is the **first slide** with some content.
 Build your presentation:
 
 ```bash
-npx curtains build presentation.curtain -o slides.html
+npx curtains presentation.curtain -o slides.html
 ```
 
 Open `slides.html` in your browser and use arrow keys to navigate!
@@ -77,7 +77,7 @@ Open `slides.html` in your browser and use arrow keys to navigate!
 ### Basic Command
 
 ```bash
-npx curtains build presentation.curtain -o slides.html
+npx curtains presentation.curtain -o slides.html
 ```
 
 ### Options

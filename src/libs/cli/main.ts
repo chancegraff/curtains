@@ -12,7 +12,7 @@ import { generateOutputPath } from './commands/build';
  */
 export function setupCLI(): Command {
   const program = new Command();
-  
+
   program
     .name('curtains')
     .description('Convert Curtain markup to HTML presentations')
@@ -22,7 +22,7 @@ export function setupCLI(): Command {
     .option('-t, --theme <name>', 'Theme name', 'light')
     .option('-d, --debug', 'Enable debug mode', false)
     .option('-s, --strict', 'Enable strict mode', false);
-    
+
   return program;
 }
 
@@ -31,23 +31,23 @@ export function setupCLI(): Command {
  */
 export function parseCLI(argv: string[]): z.infer<typeof ParsedOptionsSchema> {
   const program = setupCLI();
-  
+
   // Check for help or version flags before parsing
   if (argv.includes('-h') || argv.includes('--help')) {
     console.log(program.helpInformation());
     process.exit(0);
   }
   if (argv.includes('-V') || argv.includes('--version')) {
-    console.log('2.0.0');
+    console.log('2.0.1');
     process.exit(0);
   }
-  
+
   // Parse the arguments
   program.parse(['node', 'curtains', ...argv]);
-  
+
   const opts = program.opts();
   const [input] = program.args;
-  
+
   // Build the parsed options object
   const parsed = {
     command: 'build' as const,
@@ -57,14 +57,14 @@ export function parseCLI(argv: string[]): z.infer<typeof ParsedOptionsSchema> {
     debug: Boolean(opts.debug),
     strict: Boolean(opts.strict),
   };
-  
+
   // Validate with Zod
   const result = ParsedOptionsSchema.safeParse(parsed);
   if (!result.success) {
     console.error(`✗ Invalid options: ${result.error.message}`);
     process.exit(1);
   }
-  
+
   return result.data;
 }
 
@@ -74,16 +74,16 @@ export function parseCLI(argv: string[]): z.infer<typeof ParsedOptionsSchema> {
 export async function main(argv: string[]): Promise<void> {
   const registry = createRegistry({ debug: false });
   const unsubscribe = initializeCoordinator(registry);
-  
+
   try {
     // Parse and validate CLI arguments
     const options = parseCLI(argv);
-    
+
     // Handle build command
     if (options.command === 'build') {
       // Generate output path if not provided
       const outputPath = options.output ?? generateOutputPath(options.input);
-      
+
       // Create build options with validated data
       const buildOptions = BuildOptionsSchema.parse({
         command: 'build',
@@ -91,29 +91,29 @@ export async function main(argv: string[]): Promise<void> {
         output: outputPath,
         theme: options.theme,
       });
-      
+
       // Execute the build
       await executeBuild(buildOptions, registry);
     }
   } catch (error) {
     unsubscribe();
-    
+
     // Check if it's a general error
     if (error instanceof Error) {
       console.error(`✗ Error: ${error.message}`);
     } else {
       console.error('✗ Error: Unknown error occurred');
     }
-    
+
     // Exit with appropriate code for non-test environments
     if (process.env.NODE_ENV !== 'test') {
       process.exit(1);
     }
-    
+
     // Re-throw for tests to handle
     throw error;
   }
-  
+
   // Clean up subscriptions on success
   unsubscribe();
 }
