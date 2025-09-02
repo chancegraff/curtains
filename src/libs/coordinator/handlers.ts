@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import { buildAST } from '../pipeline/ast';
 import { parseStage as parse } from '../pipeline/parse';
-import { renderStage as renderPipeline } from '../pipeline/render';
+import { renderStage as render } from '../pipeline/render';
 import { transformStage as transform } from '../pipeline/transform';
 import { emit, getConfig, save } from '../registry/registry';
 import { CurtainsDocumentSchema } from '../schemas/ast';
@@ -60,10 +60,10 @@ export async function parseStage(
     if (input.type !== 'parse') {
       throw new Error(`Invalid input type for parse stage: ${input.type}`);
     }
-    
+
     // Parse the markdown content
     const parserOutput = parse(input.content);
-    
+
     // Build AST slides from parsed slides
     const astSlides = parserOutput.slides.map(slide => {
       // Handle the optional mdast field properly
@@ -77,13 +77,13 @@ export async function parseStage(
       };
       return buildAST(slideData);
     });
-    
+
     // Combine global styles into a single CSS string
     // Global styles are those extracted from the global content section (before first ===)
     const globalCSS = parserOutput.globalStyles
       .map(style => style.content)
       .join('\n');
-    
+
     // Create the CurtainsDocument
     const curtainsDocument = CurtainsDocumentSchema.parse({
       type: 'curtains-document',
@@ -94,7 +94,7 @@ export async function parseStage(
 
     // Save AST to registry
     save(registry, 'ast', curtainsDocument);
-    
+
     // Also save the parser output for compatibility with the output schema
     save(registry, 'cache', {
       'parser-output': {
@@ -162,10 +162,10 @@ export async function renderStage(
     if (input.type !== 'render') {
       throw new Error(`Invalid input type for render stage: ${input.type}`);
     }
-    
+
     // Get config from registry to pass theme and other settings
     const config = getConfig(registry);
-    const html = renderPipeline(input.transformed, config);
+    const html = render(input.transformed, config);
 
     // Save to registry
     save(registry, 'rendered', html);
