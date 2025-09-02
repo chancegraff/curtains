@@ -1,0 +1,42 @@
+===
+
+# Malformed Markdown Test
+
+This has some intentionally malformed markdown to test error handling.
+
+{.unclosed
+This container is never closed
+
+===
+
+## Broken Table
+
+| Col1 | Col2 | Col3
+|------|------
+| Data1 | Data2
+
+===
+
+## Unclosed Code Block
+
+```javascript
+function test() {
+  console.log("This code block never closes");
+
+===
+
+## Mixed up formatting
+
+**Bold but not closed
+
+*Italic but [link not closed (http://example.com
+
+===
+
+{.container
+Malformed container syntax
+}/
+
+## Final slide
+
+Despite errors above, this should still render.

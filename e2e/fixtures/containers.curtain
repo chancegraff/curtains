@@ -1,0 +1,35 @@
+===
+
+# Container Examples
+
+{.intro}
+This is an intro container with special styling.
+{/}
+
+===
+
+## Nested Containers
+
+{.outer}
+Outer container content
+
+{.inner}
+Inner nested container
+{/}
+
+Back to outer container
+{/}
+
+===
+
+## Multiple Containers
+
+{.highlight}
+Highlighted content
+{/}
+
+Regular content between containers
+
+{.warning}
+Warning message container
+{/}

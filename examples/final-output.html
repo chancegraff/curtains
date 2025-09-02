@@ -1,545 +1,514 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Curtains presentation with 4 slides">
-  <meta name="generator" content="Curtains Presentation Tool">
-  <title>Presentation</title>
-  <style>
-/* Base Layout Styles */
-/* Reset and Box Model */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html, body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  font-size: 16px;
-  line-height: 1.6;
-}
-
-/* Core Presentation Structure */
-.curtains-root {
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  background-color: #000000;
-}
-
-/* Responsive viewport with 16:9 aspect ratio */
-.curtains-viewport {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #000000;
-}
-
-.curtains-stage-wrapper {
-  position: absolute;
-  width: 1920px;
-  height: 1080px;
-  transform-origin: center center;
-  background-color: var(--curtains-bg-primary, #ffffff);
-  overflow: hidden;
-  left: 50%;
-  top: 50%;
-  margin-left: -960px;
-  margin-top: -540px;
-}
-
-.curtains-stage {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: row;
-  transition: transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
-  transform: translateX(0%);
-}
-
-.curtains-slide {
-  width: 100%;
-  height: 100%;
-  flex-shrink: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  font-size: 2rem;
-  line-height: 1.8;
-}
-
-/* Content wrapper with padding */
-.curtains-content {
-  padding: 4rem;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-}
-
-/* Typography Scale */
-.curtains-slide h1 {
-  font-size: 4rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-  line-height: 1.2;
-}
-
-.curtains-slide h2 {
-  font-size: 3.2rem;
-  font-weight: 600;
-  margin-bottom: 1.25rem;
-  line-height: 1.3;
-}
-
-.curtains-slide h3 {
-  font-size: 2.5rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  line-height: 1.4;
-}
-
-.curtains-slide h4 {
-  font-size: 2rem;
-  font-weight: 600;
-  margin-bottom: 0.875rem;
-  line-height: 1.5;
-}
-
-.curtains-slide h5 {
-  font-size: 1.75rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-  line-height: 1.6;
-}
-
-.curtains-slide h6 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-  line-height: 1.6;
-}
-
-.curtains-slide p {
-  margin-bottom: 1.5rem;
-  font-size: inherit;
-}
-
-.curtains-slide ul,
-.curtains-slide ol {
-  margin-bottom: 1.5rem;
-  padding-left: 2rem;
-  font-size: 1.75rem;
-}
-
-.curtains-slide li {
-  margin-bottom: 0.75rem;
-  font-size: inherit;
-}
-
-.curtains-slide pre {
-  margin-bottom: 1.5rem;
-  font-size: 1rem;
-  line-height: 1.5;
-}
-
-.curtains-slide blockquote {
-  margin: 2rem 0;
-}
-
-.curtains-slide table {
-  width: 100%;
-  margin-bottom: 1.5rem;
-}
-
-/* Column layout scaling */
-.columns {
-  font-size: inherit;
-}
-
-.columns * {
-  font-size: inherit;
-}
-
-/* Theme Variables and Base Styles */
-/* Curtains Presentation Tool - Theme Variables */
-
-:root {
-  /* Light Theme Variables */
-  --curtains-bg-primary: #ffffff;
-  --curtains-bg-secondary: #f8fafc;
-  --curtains-bg-tertiary: #f1f5f9;
-  
-  --curtains-text-primary: #0f172a;
-  --curtains-text-secondary: #475569;
-  --curtains-text-muted: #64748b;
-  --curtains-text-inverse: #ffffff;
-  
-  --curtains-accent-primary: #3b82f6;
-  --curtains-accent-secondary: #1e40af;
-  --curtains-accent-tertiary: #dbeafe;
-  
-  --curtains-link-default: #2563eb;
-  --curtains-link-hover: #1d4ed8;
-  --curtains-link-visited: #7c3aed;
-  
-  --curtains-border-light: #e2e8f0;
-  --curtains-border-medium: #cbd5e1;
-  --curtains-border-strong: #94a3b8;
-  
-  --curtains-code-bg: #f8fafc;
-  --curtains-code-border: #e2e8f0;
-  --curtains-code-text: #374151;
-  --curtains-code-keyword: #dc2626;
-  --curtains-code-string: #059669;
-  --curtains-code-comment: #6b7280;
-  
-  --curtains-counter-bg: rgba(15, 23, 42, 0.85);
-  --curtains-counter-text: #ffffff;
-  --curtains-counter-border: rgba(255, 255, 255, 0.2);
-  
-  --curtains-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --curtains-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --curtains-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  
-  --curtains-success: #10b981;
-  --curtains-warning: #f59e0b;
-  --curtains-error: #ef4444;
-  --curtains-info: #3b82f6;
-}
-
-[data-theme="dark"] {
-  /* Dark Theme Variables */
-  --curtains-bg-primary: #0f172a;
-  --curtains-bg-secondary: #1e293b;
-  --curtains-bg-tertiary: #334155;
-  
-  --curtains-text-primary: #f8fafc;
-  --curtains-text-secondary: #cbd5e1;
-  --curtains-text-muted: #94a3b8;
-  --curtains-text-inverse: #0f172a;
-  
-  --curtains-accent-primary: #60a5fa;
-  --curtains-accent-secondary: #3b82f6;
-  --curtains-accent-tertiary: #1e3a8a;
-  
-  --curtains-link-default: #60a5fa;
-  --curtains-link-hover: #93c5fd;
-  --curtains-link-visited: #a78bfa;
-  
-  --curtains-border-light: #334155;
-  --curtains-border-medium: #475569;
-  --curtains-border-strong: #64748b;
-  
-  --curtains-code-bg: #1e293b;
-  --curtains-code-border: #374151;
-  --curtains-code-text: #e5e7eb;
-  --curtains-code-keyword: #fca5a5;
-  --curtains-code-string: #6ee7b7;
-  --curtains-code-comment: #9ca3af;
-  
-  --curtains-counter-bg: rgba(248, 250, 252, 0.9);
-  --curtains-counter-text: #0f172a;
-  --curtains-counter-border: rgba(15, 23, 42, 0.2);
-  
-  --curtains-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --curtains-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
-  --curtains-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-  
-  --curtains-success: #34d399;
-  --curtains-warning: #fbbf24;
-  --curtains-error: #f87171;
-  --curtains-info: #60a5fa;
-}
-
-/* Base Styles */
-.curtains-root {
-  background-color: var(--curtains-bg-primary);
-  color: var(--curtains-text-primary);
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.curtains-stage {
-  background-color: var(--curtains-bg-primary);
-}
-
-.curtains-slide {
-  background-color: var(--curtains-bg-primary);
-  color: var(--curtains-text-primary);
-}
-
-/* Typography */
-.curtains-slide h1,
-.curtains-slide h2,
-.curtains-slide h3,
-.curtains-slide h4,
-.curtains-slide h5,
-.curtains-slide h6 {
-  color: var(--curtains-text-primary);
-}
-
-.curtains-slide p {
-  color: var(--curtains-text-primary);
-}
-
-.curtains-slide small,
-.curtains-slide .text-muted {
-  color: var(--curtains-text-muted);
-}
-
-/* Links */
-.curtains-slide a {
-  color: var(--curtains-link-default);
-  text-decoration: none;
-  border-bottom: 1px solid transparent;
-  transition: color 0.2s ease, border-color 0.2s ease;
-}
-
-.curtains-slide a:hover {
-  color: var(--curtains-link-hover);
-  border-bottom-color: var(--curtains-link-hover);
-}
-
-.curtains-slide a:visited {
-  color: var(--curtains-link-visited);
-}
-
-/* Code Blocks */
-.curtains-slide pre,
-.curtains-slide code {
-  background-color: var(--curtains-code-bg);
-  color: var(--curtains-code-text);
-  border: 1px solid var(--curtains-code-border);
-}
-
-.curtains-slide pre {
-  padding: 1rem;
-  border-radius: 6px;
-  overflow-x: auto;
-  box-shadow: var(--curtains-shadow-sm);
-}
-
-.curtains-slide code {
-  padding: 0.125rem 0.25rem;
-  border-radius: 3px;
-  font-size: 0.875em;
-}
-
-.curtains-slide pre code {
-  background-color: transparent;
-  border: none;
-  padding: 0;
-  font-size: inherit;
-}
-
-/* Lists */
-.curtains-slide ul,
-.curtains-slide ol {
-  color: var(--curtains-text-primary);
-}
-
-.curtains-slide li {
-  margin-bottom: 0.5rem;
-}
-
-.curtains-slide ul li::marker {
-  color: var(--curtains-accent-primary);
-}
-
-.curtains-slide ol li::marker {
-  color: var(--curtains-accent-primary);
-  font-weight: 600;
-}
-
-/* Blockquotes */
-.curtains-slide blockquote {
-  background-color: var(--curtains-bg-secondary);
-  border-left: 4px solid var(--curtains-accent-primary);
-  padding: 1rem 1.5rem;
-  margin: 1.5rem 0;
-  border-radius: 0 6px 6px 0;
-  color: var(--curtains-text-secondary);
-  font-style: italic;
-}
-
-/* Tables */
-.curtains-slide table {
-  background-color: var(--curtains-bg-secondary);
-  border-collapse: collapse;
-  border-radius: 6px;
-  overflow: hidden;
-  box-shadow: var(--curtains-shadow-sm);
-}
-
-.curtains-slide th {
-  background-color: var(--curtains-accent-tertiary);
-  color: var(--curtains-text-primary);
-  font-weight: 600;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--curtains-border-medium);
-}
-
-.curtains-slide td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--curtains-border-light);
-  color: var(--curtains-text-primary);
-}
-
-.curtains-slide tr:last-child td {
-  border-bottom: none;
-}
-
-.curtains-slide tr:hover {
-  background-color: var(--curtains-bg-tertiary);
-}
-
-/* Horizontal Rules */
-.curtains-slide hr {
-  border: none;
-  border-top: 2px solid var(--curtains-border-medium);
-  margin: 2rem 0;
-  opacity: 0.6;
-}
-
-/* Counter Overlay */
-.curtains-counter {
-  background-color: var(--curtains-counter-bg);
-  color: var(--curtains-counter-text);
-  border: 1px solid var(--curtains-counter-border);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-radius: 20px;
-  padding: 0.5rem 1rem;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 0.875rem;
-  font-weight: 500;
-  box-shadow: var(--curtains-shadow-md);
-  position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  z-index: 1000;
-  transition: all 0.3s ease;
-}
-
-/* Images */
-.curtains-slide img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 6px;
-  box-shadow: var(--curtains-shadow-md);
-}
-
-/* Emphasis */
-.curtains-slide strong {
-  color: var(--curtains-text-primary);
-  font-weight: 700;
-}
-
-.curtains-slide em {
-  color: var(--curtains-text-secondary);
-  font-style: italic;
-}
-
-/* Utility Classes */
-.curtains-slide .text-accent {
-  color: var(--curtains-accent-primary);
-}
-
-.curtains-slide .bg-accent {
-  background-color: var(--curtains-accent-tertiary);
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-}
-
-.curtains-slide .text-success {
-  color: var(--curtains-success);
-}
-
-.curtains-slide .text-warning {
-  color: var(--curtains-warning);
-}
-
-.curtains-slide .text-error {
-  color: var(--curtains-error);
-}
-
-.curtains-slide .text-info {
-  color: var(--curtains-info);
-}
-
-/* Focus states for accessibility */
-.curtains-slide a:focus {
-  outline: 2px solid var(--curtains-accent-primary);
-  outline-offset: 2px;
-  border-radius: 2px;
-}
-
-/* Smooth transitions for theme switching */
-.curtains-root *,
-.curtains-root *::before,
-.curtains-root *::after {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-}
-
-/* Global User Styles */
-/* Global styles for all slides */
-.centered {
-  text-align: center;
-}
-.highlight {
-  color: #007acc;
-}
-.columns {
-  display: flex;
-  gap: 2rem;
-  align-items: flex-start;
-}
-.nested {
-  background-color: rgba(150, 150, 150, 0.1);
-  padding: 1rem;
-  border-radius: 0.5rem;
-  margin-top: 1rem;
-}
-
-/* Slide-specific Scoped Styles */
-/* Slide-specific styles */
-.curtains-slide:nth-child(1) .hero {
-  height: 100%;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(45deg, #667eea, #764ba2);
-}
-  </style>
-</head>
-<body>
-  <div class="curtains-root" data-theme="light">
-    <div class="curtains-viewport">
-      <div class="curtains-stage-wrapper">
-        <div class="curtains-stage">
-          <section class="curtains-slide"><div class="hero"><h1>Welcome to My Presentation</h1>
-<p>This is the <strong>first slide</strong> with some content.</p></div></section>
-      <section class="curtains-slide"><div class="curtains-content"><h2>Features Demo</h2>
-<ul><li><p>Showing off tables</p></li>
-<li><p>Also shows off code blocks</p></li></ul>
-<h3>Markdown Tables</h3>
-<p>Here's a comparison table with different alignments:</p>
-<table><thead><tr><th>Feature</th><th style="text-align: center">Status</th><th style="text-align: right">Priority</th><th>Notes</th></tr></thead><tbody><tr><td><strong>Tables</strong></td><td style="text-align: center">✅ Done</td><td style="text-align: right">High</td><td>Full markdown support</td></tr><tr><td><em>Code blocks</em></td><td style="text-align: center">✅ Done</td><td style="text-align: right">Medium</td><td>Syntax highlighting ready</td></tr><tr><td>Images</td><td style="text-align: center">✅ Done</td><td style="text-align: right">Low</td><td>SVG and raster support</td></tr><tr><td><a href="https://example.com" target="_blank" rel="noopener noreferrer">Links</a></td><td style="text-align: center">✅ Done</td><td style="text-align: right">Medium</td><td>External links work</td></tr></tbody></table>
-<h3>Code Blocks</h3>
-<pre><code class="language-javascript">// Example JavaScript code with syntax highlighting
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curtains Presentation</title>
+    <style>/* Base Layout Styles */
+      /* Reset and Box Model */
+      * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      }
+      html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      }
+      /* Core Presentation Structure */
+      .curtains-root {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-color: #000000;
+      }
+      /* Responsive viewport with 16:9 aspect ratio */
+      .curtains-viewport {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #000000;
+      }
+      .curtains-stage-wrapper {
+      position: absolute;
+      width: 1920px;
+      height: 1080px;
+      transform-origin: center center;
+      background-color: var(--curtains-bg-primary, #ffffff);
+      overflow: hidden;
+      left: 50%;
+      top: 50%;
+      margin-left: -960px;
+      margin-top: -540px;
+      }
+      .curtains-stage {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: row;
+      transition: transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+      transform: translateX(0%);
+      }
+      .curtains-slide {
+      width: 100%;
+      height: 100%;
+      flex-shrink: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      font-size: 2rem;
+      line-height: 1.8;
+      }
+      /* Content wrapper with padding */
+      .curtains-content {
+      padding: 4rem;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      }
+      /* Typography Scale */
+      .curtains-slide h1 {
+      font-size: 4rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      line-height: 1.2;
+      }
+      .curtains-slide h2 {
+      font-size: 3.2rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      line-height: 1.3;
+      }
+      .curtains-slide h3 {
+      font-size: 2.5rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      line-height: 1.4;
+      }
+      .curtains-slide h4 {
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 0.875rem;
+      line-height: 1.5;
+      }
+      .curtains-slide h5 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      line-height: 1.6;
+      }
+      .curtains-slide h6 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      line-height: 1.6;
+      }
+      .curtains-slide p {
+      margin-bottom: 1.5rem;
+      font-size: inherit;
+      }
+      .curtains-slide ul,
+      .curtains-slide ol {
+      margin-bottom: 1.5rem;
+      padding-left: 2rem;
+      font-size: 1.75rem;
+      }
+      .curtains-slide li {
+      margin-bottom: 0.75rem;
+      font-size: inherit;
+      }
+      .curtains-slide pre {
+      margin-bottom: 1.5rem;
+      font-size: 1rem;
+      line-height: 1.5;
+      }
+      .curtains-slide blockquote {
+      margin: 2rem 0;
+      }
+      .curtains-slide table {
+      width: 100%;
+      margin-bottom: 1.5rem;
+      }
+      /* Column layout scaling */
+      .columns {
+      font-size: inherit;
+      }
+      .columns * {
+      font-size: inherit;
+      }
+      /* Curtains Presentation Tool - Theme Variables */
+      :root {
+      /* Light Theme Variables */
+      --curtains-bg-primary: #ffffff;
+      --curtains-bg-secondary: #f8fafc;
+      --curtains-bg-tertiary: #f1f5f9;
+      --curtains-text-primary: #0f172a;
+      --curtains-text-secondary: #475569;
+      --curtains-text-muted: #64748b;
+      --curtains-text-inverse: #ffffff;
+      --curtains-accent-primary: #3b82f6;
+      --curtains-accent-secondary: #1e40af;
+      --curtains-accent-tertiary: #dbeafe;
+      --curtains-link-default: #2563eb;
+      --curtains-link-hover: #1d4ed8;
+      --curtains-link-visited: #7c3aed;
+      --curtains-border-light: #e2e8f0;
+      --curtains-border-medium: #cbd5e1;
+      --curtains-border-strong: #94a3b8;
+      --curtains-code-bg: #f8fafc;
+      --curtains-code-border: #e2e8f0;
+      --curtains-code-text: #374151;
+      --curtains-code-keyword: #dc2626;
+      --curtains-code-string: #059669;
+      --curtains-code-comment: #6b7280;
+      --curtains-counter-bg: rgba(15, 23, 42, 0.85);
+      --curtains-counter-text: #ffffff;
+      --curtains-counter-border: rgba(255, 255, 255, 0.2);
+      --curtains-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --curtains-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      --curtains-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      --curtains-success: #10b981;
+      --curtains-warning: #f59e0b;
+      --curtains-error: #ef4444;
+      --curtains-info: #3b82f6;
+      }
+      [data-theme="dark"] {
+      /* Dark Theme Variables */
+      --curtains-bg-primary: #0f172a;
+      --curtains-bg-secondary: #1e293b;
+      --curtains-bg-tertiary: #334155;
+      --curtains-text-primary: #f8fafc;
+      --curtains-text-secondary: #cbd5e1;
+      --curtains-text-muted: #94a3b8;
+      --curtains-text-inverse: #0f172a;
+      --curtains-accent-primary: #60a5fa;
+      --curtains-accent-secondary: #3b82f6;
+      --curtains-accent-tertiary: #1e3a8a;
+      --curtains-link-default: #60a5fa;
+      --curtains-link-hover: #93c5fd;
+      --curtains-link-visited: #a78bfa;
+      --curtains-border-light: #334155;
+      --curtains-border-medium: #475569;
+      --curtains-border-strong: #64748b;
+      --curtains-code-bg: #1e293b;
+      --curtains-code-border: #374151;
+      --curtains-code-text: #e5e7eb;
+      --curtains-code-keyword: #fca5a5;
+      --curtains-code-string: #6ee7b7;
+      --curtains-code-comment: #9ca3af;
+      --curtains-counter-bg: rgba(248, 250, 252, 0.9);
+      --curtains-counter-text: #0f172a;
+      --curtains-counter-border: rgba(15, 23, 42, 0.2);
+      --curtains-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+      --curtains-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+      --curtains-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+      --curtains-success: #34d399;
+      --curtains-warning: #fbbf24;
+      --curtains-error: #f87171;
+      --curtains-info: #60a5fa;
+      }
+      /* Base Styles */
+      .curtains-root {
+      background-color: var(--curtains-bg-primary);
+      color: var(--curtains-text-primary);
+      transition: background-color 0.3s ease, color 0.3s ease;
+      }
+      .curtains-stage {
+      background-color: var(--curtains-bg-primary);
+      }
+      .curtains-slide {
+      background-color: var(--curtains-bg-primary);
+      color: var(--curtains-text-primary);
+      }
+      /* Typography */
+      .curtains-slide h1,
+      .curtains-slide h2,
+      .curtains-slide h3,
+      .curtains-slide h4,
+      .curtains-slide h5,
+      .curtains-slide h6 {
+      color: var(--curtains-text-primary);
+      }
+      .curtains-slide p {
+      color: var(--curtains-text-primary);
+      }
+      .curtains-slide small,
+      .curtains-slide .text-muted {
+      color: var(--curtains-text-muted);
+      }
+      /* Links */
+      .curtains-slide a {
+      color: var(--curtains-link-default);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: color 0.2s ease, border-color 0.2s ease;
+      }
+      .curtains-slide a:hover {
+      color: var(--curtains-link-hover);
+      border-bottom-color: var(--curtains-link-hover);
+      }
+      .curtains-slide a:visited {
+      color: var(--curtains-link-visited);
+      }
+      /* Code Blocks */
+      .curtains-slide pre,
+      .curtains-slide code {
+      background-color: var(--curtains-code-bg);
+      color: var(--curtains-code-text);
+      border: 1px solid var(--curtains-code-border);
+      }
+      .curtains-slide pre {
+      padding: 1rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      box-shadow: var(--curtains-shadow-sm);
+      }
+      .curtains-slide code {
+      padding: 0.125rem 0.25rem;
+      border-radius: 3px;
+      font-size: 0.875em;
+      }
+      .curtains-slide pre code {
+      background-color: transparent;
+      border: none;
+      padding: 0;
+      font-size: inherit;
+      }
+      /* Lists */
+      .curtains-slide ul,
+      .curtains-slide ol {
+      color: var(--curtains-text-primary);
+      }
+      .curtains-slide li {
+      margin-bottom: 0.5rem;
+      }
+      .curtains-slide ul li::marker {
+      color: var(--curtains-accent-primary);
+      }
+      .curtains-slide ol li::marker {
+      color: var(--curtains-accent-primary);
+      font-weight: 600;
+      }
+      /* Blockquotes */
+      .curtains-slide blockquote {
+      background-color: var(--curtains-bg-secondary);
+      border-left: 4px solid var(--curtains-accent-primary);
+      padding: 1rem 1.5rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+      color: var(--curtains-text-secondary);
+      font-style: italic;
+      }
+      /* Tables */
+      .curtains-slide table {
+      background-color: var(--curtains-bg-secondary);
+      border-collapse: collapse;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: var(--curtains-shadow-sm);
+      }
+      .curtains-slide th {
+      background-color: var(--curtains-accent-tertiary);
+      color: var(--curtains-text-primary);
+      font-weight: 600;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--curtains-border-medium);
+      }
+      .curtains-slide td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--curtains-border-light);
+      color: var(--curtains-text-primary);
+      }
+      .curtains-slide tr:last-child td {
+      border-bottom: none;
+      }
+      .curtains-slide tr:hover {
+      background-color: var(--curtains-bg-tertiary);
+      }
+      /* Horizontal Rules */
+      .curtains-slide hr {
+      border: none;
+      border-top: 2px solid var(--curtains-border-medium);
+      margin: 2rem 0;
+      opacity: 0.6;
+      }
+      /* Counter Overlay */
+      .curtains-counter {
+      background-color: var(--curtains-counter-bg);
+      color: var(--curtains-counter-text);
+      border: 1px solid var(--curtains-counter-border);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-radius: 20px;
+      padding: 0.5rem 1rem;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 0.875rem;
+      font-weight: 500;
+      box-shadow: var(--curtains-shadow-md);
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      z-index: 1000;
+      transition: all 0.3s ease;
+      }
+      /* Images */
+      .curtains-slide img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 6px;
+      box-shadow: var(--curtains-shadow-md);
+      }
+      /* Emphasis */
+      .curtains-slide strong {
+      color: var(--curtains-text-primary);
+      font-weight: 700;
+      }
+      .curtains-slide em {
+      color: var(--curtains-text-secondary);
+      font-style: italic;
+      }
+      /* Utility Classes */
+      .curtains-slide .text-accent {
+      color: var(--curtains-accent-primary);
+      }
+      .curtains-slide .bg-accent {
+      background-color: var(--curtains-accent-tertiary);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      }
+      .curtains-slide .text-success {
+      color: var(--curtains-success);
+      }
+      .curtains-slide .text-warning {
+      color: var(--curtains-warning);
+      }
+      .curtains-slide .text-error {
+      color: var(--curtains-error);
+      }
+      .curtains-slide .text-info {
+      color: var(--curtains-info);
+      }
+      /* Focus states for accessibility */
+      .curtains-slide a:focus {
+      outline: 2px solid var(--curtains-accent-primary);
+      outline-offset: 2px;
+      border-radius: 2px;
+      }
+      /* Smooth transitions for theme switching */
+      .curtains-root *,
+      .curtains-root *::before,
+      .curtains-root *::after {
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+      }
+      /* Global User Styles */
+      /* Global styles for all slides */
+      .centered {
+      text-align: center;
+      }
+      .highlight {
+      color: #007acc;
+      }
+      .columns {
+      display: flex;
+      gap: 2rem;
+      align-items: flex-start;
+      }
+      .nested {
+      background-color: rgba(150, 150, 150, 0.1);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin-top: 1rem;
+      }
+      /* Slide-Specific Scoped Styles */
+      .curtains-slide:nth-child(1) .hero {
+      height: 100%;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      }</style>
+    </head>
+    <body>
+      <div class="curtains-root" data-theme="dark">
+        <div class="curtains-viewport">
+          <div class="curtains-stage-wrapper">
+            <div class="curtains-stage">
+              <section class="curtains-slide">
+                <div class="hero">
+                  <h1>Welcome to My Presentation</h1>
+                  <p>This is the <strong>first slide</strong> with some content.</p>
+                </div>
+              </section>
+              <section class="curtains-slide">
+                <div class="curtains-content">
+                  <h2>Features Demo</h2>
+                  <ul>
+                    <li>
+                      <p>Showing off tables</p>
+                    </li>
+                    <li>
+                      <p>Also shows off code blocks</p>
+                    </li>
+                  </ul>
+                  <h3>Markdown Tables</h3>
+                  <p>Here's a comparison table with different alignments:</p>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th style="text-align: left">Feature</th>
+                        <th style="text-align: center">Status</th>
+                        <th style="text-align: right">Priority</th>
+                        <th>Notes</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td style="text-align: left">
+                          <strong>Tables</strong>
+                        </td>
+                        <td style="text-align: center">✅ Done</td>
+                        <td style="text-align: right">High</td>
+                        <td>Full markdown support</td>
+                      </tr>
+                      <tr>
+                        <td style="text-align: left">
+                          <em>Code blocks</em>
+                        </td>
+                        <td style="text-align: center">✅ Done</td>
+                        <td style="text-align: right">Medium</td>
+                        <td>Syntax highlighting ready</td>
+                      </tr>
+                      <tr>
+                        <td style="text-align: left">Images</td>
+                        <td style="text-align: center">✅ Done</td>
+                        <td style="text-align: right">Low</td>
+                        <td>SVG and raster support</td>
+                      </tr>
+                      <tr>
+                        <td style="text-align: left">
+                          <a href="https://example.com" target="_blank" rel="noopener noreferrer">Links</a>
+                        </td>
+                        <td style="text-align: center">✅ Done</td>
+                        <td style="text-align: right">Medium</td>
+                        <td>External links work</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <h3>Code Blocks</h3>
+                  <pre><code class="language-javascript">// Example JavaScript code with syntax highlighting
 function greet(name) {
   const message = `Hello, ${name}!`;
   console.log(message);
@@ -547,258 +516,262 @@ function greet(name) {
 }
 
 // Call the function
-greet(&quot;Curtains&quot;);</code></pre>
-<pre><code class="language-python"># Python example
+greet("Curtains");</code></pre><pre><code class="language-python"># Python example
 def fibonacci(n):
-    &quot;&quot;&quot;Generate Fibonacci sequence up to n&quot;&quot;&quot;
+    """Generate Fibonacci sequence up to n"""
     a, b = 0, 1
-    while a &lt; n:
-        print(a, end=&#39; &#39;)
+    while a &#x3C; n:
+        print(a, end=' ')
         a, b = b, a + b
     print()
 
-fibonacci(100)</code></pre></div></section>
-      <section class="curtains-slide"><div class="curtains-content"><h2>Advanced Features</h2></div>
-<div class="columns"><div><h3>Tables in Containers</h3>
-<table><thead><tr><th>Language</th><th>Type</th><th style="text-align: right">Year</th></tr></thead><tbody><tr><td>JavaScript</td><td>Dynamic</td><td style="text-align: right">1995</td></tr><tr><td>Python</td><td>Dynamic</td><td style="text-align: right">1991</td></tr><tr><td>Rust</td><td>Static</td><td style="text-align: right">2010</td></tr></tbody></table></div>
-<div><h3>Code in Containers</h3>
-<pre><code class="language-bash"># Build and run
+fibonacci(100)</code></pre></div>
+                </section>
+                <section class="curtains-slide">
+                  <div class="curtains-content">
+                    <h2>Advanced Features</h2>
+                    <div class="columns">
+                      <div class="">
+                        <h3>Tables in Containers</h3>
+                        <table>
+                          <thead>
+                            <tr>
+                              <th style="text-align: left">Language</th>
+                              <th style="text-align: left">Type</th>
+                              <th style="text-align: right">Year</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td style="text-align: left">JavaScript</td>
+                              <td style="text-align: left">Dynamic</td>
+                              <td style="text-align: right">1995</td>
+                            </tr>
+                            <tr>
+                              <td style="text-align: left">Python</td>
+                              <td style="text-align: left">Dynamic</td>
+                              <td style="text-align: right">1991</td>
+                            </tr>
+                            <tr>
+                              <td style="text-align: left">Rust</td>
+                              <td style="text-align: left">Static</td>
+                              <td style="text-align: right">2010</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div class="">
+                        <h3>Code in Containers</h3>
+                        <pre><code class="language-bash"># Build and run
 npm install
 npm run build
-npm start</code></pre></div></div></section>
-      <section class="curtains-slide"><div class="curtains-content"><h2>Final Slide</h2>
-<p>Thank you for your attention!
-<img src="./test-image.svg" alt=""></p></div></section>
-        </div>
-      </div>
-    </div>
-    <div class="curtains-counter">1/4</div>
-  </div>
-  <script>
-(function() {
-  'use strict';
-  
-  // Navigation state and methods
-  const navigation = {
-    current: 0,
-    total: 0,
-    
-    init() {
-      this.total = document.querySelectorAll('.curtains-slide').length;
-      this.updateCounter();
-      this.updateScale();
-      this.setupEventListeners();
-      console.log(`Curtains initialized: ${this.total} slides`);
-    },
-    
-    goToSlide(index) {
-      // Implement wrap-around navigation
-      let newIndex = index;
-      if (newIndex >= this.total) {
-        newIndex = 0; // Wrap to first slide
-      } else if (newIndex < 0) {
-        newIndex = this.total - 1; // Wrap to last slide
-      }
-      
-      if (newIndex === this.current) return;
-      
-      this.current = newIndex;
-      const stage = document.querySelector('.curtains-stage');
-      if (stage) {
-        stage.style.transform = `translateX(-${this.current * 100}%)`;
-      }
-      this.updateCounter();
-      
-      // Announce slide change for screen readers
-      this.announceSlideChange();
-    },
-    
-    nextSlide() {
-      this.goToSlide(this.current + 1);
-    },
-    
-    prevSlide() {
-      this.goToSlide(this.current - 1);
-    },
-    
-    firstSlide() {
-      this.goToSlide(0);
-    },
-    
-    lastSlide() {
-      this.goToSlide(this.total - 1);
-    },
-    
-    updateCounter() {
-      const counter = document.querySelector('.curtains-counter');
-      if (counter) {
-        counter.textContent = `${this.current + 1}/${this.total}`;
-      }
-      
-      // Update document title
-      document.title = `Slide ${this.current + 1} of ${this.total} - Presentation`;
-    },
-    
-    announceSlideChange() {
-      // Create or update live region for screen reader announcements
-      let announcer = document.getElementById('slide-announcer');
-      if (!announcer) {
-        announcer = document.createElement('div');
-        announcer.id = 'slide-announcer';
-        announcer.setAttribute('aria-live', 'polite');
-        announcer.setAttribute('aria-atomic', 'true');
-        announcer.style.position = 'absolute';
-        announcer.style.left = '-10000px';
-        announcer.style.width = '1px';
-        announcer.style.height = '1px';
-        announcer.style.overflow = 'hidden';
-        document.body.appendChild(announcer);
-      }
-      
-      announcer.textContent = `Slide ${this.current + 1} of ${this.total}`;
-    },
-    
-    updateScale() {
-      // Calculate scale to fit 1920x1080 slide to viewport
-      const stageWrapper = document.querySelector('.curtains-stage-wrapper');
-      if (!stageWrapper) return;
-      
-      // Fixed slide dimensions (16:9 aspect ratio)
-      const slideWidth = 1920;
-      const slideHeight = 1080;
-      
-      // Available viewport dimensions
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      
-      // Calculate scale factors for width and height
-      const scaleX = viewportWidth / slideWidth;
-      const scaleY = viewportHeight / slideHeight;
-      
-      // Use the smaller scale to maintain aspect ratio
-      const scale = Math.min(scaleX, scaleY);
-      
-      // Apply the scale transform
-      stageWrapper.style.transform = `scale(${scale})`;
-    },
-    
-    setupEventListeners() {
-      // Keyboard navigation
-      document.addEventListener('keydown', (e) => {
-        // Prevent default for navigation keys
-        const navKeys = ['ArrowRight', 'ArrowLeft', 'Space', 'Home', 'End', 'f', 'F'];
-        if (navKeys.includes(e.key)) {
-          e.preventDefault();
-        }
-        
-        switch(e.key) {
-          case 'ArrowRight':
-          case ' ': // Spacebar
+npm start</code></pre></div>
+                      </div>
+                    </div>
+                  </section>
+                  <section class="curtains-slide">
+                    <div class="curtains-content">
+                      <h2>Final Slide</h2>
+                      <p>Thank you for your attention!</p>
+                      <img src="./test-image.svg" alt=""/>
+                    </div>
+                  </section>
+                </div>
+              </div>
+            </div>
+            <div class="curtains-counter" aria-live="polite" aria-atomic="true">1/4</div>
+          </div>
+          <script>
+            (function() {
+            'use strict';
+            // Navigation state and methods
+            const navigation = {
+            current: 0,
+            total: 0,
+            init() {
+            this.total = document.querySelectorAll('.curtains-slide').length;
+            this.updateCounter();
+            this.updateScale();
+            this.setupEventListeners();
+            console.log(`Curtains initialized: ${this.total} slides`);
+            },
+            goToSlide(index) {
+            // Implement wrap-around navigation
+            let newIndex = index;
+            if (newIndex >= this.total) {
+            newIndex = 0; // Wrap to first slide
+            } else if (newIndex < 0) {
+            newIndex = this.total - 1; // Wrap to last slide
+            }
+            if (newIndex === this.current) return;
+            this.current = newIndex;
+            const stage = document.querySelector('.curtains-stage');
+            if (stage) {
+            stage.style.transform = `translateX(-${this.current * 100}%)`;
+            }
+            this.updateCounter();
+            // Announce slide change for screen readers
+            this.announceSlideChange();
+            },
+            nextSlide() {
+            this.goToSlide(this.current + 1);
+            },
+            prevSlide() {
+            this.goToSlide(this.current - 1);
+            },
+            firstSlide() {
+            this.goToSlide(0);
+            },
+            lastSlide() {
+            this.goToSlide(this.total - 1);
+            },
+            updateCounter() {
+            const counter = document.querySelector('.curtains-counter');
+            if (counter) {
+            counter.textContent = `${this.current + 1}/${this.total}`;
+            }
+            // Update document title
+            document.title = `Slide ${this.current + 1} of ${this.total} - Presentation`;
+            },
+            announceSlideChange() {
+            // Create or update live region for screen reader announcements
+            let announcer = document.getElementById('slide-announcer');
+            if (!announcer) {
+            announcer = document.createElement('div');
+            announcer.id = 'slide-announcer';
+            announcer.setAttribute('aria-live', 'polite');
+            announcer.setAttribute('aria-atomic', 'true');
+            announcer.style.position = 'absolute';
+            announcer.style.left = '-10000px';
+            announcer.style.width = '1px';
+            announcer.style.height = '1px';
+            announcer.style.overflow = 'hidden';
+            document.body.appendChild(announcer);
+            }
+            announcer.textContent = `Slide ${this.current + 1} of ${this.total}`;
+            },
+            updateScale() {
+            // Calculate scale to fit 1920x1080 slide to viewport
+            const stageWrapper = document.querySelector('.curtains-stage-wrapper');
+            if (!stageWrapper) return;
+            // Fixed slide dimensions (16:9 aspect ratio)
+            const slideWidth = 1920;
+            const slideHeight = 1080;
+            // Available viewport dimensions
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            // Calculate scale factors for width and height
+            const scaleX = viewportWidth / slideWidth;
+            const scaleY = viewportHeight / slideHeight;
+            // Use the smaller scale to maintain aspect ratio
+            const scale = Math.min(scaleX, scaleY);
+            // Apply the scale transform
+            stageWrapper.style.transform = `scale(${scale})`;
+            },
+            setupEventListeners() {
+            // Keyboard navigation
+            document.addEventListener('keydown', (e) => {
+            // Prevent default for navigation keys
+            const navKeys = ['ArrowRight', 'ArrowLeft', 'Space', 'Home', 'End', 'f', 'F'];
+            if (navKeys.includes(e.key)) {
+            e.preventDefault();
+            }
+            switch(e.key) {
+            case 'ArrowRight':
+            case ' ': // Spacebar
             this.nextSlide();
             break;
-          case 'ArrowLeft':
+            case 'ArrowLeft':
             this.prevSlide();
             break;
-          case 'Home':
+            case 'Home':
             this.firstSlide();
             break;
-          case 'End':
+            case 'End':
             this.lastSlide();
             break;
-          case 'f':
-          case 'F':
+            case 'f':
+            case 'F':
             this.toggleFullscreen();
             break;
-        }
-      });
-      
-      // Click navigation (right side = next, left side = previous)
-      document.addEventListener('click', (e) => {
-        // Don't interfere with clickable elements
-        if (e.target.closest('a, button, input, textarea, select')) {
-          return;
-        }
-        
-        const stageWrapper = e.target.closest('.curtains-stage-wrapper');
-        if (!stageWrapper) return;
-        
-        const rect = stageWrapper.getBoundingClientRect();
-        const clickX = e.clientX - rect.left;
-        const centerX = rect.width / 2;
-        
-        if (clickX > centerX) {
-          this.nextSlide();
-        } else {
-          this.prevSlide();
-        }
-      });
-      
-      // Touch/swipe navigation
-      let touchStartX = null;
-      let touchStartY = null;
-      
-      document.addEventListener('touchstart', (e) => {
-        const touch = e.touches[0];
-        touchStartX = touch.clientX;
-        touchStartY = touch.clientY;
-      }, { passive: true });
-      
-      document.addEventListener('touchend', (e) => {
-        if (!touchStartX || !touchStartY) return;
-        
-        const touch = e.changedTouches[0];
-        const deltaX = touch.clientX - touchStartX;
-        const deltaY = touch.clientY - touchStartY;
-        
-        // Only handle horizontal swipes (avoid interfering with scrolling)
-        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
-          if (deltaX > 0) {
-            this.prevSlide();
-          } else {
+            }
+            });
+            // Click navigation (right side = next, left side = previous)
+            document.addEventListener('click', (e) => {
+            // Don't interfere with clickable elements
+            if (e.target.closest('a, button, input, textarea, select')) {
+            return;
+            }
+            const stageWrapper = e.target.closest('.curtains-stage-wrapper');
+            if (!stageWrapper) return;
+            const rect = stageWrapper.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const centerX = rect.width / 2;
+            if (clickX > centerX) {
             this.nextSlide();
-          }
-        }
-        
-        touchStartX = null;
-        touchStartY = null;
-      }, { passive: true });
-      
-      // Handle window resize
-      window.addEventListener('resize', () => {
-        this.updateScale();
-        // Force repositioning to current slide after resize
-        setTimeout(() => {
-          const stage = document.querySelector('.curtains-stage');
-          if (stage) {
+            } else {
+            this.prevSlide();
+            }
+            });
+            // Touch/swipe navigation
+            let touchStartX = null;
+            let touchStartY = null;
+            document.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+            }, { passive: true });
+            document.addEventListener('touchend', (e) => {
+            if (!touchStartX || !touchStartY) return;
+            const touch = e.changedTouches[0];
+            const deltaX = touch.clientX - touchStartX;
+            const deltaY = touch.clientY - touchStartY;
+            // Only handle horizontal swipes (avoid interfering with scrolling)
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+            if (deltaX > 0) {
+            this.prevSlide();
+            } else {
+            this.nextSlide();
+            }
+            }
+            touchStartX = null;
+            touchStartY = null;
+            }, { passive: true });
+            // Handle window resize
+            window.addEventListener('resize', () => {
+            this.updateScale();
+            // Force repositioning to current slide after resize
+            setTimeout(() => {
+            const stage = document.querySelector('.curtains-stage');
+            if (stage) {
             stage.style.transform = `translateX(-${this.current * 100}%)`;
-          }
-        }, 100);
-      });
-    },
-    
-    toggleFullscreen() {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {
-          console.warn('Failed to enter fullscreen:', err);
-        });
-      } else {
-        document.exitFullscreen().catch(err => {
-          console.warn('Failed to exit fullscreen:', err);
-        });
-      }
-    }
-  };
-  
-  // Initialize when DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => navigation.init());
-  } else {
-    navigation.init();
-  }
-  
-  // Export navigation for debugging/testing
-  window.curtainsNavigation = navigation;
-})();
-  </script>
-</body>
-</html>
+            }
+            }, 100);
+            });
+            },
+            toggleFullscreen() {
+            if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+            console.warn('Failed to enter fullscreen:', err);
+            });
+            } else {
+            document.exitFullscreen().catch(err => {
+            console.warn('Failed to exit fullscreen:', err);
+            });
+            }
+            }
+            };
+            // Initialize when DOM is ready
+            if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => navigation.init());
+            } else {
+            navigation.init();
+            }
+            // Export navigation for debugging/testing
+            window.curtainsNavigation = navigation;
+            })();
+            // Runtime configuration
+            window.curtainsConfig = {"input":"./examples/test-presentation.curtain","output":"./examples/final-output.html","theme":"dark","timestamp":1756778359338,"processId":"e5702147-d84d-4ce4-8358-9857f42b478c"};
+          </script>
+        </body>
+      </html>

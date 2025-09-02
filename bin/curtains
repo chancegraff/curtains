@@ -1,12 +1,19 @@
 #!/usr/bin/env node
 
-// Global CLI entry point for curtains
+// Global CLI entry point for curtains using bundled esbuild output
 // This script enables global installation via `npm install -g curtains`
 
-import { main } from '../dist/src/cli.js'
+// Since package.json has "type": "module", we need to use createRequire to load CommonJS
+import { createRequire } from 'module'
+const require = createRequire(import.meta.url)
 
-// Execute main CLI function with process arguments
-main(process.argv).catch(error => {
-  console.error('CLI Error:', error)
+// Load the CommonJS bundle and get the exported main function
+const { main } = require('../dist/curtains-cli.cjs')
+
+// Execute the main function with command line arguments
+// process.argv.slice(2) removes 'node' and script path
+main(process.argv.slice(2)).catch((error) => {
+  // Only exit with error code if not already handled
+  // The main function handles its own error logging
   process.exit(1)
 })

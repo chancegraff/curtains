@@ -1,0 +1,172 @@
+<style>
+/* Global theme */
+:root {
+  --primary-color: #3498db;
+  --secondary-color: #2ecc71;
+}
+.container {
+  border: 2px solid var(--primary-color);
+  border-radius: 8px;
+  padding: 20px;
+  margin: 10px 0;
+}
+</style>
+
+===
+
+# Complex Presentation Kitchen Sink
+
+This presentation tests **all features** together.
+
+{.container}
+Welcome to a comprehensive test of the Curtains system!
+{/}
+
+===
+
+<style>
+/* Slide-specific override */
+.slide {
+  background: #f0f0f0;
+}
+h2 {
+  color: var(--secondary-color);
+}
+</style>
+
+## Multiple Features Combined
+
+### Lists and Formatting
+
+1. **Bold ordered item**
+2. *Italic ordered item*
+3. ~~Strikethrough item~~
+   - Nested unordered
+   - Another nested
+4. Back to ordered
+
+### Code Examples
+
+Inline code: `const x = 42;`
+
+```typescript
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+function createUser(data: Partial<User>): User {
+  return {
+    id: crypto.randomUUID(),
+    name: data.name ?? "Anonymous",
+    email: data.email ?? "user@example.com"
+  };
+}
+```
+
+===
+
+## Tables and Links
+
+| Feature | Support | Notes |
+|---------|---------|-------|
+| Markdown | ✅ | Full CommonMark + GFM |
+| Containers | ✅ | Custom syntax |
+| Styles | ✅ | Global and per-slide |
+| Code | ✅ | Syntax highlighting |
+
+Links work too:
+- [External link](https://example.com)
+- [Internal reference](#slide-1)
+
+Images:
+![Alt text](https://via.placeholder.com/150)
+
+===
+
+## Nested Containers with Content
+
+{.outer}
+# Outer Container
+
+{.middle}
+## Middle Container
+
+{.inner}
+### Inner Container
+
+Deep nesting with various content types:
+
+```js
+console.log("Code in nested container");
+```
+
+- List item 1
+- List item 2
+
+| Col1 | Col2 |
+|------|------|
+| A    | B    |
+
+{/}
+
+Back to middle
+{/}
+
+Back to outer
+{/}
+
+===
+
+## Special Characters and Unicode
+
+Testing various special characters:
+
+- Emojis: 🎉 🚀 💻 ✨
+- Math symbols: ∑ ∏ ∫ ∞ √ ≈ ≠
+- Arrows: → ← ↑ ↓ ⇒ ⇐
+- Currency: $ € £ ¥ ₹
+- Quotes: "smart quotes" 'single quotes' «guillemets»
+- Copyright: © ® ™
+
+===
+
+## Edge Cases
+
+Empty code block:
+```
+```
+
+Very long line that should wrap properly: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+
+Horizontal rule:
+
+---
+
+Blockquote:
+> This is a blockquote
+> with multiple lines
+> > And nested quotes
+
+===
+
+## Final Slide
+
+{.conclusion}
+### Thank You!
+
+This comprehensive test covers:
+- All markdown features
+- Container nesting
+- Style blocks (global and local)
+- Special characters
+- Edge cases
+{/}
+
+<!-- HTML comment that should be preserved -->
+
+<script>
+// Inline script (if supported)
+console.log("Test complete!");
+</script>

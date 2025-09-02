@@ -1,0 +1,40 @@
+<style>
+/* Global styles */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.highlight {
+  background-color: yellow;
+  padding: 10px;
+}
+</style>
+
+===
+
+# Styled Presentation
+
+This presentation has global styles.
+
+===
+
+<style>
+/* Slide-specific styles */
+.slide {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+</style>
+
+## Slide with Custom Styles
+
+This slide has its own unique styling.
+
+{.highlight}
+This content uses the global highlight style.
+{/}
+
+===
+
+## Regular Slide
+
+Back to normal styling.

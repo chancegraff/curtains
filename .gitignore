@@ -70,3 +70,4 @@ Backup[ ]of[ ]*.numbers/
 # Temporary files
 *.tmp
 *.temp
+**/fixtures/*.html
