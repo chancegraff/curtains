@@ -13,6 +13,7 @@ const config = {
   loader: {
     '.css': 'text'  // Load CSS files as text strings
   },
+  external: ['prettier'],  // Mark prettier as external to avoid bundling issues
   minify: true,  // Enable minification
   sourcemap: true,  // Keep sourcemap for debugging
   metafile: true,

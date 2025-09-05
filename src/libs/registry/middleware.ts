@@ -124,8 +124,8 @@ export const performanceMiddleware: Middleware = (_store: Store) => (next) => (a
   const endTime = performance.now();
   const duration = endTime - startTime;
 
-  // Log slow actions (> 10ms)
-  if (duration > 10) {
+  // Log slow actions (> 100ms)
+  if (duration > 100) {
     console.warn(`Slow action ${action.type}: ${duration.toFixed(2)}ms`);
   }
 };

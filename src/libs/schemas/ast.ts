@@ -32,6 +32,7 @@ interface TextNode extends BaseNode {
 interface ContainerNode extends BaseNode {
   type: 'container';
   classes: string[];
+  style?: string | undefined;
   children: ASTNode[];
 }
 
@@ -143,6 +144,7 @@ export const ContainerNodeSchema: z.ZodType<ContainerNode> = z.lazy(() =>
   z.object({
     type: z.literal('container'),
     classes: z.array(z.string()),
+    style: z.string().optional(),
     children: z.array(ASTNodeSchema),
   })
 );

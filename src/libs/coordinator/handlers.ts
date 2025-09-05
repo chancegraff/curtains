@@ -165,7 +165,7 @@ export async function renderStage(
 
     // Get config from registry to pass theme and other settings
     const config = getConfig(registry);
-    const html = render(input.transformed, config);
+    const html = await render(input.transformed, config);
 
     // Save to registry
     save(registry, 'rendered', html);

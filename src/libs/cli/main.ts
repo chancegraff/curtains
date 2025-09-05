@@ -38,7 +38,7 @@ export function parseCLI(argv: string[]): z.infer<typeof ParsedOptionsSchema> {
     process.exit(0);
   }
   if (argv.includes('-V') || argv.includes('--version')) {
-    console.log('2.0.1');
+    console.log('2.0.2');
     process.exit(0);
   }
 

@@ -95,7 +95,7 @@ export function astNodeToHast(node: ASTNode): Element | HastText | Array<Element
 
     case 'container': {
       if (node.type !== 'container') break;
-      return buildContainerHast(node.classes, node.children);
+      return buildContainerHast(node.classes, node.style, node.children);
     }
 
     case 'table': {
@@ -170,12 +170,22 @@ export function astToHast(ast: ASTRootNode): HastRoot {
 /**
  * Build container hast element using hastscript
  */
-export function buildContainerHast(classes: string[], children: ASTNode[]): Element {
+export function buildContainerHast(classes: string[], style: string | undefined, children: ASTNode[]): Element {
   // Convert children to hast nodes
   const hastChildren = processChildren(children);
   
-  // Build container div with classes
-  return h('div', { className: classes }, hastChildren);
+  // Build container div with classes and optional style
+  const props: { className?: string[]; style?: string } = {};
+  
+  if (classes.length > 0) {
+    props.className = classes;
+  }
+  
+  if (style) {
+    props.style = style;
+  }
+  
+  return h('div', props, hastChildren);
 }
 
 /**
@@ -419,20 +429,85 @@ export function createTableBody(
 
 /**
  * Conditionally wrap content in .curtains-content div
- * Skip wrapping if the content starts with a hero container
- * For columns containers, wrap everything together in a single curtains-content div
+ * Skip wrapping if there is a single root container element AND no text content outside of it
+ * Otherwise wrap everything in curtains-content div
  */
 export function wrapInContentDiv(html: string): string {
-  // Check if the HTML starts with a hero div
-  const heroPattern = /^\s*<div class="[^"]*\bhero\b[^"]*">/;
-  if (heroPattern.test(html)) {
-    // Don't wrap hero containers
-    return html;
+  // Trim the HTML to remove leading/trailing whitespace
+  const trimmedHtml = html.trim();
+  
+  // Check if the HTML starts with a container div
+  // Match any div tag (with or without attributes) at the root level
+  const containerStartPattern = /^<div(?:\s+[^>]*)?>/;
+  const containerStartMatch = trimmedHtml.match(containerStartPattern);
+  
+  if (!containerStartMatch) {
+    // No root container found, wrap everything
+    return `<div class="curtains-content">${html}</div>`;
   }
   
-  // For all other content (including columns), wrap in a single curtains-content div
-  // This ensures proper nesting and prevents broken HTML structure
-  return `<div class="curtains-content">${html}</div>`;
+  // Find the matching closing tag for the root container
+  // We need to handle nested divs properly
+  let depth = 0;
+  let inTag = false;
+  let inQuotes = false;
+  let quoteChar = '';
+  let rootContainerEnd = -1;
+  
+  for (let i = 0; i < trimmedHtml.length; i++) {
+    const char = trimmedHtml[i];
+    const nextChars = trimmedHtml.slice(i);
+    
+    // Handle quotes to avoid parsing HTML inside attributes
+    if ((char === '"' || char === "'") && inTag) {
+      if (!inQuotes) {
+        inQuotes = true;
+        quoteChar = char;
+      } else if (char === quoteChar) {
+        inQuotes = false;
+        quoteChar = '';
+      }
+      continue;
+    }
+    
+    // Skip if we're inside quotes
+    if (inQuotes) continue;
+    
+    // Check for tag start/end
+    if (char === '<') {
+      inTag = true;
+      
+      // Check for opening div tag
+      if (nextChars.startsWith('<div')) {
+        depth++;
+      } else if (nextChars.startsWith('</div>')) {
+        depth--;
+        if (depth === 0) {
+          // Found the closing tag for root container
+          rootContainerEnd = i + 6; // Length of </div>
+          break;
+        }
+      }
+    } else if (char === '>') {
+      inTag = false;
+    }
+  }
+  
+  // If we didn't find a proper closing tag, wrap everything
+  if (rootContainerEnd === -1) {
+    return `<div class="curtains-content">${html}</div>`;
+  }
+  
+  // Check if there's any meaningful content after the root container
+  const afterContainer = trimmedHtml.slice(rootContainerEnd).trim();
+  
+  if (afterContainer.length === 0) {
+    // Single root container with no content after it, don't wrap
+    return html;
+  } else {
+    // There's content outside the root container, wrap everything
+    return `<div class="curtains-content">${html}</div>`;
+  }
 }
 
 /**
@@ -442,7 +517,7 @@ export function transformStage(doc: CurtainsDocument): z.infer<typeof Transforme
   // Transform each slide
   const transformedSlides = doc.slides.map(slide => {
     const { html, css } = convertSlideToHast(slide);
-    const wrappedHtml = wrapInContentDiv(html);
+    const wrappedHtml = wrapInContentDiv(html)
     
     return TransformedSlideSchema.parse({
       html: wrappedHtml,

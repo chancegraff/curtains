@@ -8,6 +8,7 @@ export const DelimiterPatternSchema = z.literal('===');
 export const ContainerSchema = z.object({
   tag: z.literal('container'),
   classes: z.array(z.string().regex(/^[a-zA-Z0-9_-]+$/)),
+  style: z.string().optional(),
   content: z.string(),
 });
 

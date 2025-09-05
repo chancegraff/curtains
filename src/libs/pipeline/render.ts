@@ -9,7 +9,7 @@ import curtainsStyleCSS from './style.css';
 /**
  * Build HTML for all slides
  */
-export function buildSlidesHTML(doc: z.infer<typeof TransformedDocumentSchema>): string {
+export function buildSlidesHTML(doc: z.infer<typeof TransformedDocumentSchema>, theme: 'light' | 'dark'): string {
   const slideElements = doc.slides
     .map((slide, _index) => {
       // slide.html already contains .curtains-content wrapper from transform stage
@@ -19,7 +19,7 @@ export function buildSlidesHTML(doc: z.infer<typeof TransformedDocumentSchema>):
 
   // Build proper Curtains HTML structure with viewport, stage wrapper, and stage
   const curtainsHTML = `
-<div class="curtains-root" data-theme="dark">
+<div class="curtains-root" data-theme="${theme}">
   <div class="curtains-viewport">
     <div class="curtains-stage-wrapper">
       <div class="curtains-stage">
@@ -50,7 +50,7 @@ export function mergeCSS(options: {
   const curtainsStyleCSS = getCurtainsStyleCSS();
 
   // Format global user styles with comment label
-  const labeledGlobalCSS = globalCSS.trim().length > 0 
+  const labeledGlobalCSS = globalCSS.trim().length > 0
     ? `\n/* Global User Styles */\n${globalCSS}`
     : '';
 
@@ -433,50 +433,50 @@ export function formatHTML(html: string): string {
   // First, protect <pre> blocks from formatting
   const preBlocks: string[] = [];
   let preIndex = 0;
-  
+
   // Extract pre blocks and replace with placeholders
   const htmlWithPlaceholders = html.replace(/<pre[^>]*>[\s\S]*?<\/pre>/gi, (match) => {
     preBlocks.push(match);
     return `___PRE_BLOCK_${preIndex++}___`;
   });
-  
+
   // Split HTML into lines at tag boundaries
   const lines = htmlWithPlaceholders
     .replace(/></g, '>\n<')  // Add newlines between tags
     .replace(/(<\/[^>]+>)([^<\s])/g, '$1\n$2')  // Newline after closing tags if content follows
     .replace(/([^>\s])(<[^/])/g, '$1\n$2')  // Newline before opening tags if content precedes
     .split('\n');
-  
+
   let formatted = '';
   let indent = 0;
   const indentStr = '  '; // 2 spaces per level
-  
+
   for (const rawLine of lines) {
     const line = rawLine.trim();
-    
+
     if (line.length === 0) {
       continue; // Skip empty lines
     }
-    
+
     // Check if line is a closing tag
     const isClosingTag = line.startsWith('</');
     // Check if line is a self-closing tag or void element
-    const isSelfClosing = line.includes('/>') || 
+    const isSelfClosing = line.includes('/>') ||
       line.match(/<(meta|link|img|br|hr|input|area|base|col|embed|source|track|wbr)\b[^>]*>/i);
     // Check if line is a comment or doctype
     const isSpecialTag = line.startsWith('<!--') || line.startsWith('<!DOCTYPE') || line.startsWith('<!');
     // Check if line opens and closes on same line (inline content)
-    const isInlineComplete = !isSelfClosing && !isSpecialTag && 
+    const isInlineComplete = !isSelfClosing && !isSpecialTag &&
       line.match(/<[^/][^>]*>.*<\/[^>]+>/);
-    
+
     // Decrease indent before adding closing tags
     if (isClosingTag) {
       indent = Math.max(0, indent - 1);
     }
-    
+
     // Add the line with current indentation
     formatted += indentStr.repeat(indent) + line + '\n';
-    
+
     // Increase indent after opening tags (not self-closing, not inline complete)
     if (!isClosingTag && !isSelfClosing && !isSpecialTag && !isInlineComplete) {
       // Only increase if it's an opening tag
@@ -485,7 +485,7 @@ export function formatHTML(html: string): string {
       }
     }
   }
-  
+
   // Restore pre blocks without formatting
   let restoredHTML = formatted.trim();
   for (let i = 0; i < preBlocks.length; i++) {
@@ -493,25 +493,64 @@ export function formatHTML(html: string): string {
     const preBlock = preBlocks[i] ?? '';
     restoredHTML = restoredHTML.replace(placeholder, preBlock);
   }
-  
+
   return restoredHTML;
+}
+
+/**
+ * Format HTML using Prettier if available
+ * Falls back to simple formatter if Prettier is not available or bundled
+ * This handles both development (where Prettier is available) and production (where it may not be)
+ */
+export async function formatPrettier(html: string): Promise<string> {
+  try {
+    // Try to dynamically import Prettier
+    // This will work in development but may fail when bundled
+    const prettierModule = await import('prettier').catch(() => null);
+
+    if (!prettierModule) {
+      // Prettier is not available (likely in bundled/production environment)
+      // Use the built-in formatter instead
+      return formatHTML(html);
+    }
+
+    const formatted = await prettierModule.format(html, {
+      parser: 'html',
+      printWidth: 120,
+      tabWidth: 2,
+      useTabs: false,
+      semi: true,
+      singleQuote: true,
+      htmlWhitespaceSensitivity: 'css',
+      bracketSameLine: false,
+    });
+
+    return formatted;
+  } catch {
+    // If any error occurs, fall back to the simple formatter
+    // This is silent since the fallback formatter works well
+    return formatHTML(html);
+  }
 }
 
 /**
  * Main render stage function
  */
-export function renderStage(
+export async function renderStage(
   doc: z.infer<typeof TransformedDocumentSchema>,
   config?: z.infer<typeof RuntimeConfigSchema>
-): z.infer<typeof HTMLOutputSchema> {
-  // Build slides HTML
-  const slidesHTML = buildSlidesHTML(doc);
+): Promise<z.infer<typeof HTMLOutputSchema>> {
+  // Determine theme to use
+  const theme = config?.theme ?? 'light';
+
+  // Build slides HTML with theme
+  const slidesHTML = buildSlidesHTML(doc, theme);
 
   // Merge all CSS
   const mergedCSS = mergeCSS({
     globalCSS: doc.globalCSS,
     slidesCSS: doc.slides.map(s => s.css),
-    theme: config?.theme ?? 'light', // Use config theme or default
+    theme: theme,
   });
 
   // Use provided config or create defaults
@@ -535,7 +574,7 @@ export function renderStage(
   });
 
   // Format the HTML for better readability
-  const formattedHTML = formatHTML(html);
+  const formattedHTML = await formatPrettier(html);
 
   return HTMLOutputSchema.parse(formattedHTML);
 }

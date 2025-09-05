@@ -46,12 +46,18 @@ export function extractContainers(content: string): {
   // Extract only the top-level container (if any)
   // For HTML containers, we need to handle nesting carefully
   // We need to find matching open/close tags to handle nesting
-  const containerStartRegex = /<container(?:\s+class="([^"]+)")?>/i;
+  const containerStartRegex = /<container([^>]*)>/i;
   const containerMatch = containerStartRegex.exec(content);
   
   if (containerMatch) {
     const startIndex = containerMatch.index;
-    const classesStr = containerMatch[1];
+    const attributesStr = containerMatch[1];
+    
+    // Extract class and style attributes separately
+    const classMatch = attributesStr ? /class="([^"]+)"/.exec(attributesStr) : null;
+    const styleMatch = attributesStr ? /style="([^"]+)"/.exec(attributesStr) : null;
+    const classesStr = classMatch ? classMatch[1] : undefined;
+    const styleStr = styleMatch ? styleMatch[1] : undefined;
     
     // Find the matching closing tag by counting open/close tags
     let depth = 1;
@@ -60,7 +66,7 @@ export function extractContainers(content: string): {
     
     while (depth > 0 && currentIndex < content.length) {
       const remainingContent = content.substring(currentIndex);
-      const openMatch = /<container(?:\s+[^>]*)?>/.exec(remainingContent);
+      const openMatch = /<container[^>]*>/.exec(remainingContent);
       const closeMatch = /<\/container>/.exec(remainingContent);
       
       // Find which comes first
@@ -93,11 +99,17 @@ export function extractContainers(content: string): {
       const dedentedContent = dedentContent(containerContent);
       const trimmedContent = dedentedContent ? dedentedContent.trim() : '';
       
-      containers.push({
+      const containerObj: z.infer<typeof ContainerSchema> = {
         tag: 'container',
         classes,
         content: trimmedContent,
-      });
+      };
+      
+      if (styleStr) {
+        containerObj.style = styleStr;
+      }
+      
+      containers.push(containerObj);
       
       // Remove only this container from content
       content = content.substring(0, startIndex) + content.substring(endIndex);
@@ -259,12 +271,18 @@ export function dedentContent(content: string): string {
  * This is a pure function that returns a new string
  */
 export function preprocessHTMLContainers(content: string): string {
-  // Convert opening tags
+  // Convert opening tags - handle both class and style attributes
   let processed = content.replace(
-    /<container(?:\s+class="([^"]+)")?>/gi,
-    (_, classes) => {
-      const classNames = classes ? classes.trim().split(/\s+/) : [];
+    /<container([^>]*)>/gi,
+    (_, attributes) => {
+      const classMatch = attributes ? /class="([^"]+)"/.exec(attributes) : null;
+      // Note: style attributes are lost in fence syntax conversion
+      // This is a limitation of fence syntax which only supports classes
+      
+      const classText = classMatch ? classMatch[1] : '';
+      const classNames = classText ? classText.trim().split(/\s+/) : [];
       const classString = classNames.length > 0 ? ` ${classNames.join(' ')}` : '';
+      
       return `:::container${classString}\n`;
     }
   );

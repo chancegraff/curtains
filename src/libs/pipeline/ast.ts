@@ -407,12 +407,18 @@ export function wrapInContainers(
     }
     
     // Create container node with parsed children
+    const containerNodeData: z.infer<typeof ContainerNodeSchema> = {
+      type: 'container',
+      classes: container.classes,
+      children: containerChildren,
+    };
+    
+    if (container.style) {
+      containerNodeData.style = container.style;
+    }
+    
     containerNodes.push(
-      ContainerNodeSchema.parse({
-        type: 'container',
-        classes: container.classes,
-        children: containerChildren,
-      })
+      ContainerNodeSchema.parse(containerNodeData)
     );
   }
   
@@ -440,7 +446,7 @@ function extractNestedContainers(content: string): {
   
   // Keep extracting containers until none are left
   while (true) {
-    const containerStartRegex = /<container(?:\s+class="([^"]+)")?>/i;
+    const containerStartRegex = /<container([^>]*)>/i;
     const containerMatch = containerStartRegex.exec(cleaned);
     
     if (!containerMatch) {
@@ -448,7 +454,13 @@ function extractNestedContainers(content: string): {
     }
     
     const startIndex = containerMatch.index;
-    const classesStr = containerMatch[1];
+    const attributesStr = containerMatch[1];
+    
+    // Extract class and style attributes separately
+    const classMatch = attributesStr ? /class="([^"]+)"/.exec(attributesStr) : null;
+    const styleMatch = attributesStr ? /style="([^"]+)"/.exec(attributesStr) : null;
+    const classesStr = classMatch ? classMatch[1] : undefined;
+    const styleStr = styleMatch ? styleMatch[1] : undefined;
     
     // Find the matching closing tag by counting open/close tags
     let depth = 1;
@@ -457,7 +469,7 @@ function extractNestedContainers(content: string): {
     
     while (depth > 0 && currentIndex < cleaned.length) {
       const remainingContent = cleaned.substring(currentIndex);
-      const openMatch = /<container(?:\s+[^>]*)?>/.exec(remainingContent);
+      const openMatch = /<container[^>]*>/.exec(remainingContent);
       const closeMatch = /<\/container>/.exec(remainingContent);
       
       // Find which comes first
@@ -490,11 +502,17 @@ function extractNestedContainers(content: string): {
       const dedentedContent = dedentContent(containerContent);
       const trimmedContent = dedentedContent ? dedentedContent.trim() : '';
       
-      containers.push({
+      const containerObj: z.infer<typeof ContainerSchema> = {
         tag: 'container',
         classes,
         content: trimmedContent,
-      });
+      };
+      
+      if (styleStr) {
+        containerObj.style = styleStr;
+      }
+      
+      containers.push(containerObj);
       
       // Remove this container from cleaned content
       cleaned = cleaned.substring(0, startIndex) + cleaned.substring(endIndex);
